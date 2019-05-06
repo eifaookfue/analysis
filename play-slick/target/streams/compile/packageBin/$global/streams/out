@@ -1,0 +1,17 @@
+[info] Packaging D:\Apl\analysis\play-slick\target\scala-2.12\play-slick_2.12-0.1.0-SNAPSHOT.jar ...
+[debug] Input file mappings:
+[debug] 	models\Window$.class
+[debug] 	  D:\Apl\analysis\play-slick\target\scala-2.12\classes\models\Window$.class
+[debug] 	dao\WindowDetailDAO.class
+[debug] 	  D:\Apl\analysis\play-slick\target\scala-2.12\classes\dao\WindowDetailDAO.class
+[debug] 	dao\WindowDetailComponent.class
+[debug] 	  D:\Apl\analysis\play-slick\target\scala-2.12\classes\dao\WindowDetailComponent.class
+[debug] 	models\Window.class
+[debug] 	  D:\Apl\analysis\play-slick\target\scala-2.12\classes\models\Window.class
+[debug] 	dao
+[debug] 	  D:\Apl\analysis\play-slick\target\scala-2.12\classes\dao
+[debug] 	models
+[debug] 	  D:\Apl\analysis\play-slick\target\scala-2.12\classes\models
+[debug] 	dao\WindowDetailComponent$WindowDetail.class
+[debug] 	  D:\Apl\analysis\play-slick\target\scala-2.12\classes\dao\WindowDetailComponent$WindowDetail.class
+[info] Done packaging.

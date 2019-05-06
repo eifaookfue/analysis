@@ -1,0 +1,7 @@
+[error] D:\Apl\analysis\play-slick\app\dao\WindowDetailDAO.scala:36:2: trait Singleton is abstract; cannot be instantiated
+[error] @Singleton()
+[error]  ^
+[error] D:\Apl\analysis\play-slick\app\dao\WindowDetailDAO.scala:37:24: not found: type Inject
+[error] class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext)
+[error]                        ^
+[error] two errors found
