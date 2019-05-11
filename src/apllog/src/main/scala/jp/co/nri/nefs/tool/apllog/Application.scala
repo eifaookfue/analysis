@@ -9,14 +9,14 @@ import org.apache.commons.io.FileUtils
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 import com.typesafe.scalalogging.LazyLogging
-import models.Window
+import models.WindowDetail
 
 object Application extends LazyLogging{
   /**
     * キー：windowName
     * バリュー：Windowクラスのリスト。追加する必要があるためmutableなListBufferを用いる
     */
-  private var windowMap = Map[Option[String], ListBuffer[Window]]()
+  private var windowDetailMap = Map[Option[String], ListBuffer[WindowDetail]]()
 
   private case class FileInfo(env: String, computer: String, userName: String, startTime: String){
     val tradeDate = startTime.take(8)
@@ -91,21 +91,20 @@ object Application extends LazyLogging{
         //else if ("Dialog opened.".equals(message)) {
         handlerEndTime = lineInfo.datetime
         val startupTime = handlerEndTime.getTime - handlerStartTime.getTime
-        val window = Window.apply(handler, windowName, None, None, fileInfo.userName,
+        val windowDetail = WindowDetail.apply(handler, windowName, None, None, fileInfo.userName,
           fileInfo.tradeDate, lineInfo.datetime, startupTime)
-        println(s"window = $window")
         //たとえばNewOrderListのDialogがOpenされた後にSelect Basketが起動するケースは
         //handelerをNewOrderListとする
         handler = windowName.getOrElse("")
-        windowMap.get(windowName) match {
-          case Some(buf) => buf += window
-          case None => windowMap += (windowName -> ListBuffer(window))
+        windowDetailMap.get(windowName) match {
+          case Some(buf) => buf += windowDetail
+          case None => windowDetailMap += (windowName -> ListBuffer(windowDetail))
         }
       }
       else if ((lineInfo.message contains "Button event ends") || (lineInfo.message contains "Button Pressed")) {
         val windowName = getWindowName(lineInfo.message, lineInfo.clazz)
         val action = getButtonAction(lineInfo.message)
-        windowMap.get(windowName) match {
+        windowDetailMap.get(windowName) match {
           case Some(buf) => buf.update(buf.length - 1, buf.last.copy(action = action))
           case None => println("Error")
         }

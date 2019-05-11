@@ -5,6 +5,7 @@ import sbt._
       Library.slick,
       Library.slickHikariCP,
       Library.playJdbcApi,
+      Library.mysql,
       Library.playLogback % "test",
       Library.playSpecs2 % "test",
       Library.h2 % "test"
@@ -31,6 +32,7 @@ import sbt._
     val slick        = "3.3.0"
     val h2           = "1.4.197"
     val scalaLogging = "3.9.2"
+    val mysql        = "8.0.15"
   }
 
   object Library {
@@ -42,5 +44,6 @@ import sbt._
     val slickHikariCP       = "com.typesafe.slick"         %% "slick-hikaricp"           % Version.slick
     val h2                  = "com.h2database"             %  "h2"                       % Version.h2
     val sacalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"            % Version.scalaLogging
+    val mysql               = "mysql"                      % "mysql-connector-java"      % Version.mysql
   }
 
