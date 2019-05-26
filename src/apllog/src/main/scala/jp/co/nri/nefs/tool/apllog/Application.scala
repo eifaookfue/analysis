@@ -10,6 +10,11 @@ import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 import com.typesafe.scalalogging.LazyLogging
 import models.WindowDetail
+import dao.WindowDetailComponent.WindowDetails
+import slick.driver.MySQLDriver.api._
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 
 object Application extends LazyLogging{
   /**
@@ -123,5 +128,28 @@ object Application extends LazyLogging{
       //      println(d)
     })
     ite.close
+
+    val windowDetailList = for ((k, v) <- windowDetailMap) yield v.last
+    windowDetailList.foreach(println(_))
+
+    val windowDetails = TableQuery[WindowDetails]
+
+    val db = Database.forConfig("mydb")
+
+    try {
+      windowDetails.schema.create.statements.foreach(println)
+      val setup = DBIO.seq(
+        windowDetails.schema.create,
+        windowDetails ++= windowDetailList
+      )
+      val setupFuture = db.run(setup)
+      Await.result(resultFuture, Duration.Inf)
+    } finally db.close
+
+  println("end")
+
+
+
+
   }
 }

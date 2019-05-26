@@ -6,6 +6,8 @@ import models.{ WindowDetail, Page }
 import javax.inject.{Inject, Singleton}
 import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfigProvider }
 import slick.jdbc.JdbcProfile
+import scala.math._
+import slick.lifted.ColumnOrdered
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,6 +34,19 @@ trait WindowDetailComponent {
     def startupTime = column[Long]("STARTUP_TIME")
 
     def * = (handler, windowName, action, method, userName, tradeDate, time, startupTime) <> (WindowDetail.tupled, WindowDetail.unapply)
+    //def nth = Vector(handler, windowName, action, method, userName, tradeDate, time, startupTime )
+    // 返り値はAnyでもいいが、ColumnOrderedとしてみた。
+    def getSortedColumn(i : Int) : ColumnOrdered[_] = {
+      i match {
+        case 1 => handler.asc
+        case -1 => handler.desc
+        case 2 => windowName.asc.nullsFirst
+        case -2 => windowName.desc.nullsFirst
+        case _ => handler.asc
+      }
+    }
+
+    //def nth = handler
   }
 
 }
@@ -60,21 +75,24 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   def list(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filter: String = "%"): Future[Page[WindowDetail]] = {
 
     val offset = pageSize * page
-    val query = if (orderBy > 0) {
+    val query =
       (for {
         windowDetail <- windowDetails
       } yield windowDetail)
+        //.sortBy( _.time )
+        //.sortBy( _.nth(abs(0)).asc.nullsFirst)
+        .sortBy(_.getSortedColumn(orderBy))
+        //.sortBy( _.getColumnByIndex(0))
+        //.sortBy { x =>
+        //if (orderBy == 0) return _.handler
+        //else return _.userName
+      //}
+        //.sortBy { x => if (orderBy == 0) x.handler else x.windowName.getOrElse(x.handler) }
+        // OK .sortBy { x => if (orderBy == 0) x.handler.asc.nullsLast else x.windowName.asc.nullsLast }
         //.sortBy({ case (computer, id, name) => computer.name })
         .drop(offset)
         .take(pageSize)
-    } else {
-      (for {
-        windowDetail <- windowDetails
-      } yield windowDetail)
-        //.sortBy({ case (computer, id, name) => computer.name.desc })
-        .drop(offset)
-        .take(pageSize)
-    }
+
 
     for {
       totalRows <- count(filter)

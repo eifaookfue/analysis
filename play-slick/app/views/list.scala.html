@@ -21,7 +21,7 @@
 
 @main {
     
-    <h1>@Messages("computers.list.title", currentPage.total)</h1>
+    <h1>@Messages("windowDetails.list.title", currentPage.total)</h1>
 
     @flash.get("success").map { message =>
         <div class="alert-message warning">
@@ -34,14 +34,14 @@
         <table class="windowDetails zebra-striped">
             <thead>
                 <tr>
-                    @header(2, "Handler")
-                    @header(3, "WindowName")
-                    @header(4, "Action")
-                    @header(5, "Method")
-                    @header(6, "UserName")
-                    @header(7, "TradeDate")
-                    @header(8, "Time")
-                    @header(9, "StartupTime")
+                    @header(1, "Handler")
+                    @header(2, "WindowName")
+                    @header(3, "Action")
+                    @header(4, "Method")
+                    @header(5, "UserName")
+                    @header(6, "TradeDate")
+                    @header(7, "Time")
+                    @header(8, "StartupTime")
                 </tr>
             </thead>
             <tbody>
@@ -50,14 +50,9 @@
                     case windowDetail => {
                         <tr>
                             <td>@windowDetail.handler</td>
-                            <td>
-                                @windowDetail.windowName
-                            </td>
-                            <td>
-                                @windowDetail.action
-                            </td>
-                            <td>
-                                @windowDetail.userName
+                            <td>@windowDetail.windowName</td>
+                            <td>@windowDetail.action</td>
+                            <td>@windowDetail.userName
                             </td>
                             <td>
                                 @windowDetail.tradeDate
