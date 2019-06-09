@@ -3,20 +3,58 @@ package jp.co.nri.nefs.tool.apllog
 import java.io.File
 import java.sql.Timestamp
 import java.util.Date
+
 import scala.collection.JavaConverters._
 import org.apache.commons.io.FileUtils
 
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 import com.typesafe.scalalogging.LazyLogging
-import models.WindowDetail
-import dao.WindowDetailComponent.WindowDetails
 import slick.driver.MySQLDriver.api._
+//import slick.jdbc.JdbcProfile
+import models.WindowDetail
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import dao.WindowDetailDAO
+import play.api.db.slick.SlickModule
+import javax.inject.Inject
+import play.api.db.slick.DatabaseConfigProvider
+
+class Application @Inject() (
+                              windowDetailDao : WindowDetailDAO
+                            ){
+
+}
 
 
 object Application extends LazyLogging{
+
+  class WindowDetails2(tag: Tag) extends Table[WindowDetail](tag, "WINDOW_DETAIL") {
+    def handler = column[String]("HANDLER")
+
+    def windowName = column[Option[String]]("WINDOW_NAME")
+
+    def destinationType = column[Option[String]]("DESTINATION_TYPE")
+
+    def action = column[Option[String]]("ACTION")
+
+    def method = column[Option[String]]("METHOD")
+
+    def userName = column[String]("USER_NAME")
+
+    def tradeDate = column[String]("TRADE_DATE")
+
+    def time = column[Timestamp]("TIME")
+
+    def startupTime = column[Long]("STARTUP_TIME")
+
+    def * = (handler, windowName, destinationType, action, method, userName, tradeDate, time, startupTime) <> (WindowDetail.tupled, WindowDetail.unapply)
+
+    val details = TableQuery[WindowDetails2]
+
+  }
+
+  val windowDetails = TableQuery[WindowDetails2]
   /**
     * キー：windowName
     * バリュー：Windowクラスのリスト。追加する必要があるためmutableなListBufferを用いる
@@ -96,7 +134,10 @@ object Application extends LazyLogging{
         //else if ("Dialog opened.".equals(message)) {
         handlerEndTime = lineInfo.datetime
         val startupTime = handlerEndTime.getTime - handlerStartTime.getTime
-        val windowDetail = WindowDetail.apply(handler, windowName, None, None, fileInfo.userName,
+        val destinationType = None
+        val action = None
+        val method = None
+        val windowDetail = WindowDetail.apply(handler, windowName, destinationType, action, method, fileInfo.userName,
           fileInfo.tradeDate, lineInfo.datetime, startupTime)
         //たとえばNewOrderListのDialogがOpenされた後にSelect Basketが起動するケースは
         //handelerをNewOrderListとする
@@ -129,13 +170,20 @@ object Application extends LazyLogging{
     })
     ite.close
 
+
     val windowDetailList = for ((k, v) <- windowDetailMap) yield v.last
     windowDetailList.foreach(println(_))
 
-    val windowDetails = TableQuery[WindowDetails]
+    // いったんあきらめる
+    //val module = new SlickModule()
+    //@Inject()
+    //var dbConfigProvider : DatabaseConfigProvider
+    //val windowDetailDao = new WindowDetailDAO(dbConfigProvider)
+
+
+    windowDetailDao.initialize(windowDetailList)
 
     val db = Database.forConfig("mydb")
-
     try {
       windowDetails.schema.create.statements.foreach(println)
       val setup = DBIO.seq(
@@ -143,8 +191,9 @@ object Application extends LazyLogging{
         windowDetails ++= windowDetailList
       )
       val setupFuture = db.run(setup)
-      Await.result(resultFuture, Duration.Inf)
-    } finally db.close
+      Await.result(setupFuture, Duration.Inf)
+    }finally db.close
+
 
   println("end")
 

@@ -35,9 +35,9 @@ class Application @Inject() (
    * @param orderBy Column to be sorted
    * @param filter Filter applied on computer names
    */
-  def list(page: Int, orderBy: Int, filter: String) = Action.async { implicit request =>
-    val windowDetails = windowDetailDao.list(page = page, orderBy = orderBy, filter = ("%" + filter + "%"))
-    windowDetails.map(cs => Ok(html.list(cs, orderBy, filter)))
+  def list(page: Int, orderBy: Int, filterHandler: String, filterWindowName: String) = Action.async { implicit request =>
+    val windowDetails = windowDetailDao.list(page = page, orderBy = orderBy, filterHandler = ("%" + filterHandler + "%"), filterWindowName = ("%" + filterWindowName + "%"))
+    windowDetails.map(cs => Ok(html.list(cs, orderBy, filterHandler, filterWindowName)))
   }
 
 }

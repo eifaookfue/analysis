@@ -7,6 +7,7 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
   lazy val next = Option(page + 1).filter(_ => (offset + items.size) < total)
 }
 
-case class WindowDetail(handler: String, windowName: Option[String], action: Option[String],
-                        destinationType: Option[String], userName: String,
+case class WindowDetail(handler: String, windowName: Option[String], destinationType: Option[String],
+                        action: Option[String], method: Option[String],
+                        userName: String,
                         tradeDate: String, time: Timestamp, startupTime: Long)

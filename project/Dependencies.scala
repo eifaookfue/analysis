@@ -15,7 +15,8 @@ import sbt._
       Library.slick,
       Library.slickHikariCP,
       Library.h2 % "test",
-      Library.sacalaLogging
+      Library.sacalaLogging,
+      Library.mysql
       /*libraryDependencies ++= Seq (
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
         "com.typesafe.slick" %% "slick" % "3.3.0",
