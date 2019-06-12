@@ -85,11 +85,11 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(windowDetails.map(_.windowName).length.result)
   }
   /** Count computers with a filter. */
-  def count(filterHandler: String, filterWindowName: String): Future[Int] = {
-    db.run(windowDetails.filter { windowDetail => windowDetail.windowName.toLowerCase like filterHandler.toLowerCase }.length.result)
+  def count(filterHandler: Option[String], filterWindowName: Option[String]): Future[Int] = {
+    db.run(windowDetails.filter { windowDetail => windowDetail.windowName.toLowerCase like filterHandler.map(_.toLowerCase).getOrElse("") }.length.result)
   }
 
-  def baseQuery(filterHandler: String, filterWindowName: String): Query[_,_,_] = {
+  /*def baseQuery(filterHandler: String, filterWindowName: String): Query[_,_,_] = {
     val criteriaHandler = Some(filterHandler)
     val criteriaWindowName = Some(filterWindowName)
     windowDetails.filter { windowDetail =>
@@ -98,21 +98,18 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
         criteriaWindowName.map(windowDetail.windowName.getOrElse("") like _)
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     }
-  }
+  }*/
 
   /** Return a page of WindowDetail */
-  def list(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filterHandler: String = "%", filterWindowName: String = "%"): Future[Page[WindowDetail]] = {
+  def list(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filterHandler: Option[String] = None, filterWindowName: Option[String] = None): Future[Page[WindowDetail]] = {
 
-    val criteriaHandler = Some(filterHandler)
-    val criteriaWindowName = Some(filterWindowName)
-    println(s"filterWindowName=$filterWindowName")
     val offset = pageSize * page
     //windowNameはOptional。getOrElseを使わないとvalue || is not a member of slick.lifted.Rep[_1]がでてしまう。
     //getOrElse("")とすることで、ifnull(`WINDOW_NAME`,'') like **となる
     val query = windowDetails.filter { windowDetail =>
       List(
-        criteriaHandler.map(windowDetail.handler like _),
-        criteriaWindowName.map(windowDetail.windowName.getOrElse("") like _)
+        filterHandler.map(windowDetail.handler like _),
+        filterWindowName.map(windowDetail.windowName.getOrElse("") like _)
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     }.sortBy(_.getSortedColumn(orderBy))
       .drop(offset)

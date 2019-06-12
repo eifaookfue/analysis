@@ -1,4 +1,4 @@
-@(currentPage: Page[WindowDetail], currentOrderBy: Int, currentFilterHandler: String, currentFilterWindowName: String)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
+@(currentPage: Page[WindowDetail], currentOrderBy: Int, currentFilterHandler: Option[String], currentFilterWindowName: Option[String])(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
 
 @****************************************
 * Helper generating navigation links    *
