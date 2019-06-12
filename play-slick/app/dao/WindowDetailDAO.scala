@@ -89,36 +89,26 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(windowDetails.filter { windowDetail => windowDetail.windowName.toLowerCase like filterHandler.map(_.toLowerCase).getOrElse("") }.length.result)
   }
 
-  /*def baseQuery(filterHandler: String, filterWindowName: String): Query[_,_,_] = {
-    val criteriaHandler = Some(filterHandler)
-    val criteriaWindowName = Some(filterWindowName)
-    windowDetails.filter { windowDetail =>
-      List(
-        criteriaHandler.map(windowDetail.handler like _),
-        criteriaWindowName.map(windowDetail.windowName.getOrElse("") like _)
-      ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
-    }
-  }*/
-
   /** Return a page of WindowDetail */
   def list(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filterHandler: Option[String] = None, filterWindowName: Option[String] = None): Future[Page[WindowDetail]] = {
 
     val offset = pageSize * page
     //windowNameはOptional。getOrElseを使わないとvalue || is not a member of slick.lifted.Rep[_1]がでてしまう。
     //getOrElse("")とすることで、ifnull(`WINDOW_NAME`,'') like **となる
-    val query = windowDetails.filter { windowDetail =>
+    val query1 = windowDetails.filter { windowDetail =>
       List(
         filterHandler.map(windowDetail.handler like _),
         filterWindowName.map(windowDetail.windowName.getOrElse("") like _)
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
-    }.sortBy(_.getSortedColumn(orderBy))
-      .drop(offset)
-      .take(pageSize)
+    }
+    val query2 = query1.sortBy(_.getSortedColumn(orderBy))
+        .drop(offset)
+        .take(pageSize)
 
     for {
-      totalRows <- count(filterHandler, filterWindowName)
+      totalRows <- db.run(query1.length.result)
       //list = query.result.map { rows => rows.collect { case (computer, id, Some(name)) => (computer, Company(id, name)) } }
-      list = query.result
+      list = query2.result
       result <- db.run(list)
     } yield Page(result, page, offset, totalRows)
   }
