@@ -19,7 +19,7 @@ class Application @Inject() (
 )(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents) with I18nSupport {
 
   /** This result directly redirect to the application home.*/
-  val Home = Redirect(routes.Application.list(0, 2, ""))
+  val Home = Redirect(routes.Application.list(0, 2, None, None))
 
   /** Describe the computer form (used in both edit and create screens).*/
 
@@ -35,9 +35,10 @@ class Application @Inject() (
    * @param orderBy Column to be sorted
    * @param filter Filter applied on computer names
    */
-  def list(page: Int, orderBy: Int, filter: String) = Action.async { implicit request =>
-    val windowDetails = windowDetailDao.list(page = page, orderBy = orderBy, filter = ("%" + filter + "%"))
-    windowDetails.map(cs => Ok(html.list(cs, orderBy, filter)))
+  def list(page: Int, orderBy: Int, filterHandler: Option[String], filterWindowName: Option[String]) = Action.async { implicit request =>
+    //画面のサーチボックスに何も入力しなかった場合、NoneではなくSome()が送られてきてしまうため、Option型に変更
+    val windowDetails = windowDetailDao.list(page = page, orderBy = orderBy, filterHandler = filterHandler.filter(_.trim.nonEmpty).map("%" + _ + "%"), filterWindowName = filterWindowName.filter(_.trim.nonEmpty).map("%" + _ + "%"))
+    windowDetails.map(cs => Ok(html.list(cs, orderBy, filterHandler, filterWindowName)))
   }
 
 }

@@ -26,14 +26,15 @@ table.computers em {
     color: #aaa;
 }
 
+
 table.windowDetails .col3, table.computers .col4 {
-    width: 10%;
+    width: 20%;
     min-width: 100px;
 }
 
-table.computers .col5 {
+table.windowDetails .col8, table.computers .col4 {
     width: 30%;
-    min-width: 300px;
+    min-width: 100px;
 }
 
 table.computers .header a {

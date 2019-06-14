@@ -1,4 +1,4 @@
-@(currentPage: Page[WindowDetail], currentOrderBy: Int, currentFilter: String)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
+@(currentPage: Page[WindowDetail], currentOrderBy: Int, currentFilterHandler: Option[String], currentFilterWindowName: Option[String])(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
 
 @****************************************
 * Helper generating navigation links    *
@@ -6,7 +6,7 @@
 @link(newPage: Int, newOrderBy: Option[Int] = None) = @{
     routes.Application.list(newPage, newOrderBy.map { orderBy =>
         if(orderBy == scala.math.abs(currentOrderBy)) -currentOrderBy else orderBy
-    }.getOrElse(currentOrderBy), currentFilter)
+    }.getOrElse(currentOrderBy), currentFilterHandler, currentFilterWindowName)
     
 }
 
@@ -29,6 +29,16 @@
         </div>
     }
 
+    <div id="actions">
+
+        @helper.form(action=routes.Application.list()) {
+        <input type="search" id="searchbox1" name="hf" value="@currentFilterHandler" placeholder="Filter by Handler"/>
+        <input type="search" id="searchbox2" name="wf" value="@currentFilterWindowName" placeholder="Filter by WindowName"/>
+        <input type="submit" id="searchsubmit" value="Filter by name" class="btn primary"/>
+        }
+
+    </div>
+
     @Option(currentPage.items).filterNot(_.isEmpty).map { windowDetails =>
         
         <table class="windowDetails zebra-striped">
@@ -36,12 +46,13 @@
                 <tr>
                     @header(1, "Handler")
                     @header(2, "WindowName")
-                    @header(3, "Action")
-                    @header(4, "Method")
-                    @header(5, "UserName")
-                    @header(6, "TradeDate")
-                    @header(7, "Time")
-                    @header(8, "StartupTime")
+                    @header(3, "DestinationType")
+                    @header(4, "Action")
+                    @header(5, "Method")
+                    @header(6, "UserName")
+                    @header(7, "TradeDate")
+                    @header(8, "Time")
+                    @header(9, "StartupTime")
                 </tr>
             </thead>
             <tbody>
@@ -51,18 +62,13 @@
                         <tr>
                             <td>@windowDetail.handler</td>
                             <td>@windowDetail.windowName</td>
+                            <td>@windowDetail.destinationType</td>
                             <td>@windowDetail.action</td>
-                            <td>@windowDetail.userName
-                            </td>
-                            <td>
-                                @windowDetail.tradeDate
-                            </td>
-                            <td>
-                                @windowDetail.time.format("MM dd")
-                            </td>
-                            <td>
-                                @windowDetail.startupTime
-                            </td>
+                            <td>@windowDetail.method</td>
+                            <td>@windowDetail.userName</td>
+                            <td>@windowDetail.tradeDate</td>
+                            <td>@windowDetail.time.format("yyyy-MM-dd HH:mm:ss.SSS")</td>
+                            <td>@windowDetail.startupTime</td>
                         </tr>
                     }
                 }
