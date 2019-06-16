@@ -40,6 +40,7 @@ lazy val core =(project in file("src/core"))
 lazy val apllog = (project in file("src/apllog"))
   .dependsOn(`play-slick`)
   .settings(libraryDependencies ++= Dependencies.apllog)
+  .settings(assemblyJarName in assembly := "apllog.jar")
 
 playBuildRepoName in ThisBuild := "analysis"
 
@@ -52,3 +53,13 @@ def mimaSettings = mimaDefaultSettings ++ Seq(
     else Some(organization.value % moduleName.value % previousVersion)
   }).flatten
 )
+
+assemblyMergeStrategy in assembly := {
+  case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
+  case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+  case "application.conf"                            => MergeStrategy.concat
+  case "unwanted.txt"                                => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}

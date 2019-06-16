@@ -181,7 +181,7 @@ object Application extends LazyLogging{
     //val windowDetailDao = new WindowDetailDAO(dbConfigProvider)
 
 
-    windowDetailDao.initialize(windowDetailList)
+    //windowDetailDao.initialize(windowDetailList)
 
     val db = Database.forConfig("mydb")
     try {
