@@ -41,6 +41,7 @@ lazy val apllog = (project in file("src/apllog"))
   .dependsOn(`play-slick`)
   .settings(libraryDependencies ++= Dependencies.apllog)
   .settings(assemblyJarName in assembly := "apllog.jar")
+  .settings(mainClass in assembly := Some("jp.co.nri.nefs.tool.apllog.ZipUtils"))
 
 playBuildRepoName in ThisBuild := "analysis"
 
@@ -57,6 +58,7 @@ def mimaSettings = mimaDefaultSettings ++ Seq(
 assemblyMergeStrategy in assembly := {
   case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
   case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+  case PathList("org", "apache", "commons", "logging", "impl", xs @ _*)             => MergeStrategy.first
   case "application.conf"                            => MergeStrategy.concat
   case "unwanted.txt"                                => MergeStrategy.discard
   case x =>
