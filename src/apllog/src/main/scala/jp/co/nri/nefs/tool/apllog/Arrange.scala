@@ -1,73 +1,49 @@
 package jp.co.nri.nefs.tool.apllog
 
 import java.io.{BufferedInputStream, FileInputStream, FileOutputStream, File => JFile}
-import java.util.zip.{ZipEntry, ZipFile, ZipInputStream}
 
 import scala.util.control.Exception._
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.nio.charset.Charset
-import java.util.zip.{ZipEntry, ZipOutputStream}
+import java.util.Date
+import jp.co.nri.nefs.tool.apllog.ZipUtils
 
 import collection.JavaConverters._
 
+object Arrange {
+  def main(args: Array[String]): Unit = {
+    val path = Paths.get("D:\\tmp3")
+    val regex = """TradeSheet_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).log$""".r
 
-
-case class Zip(val path: JFile) {
-  private val regex = """(^.+)\.((?i)zip)$""".r
-  val name = path.getName match {
-    case regex(name, _) => name
-    case _ => throw new java.lang.IllegalArgumentException("Not Zip file")
-  }
-
-  def zip() = {
-    val base = "D:\\tmp"
-    val dir = Paths.get(base)
-    Files.walk(dir).iterator().asScala.foreach( p => {
-      val ins = Files.newInputStream(p)
-      val name = p.getFileName.toString
-      val zos = new ZipOutputStream(new FileOutputStream(name), Charset.forName("SJIS"))
-      val entry = new ZipEntry(name)
-      zos.putNextEntry(entry)
-      val bis = new BufferedInputStream(ins)
-      val readBytes = bis.read()
-      if (readBytes != -1){
-        zos.write(readBytes)
+    Files.list(path).filter(_.getFileName.toString.endsWith(".zip")).forEach{ orgZip =>
+      val tmpDirName = "%tY%<tm%<td%<tH%<tM%<tS" format new Date
+      val tmpDir = path.resolve(tmpDirName)
+      Files.createDirectories(tmpDir)
+      val tmpZip = tmpDir.resolve(orgZip.getFileName)
+      Files.copy(orgZip, tmpZip)
+      ZipUtils.unzip(tmpZip)
+      Files.delete(tmpZip)
+      Files.list(tmpDir).forEach { expanded =>
+        val regex(env, computer, userName, startTime) = expanded.getFileName.toString
+        val tradeDate = startTime.take(8)
+        val targetDir = path.resolve(tradeDate)
+        Files.createDirectories(targetDir)
+        val targetFile = targetDir.resolve(expanded.getFileName)
+        if (Files.exists(targetFile)) {
+          if (expanded.toFile.length > targetFile.toFile.length) {
+            println(s"override from $expanded to $targetFile")
+            Files.copy(expanded, targetFile)
+          } else {
+            println(s"skipped copy from $expanded to $targetFile because file already exists")
+          }
+        } else {
+          println(s"copied from $expanded to $targetFile")
+          Files.copy(expanded, targetFile)
+        }
+        Files.delete(expanded)
       }
-      zos.closeEntry()
-      zos.close()
-    })
-  }
-
-  /*
-    コンストラクタで指定されたZipファイル名でフォルダを作成し、そのフォルダにZipを展開する
-   */
-  def unzip(targetPath: JFile = path.getParentFile): Throwable Either JFile = {
-    def using[A <: java.io.Closeable](s: A)(f: A => Unit): Unit = {
-      try { f(s) } finally { s.close() }
-    }
-
-    val baseDirName = name
-    val baseDirPath = new JFile(targetPath, baseDirName)
-    baseDirPath.mkdir()
-
-    allCatch either {
-      val zis = new ZipInputStream(new FileInputStream(path))
-      using(zis){zs =>
-        Iterator.continually(zs.getNextEntry)
-          .takeWhile(_ != null)
-          .filterNot(_.isDirectory)
-          .foreach(e => {
-            val file = new JFile(baseDirPath, e.getName)
-            file.getParentFile.mkdir()
-            val fos = new FileOutputStream(file)
-
-            using(fos){fs => {
-              Iterator.continually(zs.read()).takeWhile(_ != -1).foreach(fs write _)
-              zs.closeEntry()
-            }}
-          })
-      }
-      baseDirPath
+      Files.delete(tmpDir)
     }
   }
 }
+
