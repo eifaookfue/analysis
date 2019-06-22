@@ -18,8 +18,8 @@ object ZipUtils {
     try { f(s) } finally { s.close() }
   }
 
-  def zip(fileName: String): Unit = {
-    val path = Paths.get(fileName)
+  def zip(path: Path): Unit = {
+    val fileName = path.getFileName.toString
     val index = fileName.lastIndexOf(".")
     val base = fileName.substring(0, index)
     val zipPath = Paths.get(base + ".zip")
@@ -37,15 +37,19 @@ object ZipUtils {
     }
   }
 
-  def unzip(zipPath: String): Unit = {
-    val path = Paths.get(zipPath)
+  def zip(fileName: String): Unit = {
+    val path = Paths.get(fileName)
+    zip(path)
+  }
+
+  def unzip(path: Path): Unit = {
     val regex = """(^.+)\.((?i)zip)$""".r
     val fileName = path.getFileName.toString match {
       case regex(fileName, _) => fileName
       case _ => throw new java.lang.IllegalArgumentException("Not Zip file")
     }
 
-    val zis = new ZipInputStream(Files.newInputStream(path))
+    val zis = new ZipInputStream(Files.newInputStream(path), Charset.forName("Shift_JIS"))
     using(zis){zs =>
       Iterator.continually(zs.getNextEntry)
         .takeWhile(_ != null)
@@ -58,5 +62,10 @@ object ZipUtils {
           }}
         })
     }
+  }
+
+  def unzip(zipPath: String): Unit = {
+    val path = Paths.get(zipPath)
+    unzip(path)
   }
 }
