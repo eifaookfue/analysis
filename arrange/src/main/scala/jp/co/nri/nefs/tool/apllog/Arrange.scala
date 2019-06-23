@@ -1,14 +1,8 @@
 package jp.co.nri.nefs.tool.apllog
 
-import java.io.{BufferedInputStream, FileInputStream, FileOutputStream, File => JFile}
-
-import scala.util.control.Exception._
-import java.nio.file.{Files, Path, Paths}
-import java.nio.charset.Charset
+import java.nio.file.{Files, Paths}
 import java.util.Date
-import jp.co.nri.nefs.tool.apllog.ZipUtils
-
-import collection.JavaConverters._
+import jp.co.nri.nefs.tool.utils.ZipUtils
 
 object Arrange {
   def main(args: Array[String]): Unit = {
@@ -16,7 +10,7 @@ object Arrange {
     val regex = """TradeSheet_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).log$""".r
 
     Files.list(path).filter(_.getFileName.toString.endsWith(".zip")).forEach{ orgZip =>
-      val tmpDirName = "%tY%<tm%<td%<tH%<tM%<tS" format new Date
+      val tmpDirName = "%tY%<tm%<td%<tH%<tM%<tS" format new Date()
       val tmpDir = path.resolve(tmpDirName)
       Files.createDirectories(tmpDir)
       val tmpZip = tmpDir.resolve(orgZip.getFileName)
@@ -46,4 +40,3 @@ object Arrange {
     }
   }
 }
-
