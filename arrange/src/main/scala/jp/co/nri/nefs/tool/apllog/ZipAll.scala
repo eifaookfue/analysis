@@ -8,6 +8,7 @@ object ZipAll {
   def main(args: Array[String]): Unit = {
     if (args.length != 2) {
       println("usage: start YYYYMMDD")
+      sys.exit(-1)
     }
     val start = Paths.get(args(0))
     val regex = """(^\d{8}$)""".r
