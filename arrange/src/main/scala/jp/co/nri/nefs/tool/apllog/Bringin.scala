@@ -54,8 +54,7 @@ object Bringin{
     val afterdate = checkAndGet('afterdate)
     val outputdir = checkAndGet('outputdir)
 
-
-    val len = cachedir.length
+    val len = cachedir.split("\\\\").length
     val sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
     val base = sdf.parse(afterdate)
     val start = Paths.get(cachedir)
@@ -65,17 +64,15 @@ object Bringin{
     val bringSet:Set[Path] = (for (p <- fileList.asScala
       if p.toFile.isFile
       if p.toFile.lastModified() > base.getTime)
-      yield {
-        val sub = p.toString.substring(len+1, p.toString.indexOf("\\",len+1))
-        start.resolve(sub)
-      })(collection.breakOut) //コレクションの型を変更するにはbreakoutを使う。戻り値の型に変更にしてくれる
+      yield p.getParent)(collection.breakOut) //コレクションの型を変更するにはbreakoutを使う。戻り値の型に変更にしてくれる
     bringSet.foreach(println _)
 
-    val newdir = "%tY%<tm%<td%<tH%<tM%<tS" format new Date
+    val now = "%tY%<tm%<td%<tH%<tM%<tS" format new Date
+    val newdir = now + "_" + afterdate.substring(0,4) + afterdate.substring(5,7) + afterdate.substring(8,10)
     val outpath = Paths.get(outputdir, newdir)
     Files.createDirectories(outpath)
 
-    bringSet.foreach(p => FileUtils.copyDir(p, outpath.resolve(start.relativize(p))))
+    bringSet.foreach(p => FileUtils.copyDir(start, p, outpath))
 //    Files.copy
 
     /*Files.walk(start).filter(_.toFile.isFile)
