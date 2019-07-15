@@ -2,6 +2,20 @@
 //import com.typesafe.tools.mima.plugin.MimaPlugin._
 import interplay.ScalaVersions._
 
+lazy val runFixed = taskKey[Unit]("A task that hard codes the values to `run`")
+
+runFixed := {
+  val _ = (arrange/runMain in Compile).toTask(" jp.co.nri.nefs.tool.apllog.Bringin --cachedir D:\\Apl\\.ivy2\\cache --afterdate " + """ "2019/07/01 00:00:00" """ + " --outputdir D:\\tmp").value
+  println("Done!")
+}
+
+lazy val runFixed2 = taskKey[Unit]("A task that hard codes the values to `run`")
+
+runFixed2 := {
+  val _ = (arrange/runMain in Compile).toTask(" jp.co.nri.nefs.tool.apllog.Bringin --cachedir C:\\Users\\s2-nakamura\\.ivy2\\cache --afterdate " + """ "2019/07/01 00:00:00" """ + " --outputdir D:\\tmp").value
+  println("Done!")
+}
+
 lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
   scalacOptions ~= (_.filterNot(_ == "-Xfatal-warnings")),
