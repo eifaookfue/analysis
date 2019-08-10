@@ -2,19 +2,13 @@
 //import com.typesafe.tools.mima.plugin.MimaPlugin._
 import interplay.ScalaVersions._
 
-lazy val runFixed = taskKey[Unit]("A task that hard codes the values to `run`")
 
-runFixed := {
-  val _ = (arrange/runMain in Compile).toTask(" jp.co.nri.nefs.tool.apllog.Bringin --cachedir D:\\Apl\\.ivy2\\cache --afterdate " + """ "2019/07/01 00:00:00" """ + " --outputdir D:\\tmp").value
+lazy val runProcesses = taskKey[Unit]("A task that hard codes the values to `run`")
+runProcesses := {
+  val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.file.Processes").value
   println("Done!")
 }
 
-lazy val runFixed2 = taskKey[Unit]("A task that hard codes the values to `run`")
-
-runFixed2 := {
-  val _ = (arrange/runMain in Compile).toTask(" jp.co.nri.nefs.tool.apllog.Bringin --cachedir C:\\Users\\s2-nakamura\\.ivy2\\cache --afterdate " + """ "2019/07/01 00:00:00" """ + " --outputdir D:\\tmp").value
-  println("Done!")
-}
 
 lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
@@ -53,26 +47,25 @@ lazy val core =(project in file("src/core"))
   //.settings(mimaSettings)
   .settings(commonSettings: _*)
 
-lazy val apllog = (project in file("src/apllog"))
-  .settings(libraryDependencies ++= Dependencies.apllog)
-  .settings(assemblyJarName in assembly := "apllog.jar")
-  .settings(mainClass in assembly := Some("jp.co.nri.nefs.tool.apllog.ZipUtils"))
-
-lazy val arrange = (project in file("arrange"))
+lazy val log = (project in file ("log"))
   .settings(commonSettings: _*)
+
+lazy val transport = (project in file ("transport"))
+  .settings(commonSettings: _*)
+  .dependsOn(log)
 
 playBuildRepoName in ThisBuild := "analysis"
 
-// Binary compatibility is tested against this version
 val previousVersion: Option[String] = None
 
 //2019/06/02 会社の環境で動かなかったため一時的に解除してみる
-/*def mimaSettings = mimaDefaultSettings ++ Seq(
+//2019/08/10 復活
+def mimaSettings = mimaDefaultSettings ++ Seq(
   mimaPreviousArtifacts := Set(previousVersion flatMap { previousVersion =>
     if (crossPaths.value) Some(organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % previousVersion)
     else Some(organization.value % moduleName.value % previousVersion)
   }).flatten
-)*/
+)
 
 assemblyMergeStrategy in assembly := {
   case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first

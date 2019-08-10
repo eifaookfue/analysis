@@ -4,7 +4,7 @@
 		module="play-slick_2.12"
 		revision="0.1.0-SNAPSHOT"
 		status="integration"
-		publication="20190504072510"
+		publication="20190723092827"
 	>
 		<license name="Apache-2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html" />
 		<description homepage="https://github.com/playframework/analysis">
@@ -49,11 +49,12 @@
 		<dependency org="com.typesafe.play" name="twirl-api_2.12" rev="1.4.0" conf="compile->default(compile)"/>
 		<dependency org="com.typesafe.play" name="play-server_2.12" rev="2.7.0" conf="compile->default(compile)"/>
 		<dependency org="com.typesafe.play" name="play-test_2.12" rev="2.7.0" conf="test->default(compile)"/>
-		<dependency org="com.typesafe.play" name="play-omnidoc_2.12" rev="2.7.0" conf="docs->default(compile)"/>
+		<dependency org="com.typesafe.play" name="play-docs_2.12" rev="2.7.0" conf="docs->default(compile)"/>
 		<dependency org="com.typesafe.play" name="play-logback_2.12" rev="2.7.0" conf="compile->default(compile)"/>
 		<dependency org="com.typesafe.play" name="play-akka-http-server_2.12" rev="2.7.0" conf="compile->default(compile)"/>
 		<dependency org="com.typesafe.play" name="play-specs2_2.12" rev="2.7.0" conf="test->default(compile)"/>
 		<dependency org="org.fluentlenium" name="fluentlenium-core" rev="3.2.0" conf="compile->default(compile)"/>
 		<dependency org="com.h2database" name="h2" rev="1.4.197" conf="compile->default(compile)"/>
+		<dependency org="com.typesafe.play" name="play-guice_2.12" rev="2.7.0" conf="compile->default(compile)"/>
 	</dependencies>
 </ivy-module>

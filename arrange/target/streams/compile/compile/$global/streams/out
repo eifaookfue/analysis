@@ -1,0 +1,7 @@
+[0m[[0m[31merror[0m] [0m[0mD:\Apl\analysis\arrange\src\main\scala\jp\co\nri\nefs\tool\utils\FileUtils.scala:30:37: not found: value d[0m
+[0m[[0m[31merror[0m] [0m[0m          tmpFrom = tmpFrom.resolve(d(i))[0m
+[0m[[0m[31merror[0m] [0m[0m                                    ^[0m
+[0m[[0m[31merror[0m] [0m[0mD:\Apl\analysis\arrange\src\main\scala\jp\co\nri\nefs\tool\utils\FileUtils.scala:31:33: not found: value d[0m
+[0m[[0m[31merror[0m] [0m[0m          tmpTo = tmpTo.resolve(d(i))[0m
+[0m[[0m[31merror[0m] [0m[0m                                ^[0m
+[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m

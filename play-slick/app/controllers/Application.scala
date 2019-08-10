@@ -41,4 +41,18 @@ class Application @Inject() (
     windowDetails.map(cs => Ok(html.list(cs, orderBy, filterHandler, filterWindowName)))
   }
 
+  def analyze(pathname: String) = Action.async { implicit request =>
+    val page = 0
+    val orderBy = 0
+    val filterHandler = None
+    val filterWindowName = None
+
+    for {
+      _ <- windowDetailDao.analyze(pathname)
+    } yield Home.flashing("success" -> "successa")
+
+    //windowDetails.map(cs => Ok(html.list(cs, orderBy, filterHandler, filterWindowName)))
+
+  }
+
 }

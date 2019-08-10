@@ -1,0 +1,27 @@
+compile
+~compile
+assembly
+projects
+project apllog
+compile
+~compile
+run
+run D:\\tmp3 20190313
+run "D:\\tmp3" 20190313
+~run "D:\\tmp3" 20190313
+run "D:\tmp3" 20190313
+run "D:\\tmp3" 20190313
+run "D:\\tmp3" aa
+run "D:\\tmp3" 201903
+~run "D:\\tmp3" 20190313
+run "D:\\tmp3" 20190313
+console
+run "D:\\tmp3" 20190313
+run D:\\tmp3 20190313
+run D:\\tmp3 20190313~
+~run D:\\tmp3 20190313
+run D:\\tmp3 a
+run D:\\tmp3 20190313
+console
+run D:\\tmp3 20190313
+run

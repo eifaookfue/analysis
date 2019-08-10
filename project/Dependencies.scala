@@ -16,7 +16,8 @@ import sbt._
       Library.slickHikariCP,
       Library.h2 % "test",
       Library.sacalaLogging,
-      Library.mysql
+      Library.mysql,
+      Library.commons_io
       /*libraryDependencies ++= Seq (
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
         "com.typesafe.slick" %% "slick" % "3.3.0",
@@ -34,6 +35,7 @@ import sbt._
     val h2           = "1.4.197"
     val scalaLogging = "3.9.2"
     val mysql        = "8.0.15"
+    val commons_io   = "2.5"
   }
 
   object Library {
@@ -46,5 +48,6 @@ import sbt._
     val h2                  = "com.h2database"             %  "h2"                       % Version.h2
     val sacalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"            % Version.scalaLogging
     val mysql               = "mysql"                      % "mysql-connector-java"      % Version.mysql
+    val commons_io          = "commons-io"                 % "commons-io"                % Version.commons_io
   }
 

@@ -1,4 +1,0 @@
-[error] D:\Apl\analysis\src\apllog\src\main\scala\jp\co\nri\nefs\tool\apllog\Application.scala:78:9: value asScala is not a member of org.apache.commons.io.LineIterator
-[error]     ite.asScala.foreach(line => {
-[error]         ^
-[error] one error found

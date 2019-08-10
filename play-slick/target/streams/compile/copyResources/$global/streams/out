@@ -1,2 +1,8 @@
-[debug] Copy resource mappings: 
-[debug] 	
+[0m[[0m[0mdebug[0m] [0m[0mCopy resource mappings: [0m
+[0m[[0m[0mdebug[0m] [0m[0m	(D:\Apl\analysis\play-slick\conf\application.conf,D:\Apl\analysis\play-slick\target\scala-2.12\classes\application.conf)[0m
+[0m[[0m[0mdebug[0m] [0m[0m	(D:\Apl\analysis\play-slick\conf\evolutions,D:\Apl\analysis\play-slick\target\scala-2.12\classes\evolutions)[0m
+[0m[[0m[0mdebug[0m] [0m[0m	(D:\Apl\analysis\play-slick\conf\evolutions\default,D:\Apl\analysis\play-slick\target\scala-2.12\classes\evolutions\default)[0m
+[0m[[0m[0mdebug[0m] [0m[0m	(D:\Apl\analysis\play-slick\conf\evolutions\default\1.sql,D:\Apl\analysis\play-slick\target\scala-2.12\classes\evolutions\default\1.sql)[0m
+[0m[[0m[0mdebug[0m] [0m[0m	(D:\Apl\analysis\play-slick\conf\logback.xml,D:\Apl\analysis\play-slick\target\scala-2.12\classes\logback.xml)[0m
+[0m[[0m[0mdebug[0m] [0m[0m	(D:\Apl\analysis\play-slick\conf\messages,D:\Apl\analysis\play-slick\target\scala-2.12\classes\messages)[0m
+[0m[[0m[0mdebug[0m] [0m[0m	(D:\Apl\analysis\play-slick\conf\routes,D:\Apl\analysis\play-slick\target\scala-2.12\classes\routes)[0m

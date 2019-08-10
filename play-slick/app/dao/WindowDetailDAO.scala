@@ -1,6 +1,8 @@
 package dao
 
+import java.io.File
 import java.sql.Timestamp
+import java.util.Date
 
 import models.{ WindowDetail, Page }
 import javax.inject.{Inject, Singleton}
@@ -10,8 +12,11 @@ import scala.math._
 import slick.lifted.ColumnOrdered
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-
 import scala.concurrent.{ExecutionContext, Future}
+import org.apache.commons.io.FileUtils
+import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
+import scala.util.matching.Regex
 
 trait WindowDetailComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
@@ -116,17 +121,100 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   /*def insert(computers: Seq[Computer]): Future[Unit] =
     db.run(this.computers ++= computers).map(_ => ())
 */
-  def initialize(windowDetailList : List[WindowDetail]): Unit = {
+  def analyze(pathname: String): Future[Unit] = {
 
-    try {
-      windowDetails.schema.create.statements.foreach(println)
-      val setup = DBIO.seq(
-        windowDetails.schema.create,
-        windowDetails ++= windowDetailList
-      )
-      val setupFuture = db.run(setup)
-      Await.result(setupFuture, Duration.Inf)
-    } finally db.close
+    var windowDetailMap = Map[Option[String], ListBuffer[WindowDetail]]()
+
+    case class FileInfo(env: String, computer: String, userName: String, startTime: String){
+      val tradeDate = startTime.take(8)
+    }
+    def getFileInfo(fileName: String): FileInfo = {
+      lazy val regex = """TradeSheet_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).log$""".r
+      val regex(env, computer, userName, startTime) = fileName
+      FileInfo.apply(env, computer, userName, startTime)
+    }
+
+    case class LineInfo(datetimeStr: String, logLevel: String, message: String,
+                        thread: String, clazz: String){
+      lazy val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
+      val datetime = new Timestamp(format.parse(datetimeStr).getTime)
+    }
+
+    def getLineInfo(line: String): LineInfo = {
+      lazy val regex = """(2[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\s[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\.[0-9][0-9][0-9])\s\[(.*)\]\[TradeSheet\](.*)\[(.*)\]\[(j.c.*)\]$""".r
+      val regex(datetimeStr, logLevel, message, thread, clazz) = line
+      LineInfo.apply(datetimeStr, logLevel, message, thread, clazz)
+    }
+
+    def getWindowName(message: String, clazz: String): Option[String] = {
+      lazy val regex = """\[(.*)\].*""".r
+      regexOption(regex, message).orElse(Some(clazz))
+    }
+
+    def getButtonAction(message: String) : Option[String] = {
+      lazy val regex = """.*\((.*)\).*""".r
+      regexOption(regex, message)
+    }
+
+    def regexOption(regex: Regex, message: String):Option[String] = {
+      message match {
+        case regex(contents) => return Some(contents)
+        case _ => return None
+      }
+    }
+
+    val file = new File("D:\\tmp\\" + pathname)
+    val fileInfo = getFileInfo(file.getName)
+    println(fileInfo)
+
+    val ite = FileUtils.lineIterator(file)
+
+    var handler: String = ""
+    var handlerStartTime = new Date()
+    var handlerEndTime = new Date()
+
+    ite.asScala.foreach(line => {
+      val lineInfo = getLineInfo(line)
+      if (lineInfo.message contains "Handler start.") {
+        handlerStartTime = lineInfo.datetime
+        handler = lineInfo.clazz
+      } else if ((lineInfo.message contains "Dialog opened.") || (lineInfo.message contains "Opened.")) {
+        val windowName = getWindowName(lineInfo.message, lineInfo.clazz)
+
+        handlerEndTime = lineInfo.datetime
+        val startupTime = handlerEndTime.getTime - handlerStartTime.getTime
+        val destinationType = None
+        val action = None
+        val method = None
+        val windowDetail = WindowDetail.apply(handler, windowName, destinationType, action, method, fileInfo.userName,
+          fileInfo.tradeDate, lineInfo.datetime, startupTime)
+        //たとえばNewOrderListのDialogがOpenされた後にSelect Basketが起動するケースは
+        //handelerをNewOrderListとする
+        handler = windowName.getOrElse("")
+        windowDetailMap.get(windowName) match {
+          case Some(buf) => buf += windowDetail
+          case None => windowDetailMap += (windowName -> ListBuffer(windowDetail))
+        }
+      }
+      else if ((lineInfo.message contains "Button event ends") || (lineInfo.message contains "Button Pressed")) {
+        val windowName = getWindowName(lineInfo.message, lineInfo.clazz)
+        val action = getButtonAction(lineInfo.message)
+        windowDetailMap.get(windowName) match {
+          case Some(buf) => buf.update(buf.length - 1, buf.last.copy(action = action))
+          case None => println("Error")
+        }
+      }
+    })
+    ite.close
+    val windowDetailList = for ((k, v) <- windowDetailMap) yield v.last
+    windowDetailList.foreach(println(_))
+
+    windowDetails.schema.create.statements.foreach(println)
+    val setup = DBIO.seq(
+      windowDetails.schema.create,
+      windowDetails ++= windowDetailList
+    )
+    db.run(setup).map(_ => ())
 
   }
 

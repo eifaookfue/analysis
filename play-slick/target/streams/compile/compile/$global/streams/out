@@ -1,7 +1,4 @@
-[error] D:\Apl\analysis\play-slick\app\dao\WindowDetailDAO.scala:36:2: trait Singleton is abstract; cannot be instantiated
-[error] @Singleton()
-[error]  ^
-[error] D:\Apl\analysis\play-slick\app\dao\WindowDetailDAO.scala:37:24: not found: type Inject
-[error] class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext)
-[error]                        ^
-[error] two errors found
+[0m[[0m[31merror[0m] [0m[0mD:\Apl\analysis\play-slick\app\dao\WindowDetailDAO.scala:158:28: not found: type Regex[0m
+[0m[[0m[31merror[0m] [0m[0m    def regexOption(regex: Regex, message: String):Option[String] = {[0m
+[0m[[0m[31merror[0m] [0m[0m                           ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m

@@ -35,16 +35,25 @@ object FileUtils {
         }
 
         print(s"copying from $dir to $target...")
-        Files.copy(dir, target, StandardCopyOption.COPY_ATTRIBUTES)
-        println("done.")
+        try {
+          Files.copy(dir, target, StandardCopyOption.COPY_ATTRIBUTES)
+          println("done.")
+        } catch {
+          case e: Exception => println("failed.")
+        }
         FileVisitResult.CONTINUE
       }
 
       override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult =  {
         val target = toBase.resolve(fromBase.relativize(file))
         print(s"copying from $file to $target...")
-        Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES)
-        println("done.")
+        try {
+          Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES)
+          println("done.")
+        } catch {
+          case e: Exception => println("failed.")
+        }
+
         FileVisitResult.CONTINUE
       }
     }
