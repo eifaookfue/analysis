@@ -3,12 +3,13 @@ package jp.co.nri.nefs.tool.log.analysis
 import java.io.{EOFException, ObjectInputStream}
 import java.nio.file.{Files, NoSuchFileException, Path, Paths}
 import java.sql.Timestamp
+import java.util.stream.Collectors
 
 import jp.co.nri.nefs.tool.log.common.model.WindowDetail
 //import slick.driver.MySQLProfile.api._
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
-
+import scala.collection.JavaConverters._
 import scala.collection.Map
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -51,22 +52,19 @@ class Case2Table() extends WindowDetailComponent {
     } catch { case _ : EOFException => null }
   }
 
-  def execute(path: Path){
-
-    if (path.toFile.isDirectory){
-      Files.list(path).forEach(execute(_))
-      return
-    }
+  private def createWindowDetailListByFile(path: Path): List[WindowDetail] = {
     val istream = new ObjectInputStream(Files.newInputStream(path))
-    val windowDetailList = using(istream){is =>
-      /*Iterator.continually(is.readObject().asInstanceOf[WindowDetail]).takeWhile(_ != null).foreach(windowDetail => {
-        println(windowDetail)
-      })*/
+    using(istream) { is =>
       Iterator.continually(readWindowDetail(is)).takeWhile(_ != null).toList
-
     }
+  }
 
-    windowDetailList.foreach(println _)
+  private def createWindowDetailListByDir(path: Path): List[WindowDetail] = {
+    val files = Files.list(path).collect(Collectors.toList()).asScala.toList
+    for ( f <- files; w <- createWindowDetailListByFile(f) ) yield w
+  }
+
+  def execute(windowDetailList: List[WindowDetail]){
     try {
       //windowDetails.schema.create.statements.foreach(println)
       val setup = DBIO.seq(
@@ -83,7 +81,7 @@ class Case2Table() extends WindowDetailComponent {
     schema.create.statements.foreach(println)
     try {
       val setup = DBIO.seq(
-        //schema.dropIfExists,
+        schema.dropIfExists,
         schema.createIfNotExists
       )
       val setupFuture = db.run(setup)
@@ -109,7 +107,14 @@ object Case2Table {
     if (isRecreate)
       case2Table.recreate()
     path match {
-      case Some(p) => case2Table.execute(p)
+      //case Some(p) => case2Table.execute(p)
+      case Some(p) =>
+        val windowDetailList = if (p.toFile.isFile)
+          case2Table.createWindowDetailListByFile(p)
+        else
+          case2Table.createWindowDetailListByDir(p)
+        windowDetailList.foreach(println _)
+        case2Table.execute(windowDetailList)
       case None =>
     }
   }
