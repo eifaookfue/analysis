@@ -1,5 +1,6 @@
 //2019/06/02 会社の環境で動かなかったため一時的に解除してみる
-//import com.typesafe.tools.mima.plugin.MimaPlugin._
+//2019/08/10 復活
+import com.typesafe.tools.mima.plugin.MimaPlugin._
 import interplay.ScalaVersions._
 
 
@@ -8,7 +9,17 @@ runProcesses := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.file.Processes").value
   println("Done!")
 }
-
+lazy val runRecreate = taskKey[Unit]("A task that hard codes the values to `run`")
+runRecreate := {
+  val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Case2Table " +
+    "--recreate").value
+  println("Done!")
+}
+lazy val runCase2Table = taskKey[Unit]("A task that hard codes the values to `run`")
+runCase2Table := {
+  val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Case2Table --inputdir D:\\tmp5").value
+  println("Done!")
+}
 
 lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
@@ -49,6 +60,7 @@ lazy val core =(project in file("src/core"))
 
 lazy val log = (project in file ("log"))
   .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.log)
 
 lazy val transport = (project in file ("transport"))
   .settings(commonSettings: _*)
