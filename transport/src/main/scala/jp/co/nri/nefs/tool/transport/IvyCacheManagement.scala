@@ -1,7 +1,6 @@
 package jp.co.nri.nefs.tool.transport
 
 import java.nio.file._
-import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
 
 import scala.collection.JavaConverters._
@@ -16,23 +15,13 @@ object IvyCacheManagement {
   def main(args: Array[String]): Unit = {
     val options = nextOption(Map(), args.toList)
     val path = getOption(options)
-    Files.walkFileTree(path, new Visitor)
     val files = Files.walk(path).collect(Collectors.toList()).asScala.toSeq
     val sequence = for (file <- files if file.getFileName.toString.endsWith("properties");
       (fileName, key, location) <- getList(file) if !(location contains "http") )
       yield (fileName, key, location)
-    sequence.foreach(println _)
-  }
-
-  class Visitor extends SimpleFileVisitor[Path] {
-    override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-      if (file.getFileName.toString.endsWith("properties")) {
-        for ((fileName, key, location) <- getList(file) if !(location contains "http")) {
-          println(s"fileName=$fileName, key=$key, location=$location")
-        }
-      }
-      FileVisitResult.CONTINUE
-    }
+    //sequence.foreach(println _)
+    for ((fileName, key, location) <- sequence; if !(location.contains(".m2")))
+      println(fileName, key, location)
   }
 
   def getList(path: Path): List[(String, String, String)] = {
@@ -57,10 +46,6 @@ object IvyCacheManagement {
 
   def getOption(options: OptionMap): Path = {
     val inputdir = options.get(Symbol("inputdir"))
-    if (inputdir.isEmpty){
-      println(usage)
-      throw new java.lang.IllegalArgumentException
-    }
     inputdir match {
       case Some(dir) =>
         Paths.get(dir)
