@@ -27,6 +27,14 @@ runIvyCacheManagement := {
   println("Done!")
 }
 
+lazy val runBringin = taskKey[Unit]("A task that hard codes the values to `run`")
+runBringin := {
+  val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Bringin " +
+    "--cachedir D:\\Apl\\.ivy2\\cache --afterdate " + """ "2019/07/01 00:00:00" """ + " --outputdir D:\\tmp6").value
+  println("Done!")
+}
+
+
 lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
   scalacOptions ~= (_.filterNot(_ == "-Xfatal-warnings")),

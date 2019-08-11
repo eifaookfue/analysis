@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
 object Bringin{
   def main(args: Array[String]): Unit = {
     val usage = """
-        Usage: Bringin --cachedir cachedir --afterdate afterdate(yyyy/MM/dd HH:mm:ss) --outputdir outputdir
+        Usage: jp.co.nri.nefs.tool.transport.Bringin --cachedir cachedir --afterdate afterdate(yyyy/MM/dd HH:mm:ss) --outputdir outputdir
         """
 
     if (args.length == 0){
