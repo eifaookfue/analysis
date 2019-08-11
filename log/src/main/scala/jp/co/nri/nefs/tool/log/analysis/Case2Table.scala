@@ -9,6 +9,7 @@ import jp.co.nri.nefs.tool.log.common.model.WindowDetail
 //import slick.driver.MySQLProfile.api._
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
+
 import scala.collection.JavaConverters._
 import scala.collection.Map
 import scala.concurrent.Await
@@ -65,14 +66,18 @@ class Case2Table() extends WindowDetailComponent {
   }
 
   def execute(windowDetailList: List[WindowDetail]){
+
     try {
-      //windowDetails.schema.create.statements.foreach(println)
-      val setup = DBIO.seq(
-        windowDetails ++= windowDetailList
-      )
-      val setupFuture = db.run(setup)
-      Await.result(setupFuture, Duration.Inf)
-    }finally db.close
+      windowDetailList.foreach(windowDetail => {
+        val setup = DBIO.seq(windowDetails += windowDetail)
+        try {
+          val setupFuture = db.run(setup)
+          Await.result(setupFuture, Duration.Inf)
+        } catch {
+          case e: Exception => println(e)
+        }
+      })
+    } finally db.close
 
   }
 
