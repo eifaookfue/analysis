@@ -21,6 +21,12 @@ runCase2Table := {
   println("Done!")
 }
 
+lazy val runIvyCacheManagement = taskKey[Unit]("A task that hard codes the values to `run`")
+runIvyCacheManagement := {
+  val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.IvyCacheManagement --inputdir D:\\Apl\\.ivy2\\cache").value
+  println("Done!")
+}
+
 lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
   scalacOptions ~= (_.filterNot(_ == "-Xfatal-warnings")),

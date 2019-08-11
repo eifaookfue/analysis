@@ -1,17 +1,16 @@
 package jp.co.nri.nefs.tool.transport
 
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
+import java.nio.file.{Files, Path, Paths}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.stream.Collectors
-import jp.co.nri.nefs.tool.utils.FileUtils
+
+import jp.co.nri.nefs.tool.log.common.utils.FileUtils
 
 import scala.collection.JavaConverters._
 
 object Bringin{
   def main(args: Array[String]): Unit = {
-
-
     val usage = """
         Usage: Bringin --cachedir cachedir --afterdate afterdate(yyyy/MM/dd HH:mm:ss) --outputdir outputdir
         """
