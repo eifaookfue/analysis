@@ -6,14 +6,15 @@ import java.sql.Timestamp
 import java.util.Date
 import java.util.stream.Collectors
 
-import jp.co.nri.nefs.tool.log.common.utils.FileUtils
-import jp.co.nri.nefs.tool.log.common.utils.ZipUtils
 import jp.co.nri.nefs.tool.log.common.model.WindowDetail
+import jp.co.nri.nefs.tool.log.common.utils.FileUtils._
+import jp.co.nri.nefs.tool.log.common.utils.ZipUtils._
+import jp.co.nri.nefs.tool.log.common.utils.RegexUtils._
 
+import scala.collection.JavaConverters._
+import scala.collection._
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
-import scala.collection._
-import scala.collection.JavaConverters._
 
 
 class Log2Case(outputdir: Path) {
@@ -27,11 +28,7 @@ class Log2Case(outputdir: Path) {
   private case class FileInfo(appName: String, env: String, computer: String, userId: String, startTime: String){
     val tradeDate: String = startTime.take(8)
   }
-  private def getFileInfo(fileName: String): FileInfo = {
-    lazy val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).log$""".r
-    val regex(appName, env, computer, userId, startTime) = fileName
-    FileInfo.apply(appName, env, computer, userId, startTime)
-  }
+
   private case class LineInfo(datetimeStr: String, logLevel: String, message: String,
                               thread: String, clazz: String){
     lazy val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
@@ -72,23 +69,27 @@ class Log2Case(outputdir: Path) {
 
   def execute(path: Path): Unit = {
 
-    if (isZipFile(path.getFileName.toString)){
-      val tmpdir = Files.createTempDirectory(path.getParent,"tmp")
-      val target = tmpdir.resolve(path.getFileName.toString)
-      Files.copy(path, target)
-      ZipUtils.unzip(target)
-      val paths = Files.list(tmpdir).filter(p => !p.getFileName.toString.endsWith(".zip")).collect(Collectors.toList())
-      execute(paths.asScala.toList)
-      FileUtils.delete(tmpdir)
+    if (isZipFile(path)){
+      val expandedDir = unzip(path)
+      val paths = Files.list(expandedDir).collect(Collectors.toList()).asScala.toList
+      execute(paths)
+      delete(expandedDir)
     } else {
-      val fileInfo = getFileInfo(path.getFileName.toString)
+      //val fileInfo = getFileInfo(path.getFileName.toString)
+      val fileInfo =
+        getOMSAplInfo(path.getFileName.toString) match {
+          case Some(f) => f
+          case None =>
+            println("not valid format")
+            return
+        }
 
       var handler: String = ""
       var handlerStartTime = new Date()
       var handlerEndTime = new Date()
 
       var lineNo = 1L
-      Files.readAllLines(path).forEach(line => {
+      Files.lines(path).forEach(line => {
         val lineInfo = getLineInfo(line)
         if (lineInfo.message contains "Handler start.") {
           handlerStartTime = lineInfo.datetime
@@ -142,18 +143,12 @@ class Log2Case(outputdir: Path) {
       }
       val istream = new ObjectInputStream(Files.newInputStream(outpath))
       using(istream){is =>
-        Iterator.continually(is.readObject()).takeWhile(_ != null).foreach(println _)
+        Iterator.continually(is.readObject()).takeWhile(_ != null).foreach(v => println(v))
       }
     }
 
   }
 
-  def isZipFile(name : String): Boolean = {
-    if (name.replace(getBase(name),"") == ".zip")
-      true
-    else
-      false
-  }
   def getObjFile(name: String): String = {
     getBase(name) + ".obj"
   }
@@ -197,7 +192,7 @@ object Log2Case {
 
   /**
     *
-    * @param options
+    * @param options オプションのマップ
     * @return searchdirが指定されているか
     */
   def getOption(options: OptionMap): (Boolean, String, String) = {

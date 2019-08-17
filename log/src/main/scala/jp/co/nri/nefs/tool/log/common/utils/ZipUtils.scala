@@ -22,8 +22,7 @@ object ZipUtils {
     val entry = new ZipEntry(name)
     zos.putNextEntry(entry)
     val bis = new BufferedInputStream(ins)
-    var buf = new Array[Byte](1024)
-    var len = 0
+    val buf = new Array[Byte](1024)
     using(bis){bs =>
       using(zos){zs =>
         Iterator.continually(bs.read(buf)).takeWhile(_ != -1).foreach(zs.write(buf, 0, _))
@@ -37,12 +36,19 @@ object ZipUtils {
     zip(path)
   }
 
-  def unzip(path: Path): Unit = {
-    val regex = """(^.+)\.((?i)zip)$""".r
-    val fileName = path.getFileName.toString match {
-      case regex(fileName, _) => fileName
-      case _ => throw new java.lang.IllegalArgumentException("Not Zip file")
+  /*
+     指定されたzipファイルのbasenameでフォルダを作成し、そこに展開します。
+     @param zipファイル
+     @param フォルダを作成しない場合はfalse
+     @return 指定されたzipファイルのbasenameフォルダ
+     @throws IllegalArgumentException zip拡張子がないファイルが指定されたとき
+   */
+  def unzip(path: Path, isCreateDir: Boolean = true): Path = {
+    if (!isZipFile(path)) {
+      throw new java.lang.IllegalArgumentException("Not Zip file")
     }
+    val outPath = if (isCreateDir) getBasePath(path) else path.getParent
+    if (isCreateDir) Files.createDirectories(outPath)
 
     val zis = new ZipInputStream(Files.newInputStream(path), Charset.forName("Shift_JIS"))
     using(zis){zs =>
@@ -50,18 +56,42 @@ object ZipUtils {
         .takeWhile(_ != null)
         .filterNot(_.isDirectory)
         .foreach(e => {
-          val fos = Files.newOutputStream(path.getParent.resolve(e.getName))
+          val fos = Files.newOutputStream(outPath.resolve(e.getName))
           using(fos){fs => {
-            Iterator.continually(zs.read()).takeWhile(_ != -1).foreach(fs write _)
+            Iterator.continually(zs.read()).takeWhile(_ != -1).foreach(v => fs write v)
             zs.closeEntry()
           }}
         })
     }
+    outPath
   }
 
-  def unzip(zipPath: String): Unit = {
+  def unzip(zipPath: String): String = {
     val path = Paths.get(zipPath)
-    unzip(path)
+    val outPath = unzip(path)
+    outPath.toFile.toString
+  }
+
+  def isZipFile(path: Path): Boolean = {
+    lazy val regex = """(^.+)\.((?i)zip)$""".r
+    path.getFileName.toFile.toString match {
+      case regex(_,_) => true
+      case _ => false
+    }
+  }
+
+  def getBasePath(path: Path): Path = {
+    val fileName = path.getFileName.toFile.toString
+    path.getParent.resolve(getBaseName(fileName))
+  }
+
+  def replaceExtensionToZip(fileName: String): String = {
+    getBaseName(fileName) + ".zip"
+  }
+
+  def getBaseName(fileName: String): String = {
+    val index = fileName.lastIndexOf('.')
+    if (index != -1) fileName.substring(0, index) else fileName
   }
 
   def main(args: Array[String]): Unit = {

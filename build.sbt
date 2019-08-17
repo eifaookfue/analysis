@@ -6,7 +6,8 @@ import interplay.ScalaVersions._
 
 lazy val runProcesses = taskKey[Unit]("A task that hard codes the values to `run`")
 runProcesses := {
-  val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.file.Processes").value
+  val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.file.Processes" +
+  " --searchdir D:\\tmp3 --outputdir D:\\tmp4").value
   println("Done!")
 }
 lazy val runRecreate = taskKey[Unit]("A task that hard codes the values to `run`")
@@ -15,6 +16,14 @@ runRecreate := {
     "--recreate").value
   println("Done!")
 }
+
+lazy val runLog2Case = taskKey[Unit]("A task that hard codes the values to `run`")
+runLog2Case := {
+  val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Log2Case --searchdir D:\\tmp4 --outputdir D:\\tmp5").value
+  println("Done!")
+}
+
+
 lazy val runCase2Table = taskKey[Unit]("A task that hard codes the values to `run`")
 runCase2Table := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Case2Table --inputdir D:\\tmp5").value
@@ -33,7 +42,6 @@ runBringin := {
     "--cachedir D:\\Apl\\.ivy2\\cache --afterdate " + """ "2019/07/01 00:00:00" """ + " --outputdir D:\\tmp6").value
   println("Done!")
 }
-
 
 lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
