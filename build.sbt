@@ -43,6 +43,14 @@ runBringin := {
   println("Done!")
 }
 
+lazy val runCache2Local = taskKey[Unit]("A task that hard codes the values to `run`")
+runCache2Local := {
+  val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Cache2Local " +
+    "--cachedir D:\\Apl\\.ivy2\\cache --outputdir D:\\cache2Local").value
+  println("Done!")
+}
+
+
 lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
   scalacOptions ~= (_.filterNot(_ == "-Xfatal-warnings")),
@@ -86,6 +94,8 @@ lazy val log = (project in file ("log"))
 
 lazy val transport = (project in file ("transport"))
   .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.transport)
+  .settings(resolvers += "Sonatype OSS Snapshots" at "file:///C:/pleiades/workspace/M2/repository")
   .dependsOn(log)
 
 playBuildRepoName in ThisBuild := "analysis"

@@ -19,5 +19,6 @@
         <option name="useAutoImport" value="true" />
       </SbtProjectSettings>
     </option>
+    <option name="vmParameters" value="-Dsbt.ivy.home=D:\Apl\.ivy2" />
   </component>
 </project>

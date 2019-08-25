@@ -17,6 +17,11 @@ import sbt._
       Library.h2 % "test",
       Library.mysql
     )
+
+    val transport = Seq(
+      Library.nefs_common_util,
+      Library.logback
+    )
   }
 
   object Version {
@@ -26,6 +31,8 @@ import sbt._
     val h2           = "1.4.197"
     val scalaLogging = "3.9.2"
     val mysql        = "8.0.15"
+    val nefs_common_util = "1.0.0-SNAPSHOT"
+    val logback      = "1.0.13"
   }
 
   object Library {
@@ -38,5 +45,7 @@ import sbt._
     val h2                  = "com.h2database"             %  "h2"                       % Version.h2
     val sacalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"            % Version.scalaLogging
     val mysql               = "mysql"                      % "mysql-connector-java"      % Version.mysql
+    val nefs_common_util    = "jp.co.nri.nefs.common"      % "nefs-common-util"          % Version.nefs_common_util
+    val logback             = "ch.qos.logback"             % "logback-core"              % Version.logback
   }
 

@@ -1,0 +1,11 @@
+<project name="localrepository" default="install"
+	xmlns:ivy="antlib:org.apache.ivy.ant">
+	<property name="ivy.default.ivy.user.dir" value="d:\Apl\.ivy2" />
+	<property name="my.settings.dir" value="D:\ivysettings" />
+	<property name="ivy.settings.file" value="${my.settings.dir}\ivysettings.xml" />_REPLACESTR_
+	<target name="install" description="--> install modules to localreporsitory">
+		<ivy:install organisation="_ORGANISATION_" module="_MODULE_"
+			revision="_REVISION_" transitive="true" overwrite="false" from="_FROM_"
+			to="_TO_" />
+	</target>
+</project>

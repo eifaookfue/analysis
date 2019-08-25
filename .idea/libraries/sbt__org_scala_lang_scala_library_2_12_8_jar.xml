@@ -10,9 +10,11 @@
       </compiler-classpath>
     </properties>
     <CLASSES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.12.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.12.8.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/cache/org.scala-lang/scala-library/srcs/scala-library-2.12.8-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>
