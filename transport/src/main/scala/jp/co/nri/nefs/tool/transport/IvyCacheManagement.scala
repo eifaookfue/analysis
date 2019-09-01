@@ -15,13 +15,13 @@ object IvyCacheManagement {
   def main(args: Array[String]): Unit = {
     val options = nextOption(Map(), args.toList)
     val path = getOption(options)
-    val files = Files.walk(path).collect(Collectors.toList()).asScala.toSeq
+    val files = Files.walk(path).collect(Collectors.toList()).asScala
     val sequence = for (file <- files if file.getFileName.toString.endsWith("properties");
-      (fileName, key, location) <- getList(file) if !(location contains "http") )
+      (fileName, key, location) <- getList(file) if location contains "http" )
       yield (fileName, key, location)
-    //sequence.foreach(println _)
-    for ((fileName, key, location) <- sequence; if !(location.contains(".m2")))
-      println(fileName, key, location)
+    sequence.foreach(println _)
+    /*for ((fileName, key, location) <- sequence; if !(location.contains(".m2")))
+      println(fileName, key, location)*/
   }
 
   def getList(path: Path): List[(String, String, String)] = {

@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: io.netty:netty-transport-native-epoll:4.1.31.Final:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/io.netty/netty-transport-native-epoll/4.1.31.Final/jars/netty-transport-native-epoll.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/cache/io.netty/netty-transport-native-epoll/srcs/netty-transport-native-epoll-4.1.31.Final-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

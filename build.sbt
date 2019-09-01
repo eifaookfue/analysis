@@ -50,6 +50,19 @@ runCache2Local := {
   println("Done!")
 }
 
+lazy val runAntExecute = taskKey[Unit]("A task that hard codes the values to `run`")
+runAntExecute := {
+  val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Cache2Local " +
+    "--execdir D:\\cache2Local").value
+  println("Done!")
+}
+
+lazy val runAntExecuteTest = taskKey[Unit]("A task that hard codes the values to `run`")
+runAntExecuteTest := {
+  val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Cache2Local " +
+    "--execfile D:\\cache2Local\\asm_asm-parent_3.1_null_null.xml").value
+  println("Done!")
+}
 
 lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
@@ -97,6 +110,8 @@ lazy val transport = (project in file ("transport"))
   .settings(libraryDependencies ++= Dependencies.transport)
   .settings(resolvers += "Sonatype OSS Snapshots" at "file:///C:/pleiades/workspace/M2/repository")
   .dependsOn(log)
+
+lazy val imptest = (project in file ("imptest"))
 
 playBuildRepoName in ThisBuild := "analysis"
 

@@ -8,6 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/imptest" />
             <option value="$PROJECT_DIR$/log" />
             <option value="$PROJECT_DIR$/play-slick" />
             <option value="$PROJECT_DIR$/project" />

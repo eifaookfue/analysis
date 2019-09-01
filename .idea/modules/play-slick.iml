@@ -29,19 +29,6 @@
     <orderEntry type="library" name="sbt: com.google.guava:failureaccess:1.0:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.errorprone:error_prone_annotations:2.2.0:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.code.findbugs:jsr305:3.0.2:jar" level="project" />
-    <orderEntry type="module-library">
-      <library name="sbt: unmanaged-sources-and-docs">
-        <CLASSES />
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.ivy2/cache/io.netty/netty-transport-native-epoll/srcs/netty-transport-native-epoll-4.1.31.Final-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jetty.websocket/websocket-common/srcs/websocket-common-9.4.12.v20180830-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/ch.qos.logback/logback-core/srcs/logback-core-1.0.13-sources.jar!/" />
-          <root url="jar://$MODULE_DIR$/../../../.ivy2/cache/ch.qos.logback/logback-core/srcs/logback-core-1.0.13-sources.jar!/" />
-          <root url="jar://$MODULE_DIR$/../../../.ivy2/cache/io.netty/netty-transport-native-epoll/srcs/netty-transport-native-epoll-4.1.31.Final-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
     <orderEntry type="library" scope="TEST" name="sbt: xml-apis:xml-apis:1.4.01:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: xerces:xercesImpl:2.12.0:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: xalan:xalan:2.7.2:jar" level="project" />
@@ -112,7 +99,6 @@
     <orderEntry type="library" name="sbt: javax.inject:javax.inject:1:jar" level="project" />
     <orderEntry type="library" name="sbt: javax.activation:javax.activation-api:1.2.0:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: io.netty:netty-transport-native-unix-common:4.1.31.Final:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="sbt: io.netty:netty-transport-native-epoll:4.1.31.Final:linux-x86_64:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: io.netty:netty-transport:4.1.31.Final:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: io.netty:netty-resolver:4.1.31.Final:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: io.netty:netty-handler:4.1.13.Final:jar" level="project" />
@@ -173,5 +159,6 @@
     <orderEntry type="library" name="sbt: ch.qos.logback:logback-classic:1.2.3:jar" level="project" />
     <orderEntry type="library" name="sbt: cglib:cglib-nodep:3.2.4:jar" level="project" />
     <orderEntry type="library" name="sbt: aopalliance:aopalliance:1.0:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="sbt: io.netty:netty-transport-native-epoll:4.1.31.Final:jar" level="project" />
   </component>
 </module>

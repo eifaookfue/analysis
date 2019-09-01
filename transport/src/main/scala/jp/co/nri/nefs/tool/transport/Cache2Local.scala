@@ -1,51 +1,25 @@
 package jp.co.nri.nefs.tool.transport
 import java.nio.file.{Files, Path, Paths}
+import java.util.Date
 import java.util.stream.Collectors
 
 import jp.co.nri.nefs.common.util.config.ConfigurationFactory
 import jp.co.nri.nefs.common.util.config.tree.{ConfigurationNode, TreeConfiguration}
+import jp.co.nri.nefs.tool.transport.Cache2Local.getAttributes
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 
-object Cache2Local {
-  type OptionMap = Map[Symbol, String]
+case class ExecResult(result: Int, out: List[String], err: List[String])
 
-  val usage = """
-        Usage: jp.co.nri.nefs.tool.transport.Cache2Local --cachedir dir --outputdir dir
-        """
-  def nextOption(map: OptionMap, list: List[String]): OptionMap = {
-    list match {
-      case Nil => map
-      case "--cachedir" :: value :: tail =>
-        nextOption(map ++ Map(Symbol("cachedir") -> value), tail)
-      case "--outputdir" :: value :: tail =>
-        nextOption(map ++ Map(Symbol("outputdir") -> value), tail)
-      case _ => println("Unknown option")
-        println(usage)
-        throw new java.lang.IllegalArgumentException
-    }
-  }
-  def getOption(options: OptionMap): (Path, Path) = {
-    val cachedir = options.get(Symbol("cachedir"))
-    val outputdir = options.get(Symbol("outputdir"))
-    if (cachedir.isEmpty || outputdir.isEmpty) {
-      println(usage)
-      throw new java.lang.IllegalArgumentException
-    }
-    (Paths.get(cachedir.get), Paths.get(outputdir.get))
-  }
-
-  def main(args: Array[String]): Unit = {
-    //val uri = Cache2Local.getClass.getClassLoader.getResource("template.xml").toURI
-    //val template = Paths.get(uri)
+case class BuildfileCreator(cachedir: Path, outputdir: Path){
+  def create(): Unit = {
     val template = Paths.get("D:\\Apl\\analysis\\transport\\src\\main\\resources\\template.xml")
-    val options = nextOption(Map(), args.toList)
-    val (cachedir, outputdir) = getOption(options)
+    Files.createDirectories(outputdir)
     val paths = Files.walk(cachedir).filter(_.toFile.isFile).collect(Collectors.toList()).asScala
-    //val paths = Files.walk(cachedir).filter(_.getFileName.toFile.toString == "ivy-0.5.1.xml").collect(Collectors.toList()).asScala
     for (path <- paths;
-        fileName = path.getFileName.toFile.toString
-        if fileName.endsWith("xml")){
+         fileName = path.getFileName.toFile.toString
+         if fileName.endsWith("xml") ){
       val url = path.toUri.toURL
       ConfigurationFactory.load(url)
       val config = ConfigurationFactory.getConfiguration().asInstanceOf[TreeConfiguration]
@@ -57,16 +31,8 @@ object Cache2Local {
       ).mkString("_") + ".xml"
       val outputPath = outputdir.resolve(outName)
 
-      /*val outName = Array(outputdir.toString, organisationOpt.getOrElse("null"),
-        moduleOpt.getOrElse("null"), revisionOpt.getOrElse("null"),
-        sbtVersionOpt.getOrElse("null"), scalaVersionOpt.getOrElse("null")
-      ).mkString("_")
-      val fileOutputStream = new FileOutputStream(outName, false)
-      val writer = new OutputStreamWriter(fileOutputStream, "UTF-8")*/
-
-      Files.createDirectories(outputdir)
-
       val allLines = Files.readAllLines(template).asScala
+
       val newLines = for (line <- allLines) yield {
         val s1 = line.replace("_ORGANISATION_", organisation)
         val s2 = s1.replace("_MODULE_", module)
@@ -100,27 +66,135 @@ object Cache2Local {
         }
         s6
       }
-      Files.write(outputPath, newLines.asJava)
+      val localPath = cachedir.getParent.resolve(Paths.get("local"
+        ,organisation, module, revision, "ivys", "ivy.xml"))
+      if (Files.notExists(localPath))
+        Files.write(outputPath, newLines.asJava)
+    }
+
+  }
+}
+
+case class AntExecutor(){
+
+  val errorBufferPath: ListBuffer[Path] = ListBuffer[Path]()
+  val errorBufferStr: ListBuffer[String] = ListBuffer[String]()
+
+  def exec(cmd: Seq[String]):ExecResult = {
+
+    import scala.sys.process._
+
+    val out = ListBuffer[String]()
+    val err = ListBuffer[String]()
+
+    val logger = ProcessLogger(
+      (o: String) => out += o,
+      (e : String) => err += e
+    )
+
+    val r = Process(cmd) ! logger
+
+    ExecResult(r, out.toList, err.toList)
+
+  }
 
 
-      /*Files.lines(template).map(line => {
-        val opt = for (organisation <- organisationOpt; module <- moduleOpt; revision <- revisionOpt) yield {
-          val s1 = line.replace("_ORGANISATION_", organisation)
-          val s2 = s1.replace("_MODULE_", module)
-          s2.replace("_REVISION_", revision)
-        }
-        val opt2 = for (o <- opt; sbtVersion <- sbtVersionOpt; scalaVersion <- scalaVersionOpt;
-             revision <- revisionOpt; organisation <- organisationOpt) yield {
-          val str1 = """ <property name="scalaVersion" value="""" + scalaVersion + """ />"""
-          val str2 = """ <property name="sbtVersion" value="""" + sbtVersion + """ />"""
-          val str3 = """ <property name="classifier" value="""" + revision + """ />"""
-          val strs = for (s <- organisation.split("\\.")) yield
-            """<property name="organisation1" value="""" + s + """" />"""
-          o.replace("_REPLACESTR_", Array(str1, str2, str3, strs).mkString("\r\n"))
-        }
-        opt2.getOrElse("")
-      }).forEach(s => writer.write(s))
-      writer.close()*/
+  def execute(path: Path): Unit = {
+    if (path.toFile.isDirectory){
+      Files.list(path).filter(_.getFileName.toFile.toString.endsWith("xml")).forEach(execute(_))
+      return
+    }
+    val result = exec(Seq("cmd", "/c", "D:\\Apl\\apache-ant-1.10.5\\bin\\ant", "-f", path.toString))
+    println("-----Standard output-----")
+    for (str <- result.out) println(str)
+
+    println(result.out)
+    println("-----Standard err-----")
+    var isBuildFailed = false
+    for (str <- result.err) {
+      if (str.contains("BUILD FAILED"))
+        isBuildFailed = true
+      println(str)
+      errorBufferStr += str
+    }
+    if (isBuildFailed) errorBufferPath += path
+  }
+
+}
+
+object Cache2Local {
+  type OptionMap = Map[Symbol, String]
+
+  val usage = """
+        Usage: jp.co.nri.nefs.tool.transport.Cache2Local [--cachedir dir --outputdir dir|[--execdir dir|--execfile file]]
+        """
+  def nextOption(map: OptionMap, list: List[String]): OptionMap = {
+    list match {
+      case Nil => map
+      case "--cachedir" :: value :: tail =>
+        nextOption(map ++ Map(Symbol("cachedir") -> value), tail)
+      case "--outputdir" :: value :: tail =>
+        nextOption(map ++ Map(Symbol("outputdir") -> value), tail)
+      case "--execdir" :: value :: tail =>
+        nextOption(map ++ Map(Symbol("execdir") -> value), tail)
+      case "--execfile" :: value :: tail =>
+        nextOption(map ++ Map(Symbol("execfile") -> value), tail)
+      case _ => println("Unknown option")
+        println(usage)
+        throw new java.lang.IllegalArgumentException
+    }
+  }
+  def getOption(options: OptionMap): (Boolean, Path, Path) = {
+    val cachedir = options.get(Symbol("cachedir"))
+    val outputdir = options.get(Symbol("outputdir"))
+    val execdir = options.get(Symbol("execdir"))
+    val execfile = options.get(Symbol("execfile"))
+    val err = if (cachedir.isEmpty && execdir.isEmpty && execfile.isEmpty) {
+      true
+    } else if (cachedir.isDefined && (execdir.isDefined || execfile.isDefined)){
+      true
+    } else if (cachedir.isDefined && outputdir.isEmpty) {
+      true
+    } else if (execdir.isDefined && execfile.isDefined){
+      true
+    } else {
+      false
+    }
+    if (err){
+      println(usage)
+      throw new java.lang.IllegalArgumentException()
+    }
+    if (cachedir.isDefined)
+      (true, Paths.get(cachedir.get), Paths.get(outputdir.get))
+    else {
+      val path = if (execdir.isDefined) Paths.get(execdir.get) else Paths.get(execfile.get)
+      (false, path, null)
+    }
+  }
+
+  def main(args: Array[String]): Unit = {
+    //val uri = Cache2Local.getClass.getClassLoader.getResource("template.xml").toURI
+    //val template = Paths.get(uri)
+
+    val options = nextOption(Map(), args.toList)
+    val (isBuild, path1, path2) = getOption(options)
+    if (isBuild){
+      BuildfileCreator(path1, path2).create()
+    } else {
+      val outPathParent = if (path1.toFile.isDirectory) path1 else path1.getParent
+      val df = new java.text.SimpleDateFormat("yyyyMMddHHmmss")
+      val outFileNameBase = df.format(new Date())
+      val outFileNamePath = outFileNameBase + "Path.txt"
+      val outFileNameStr = outFileNameBase + "Str.txt"
+      //val outFileName = "%tY% <tm% <td %<tH %<tM %<tS" format new Date
+      val outPath = outPathParent.resolve(outFileNamePath)
+      val executor = AntExecutor()
+      executor.execute(path1)
+      val buffer = for (line <- executor.errorBufferPath) yield line.toString
+      Files.write(outPath, buffer.asJava)
+      val outStrPath = outPathParent.resolve(outFileNameStr)
+      val bufferStr = for (line <- executor.errorBufferStr) yield line.toString
+      Files.write(outStrPath, bufferStr.asJava)
     }
 
 

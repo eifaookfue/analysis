@@ -2,6 +2,7 @@
   <library name="sbt: commons-configuration:commons-configuration:1.9:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/commons-configuration/commons-configuration/jars/commons-configuration-1.9.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/commons-configuration/commons-configuration/1.9/jars/commons-configuration.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

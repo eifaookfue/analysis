@@ -12,7 +12,7 @@
         <parameter value="utf8" />
       </parameters>
     </profile>
-    <profile name="sbt 2" modules="analysis,apllog,arrange,core,log,log2Case,transport">
+    <profile name="sbt 2" modules="analysis,apllog,arrange,core,imptest,log,log2Case,transport">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
