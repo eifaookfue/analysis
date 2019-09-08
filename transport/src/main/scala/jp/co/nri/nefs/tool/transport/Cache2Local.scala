@@ -96,7 +96,7 @@ case class BuildfileCreator(cachedir: Path, outputdir: Path) {
         val buffer = ListBuffer("<project name=\"localrepository\" default=\"install\"")
         buffer += "\txmlns:ivy=\"antlib:org.apache.ivy.ant\">"
         buffer += "\t<property name=\"ivy.default.ivy.user.dir\" value=\"d:\\Apl\\.ivy2\" />"
-        buffer += "\t<property name=\"my.settings.dir\" value=\"D:\\ivysettings\" />"
+        buffer += "\t<property name=\"my.settings.dir\" value=\"D:\\Apl\\analysis\\ivysettings\" />"
         buffer += "\t<property name=\"ivy.settings.file\" value=\"${my.settings.dir}\\ivysettings.xml\" />"
         for (sbtVersion <- artifact.sbtVersion; scalaVersion <- artifact.scalaVersion) {
           buffer += "\t<property name=\"scalaVersion\" value=\"" + scalaVersion + "\" />"
