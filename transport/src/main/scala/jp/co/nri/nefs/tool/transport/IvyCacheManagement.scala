@@ -19,6 +19,9 @@ object IvyCacheManagement {
     val sequence = for (file <- files if file.getFileName.toString.endsWith("properties");
       (fileName, key, location) <- getList(file) if location contains "http" )
       yield (fileName, key, location)
+    val outPath = Paths.get("D:\\tmp\\remote.txt")
+    val list = (for ((fileName, _, _) <- sequence) yield fileName).asJava
+    Files.write(outPath, list)
     sequence.foreach(println _)
     /*for ((fileName, key, location) <- sequence; if !(location.contains(".m2")))
       println(fileName, key, location)*/
