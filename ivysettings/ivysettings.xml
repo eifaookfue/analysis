@@ -24,8 +24,10 @@
     <include url="./ivysettings-main-chain.xml"/>
     <include url="./ivysettings-default-chain.xml"/>
     <include url="./ivysettings-public-maven-scala.xml"/>
+    <include url="./ivysettings-public-maven-scala-3.xml"/>
     <include url="./ivysettings-local-scala.xml"/>
     <include url="./ivysettings-public-source.xml"/>
     <include url="./ivysettings-public-scala.xml"/>
     <include url="./ivysettings-public-scala-noversion.xml"/>
+    <include url="./ivysettings-normal-chain.xml"/>
 </ivysettings>

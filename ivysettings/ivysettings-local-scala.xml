@@ -25,4 +25,3 @@
         </filesystem>
     </resolvers>
 </ivysettings>
-        artifactPatterns=Vector(${ivy.home}/local/[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)([branch]/)[revision]/[type]s/[artifact](-[classifier]).[ext]), isMavenCompatible=false, descriptorOptional=fals

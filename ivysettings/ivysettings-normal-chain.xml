@@ -18,9 +18,12 @@
 -->
 <ivysettings>
     <resolvers>
-        <ivyrep name="public-scala" ivyroot="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"
-                ivypattern="[organisation]/[module]/scala_${scalaVersion}/sbt_${sbtVersion}/[revision]/[type]s/[artifact](-[classifier]).[ext]"
-                artroot="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"
-                artpattern="[organisation]/[module]/scala_${scalaVersion}/sbt_${sbtVersion}/[revision]/[type]s/[artifact](-[classifier]).[ext]"/>
+        <chain name="normal" returnFirst="true" checkmodified="true">
+            <resolver ref="public"/>
+            <resolver ref="public-maven-scala"/>
+            <resolver ref="public-maven-scala-3"/>
+            <resolver ref="public-scala"/>
+            <resolver ref="public-scala-noversion"/>
+        </chain>
     </resolvers>
 </ivysettings>

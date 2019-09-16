@@ -18,9 +18,9 @@
 -->
 <ivysettings>
     <resolvers>
-        <ivyrep name="public-scala" ivyroot="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"
-                ivypattern="[organisation]/[module]/scala_${scalaVersion}/sbt_${sbtVersion}/[revision]/[type]s/[artifact](-[classifier]).[ext]"
-                artroot="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"
-                artpattern="[organisation]/[module]/scala_${scalaVersion}/sbt_${sbtVersion}/[revision]/[type]s/[artifact](-[classifier]).[ext]"/>
+        <ivyrep name="public-maven-scala-3" ivyroot="https://repo1.maven.org/maven2"
+            ivypattern="${organisation0}/${organisation1}/${organisation2}/[module]_${scalaVersion}_${sbtVersion}/([branch]/)[revision]/[artifact](-[revision]).[ext]"
+                artroot="https://repo1.maven.org/maven2"
+                artpattern="${organisation0}/${organisation1}/${organisation2}/[module]_${scalaVersion}_${sbtVersion}/([branch]/)[revision]/[artifact](-[revision]).[ext]"/>
     </resolvers>
 </ivysettings>

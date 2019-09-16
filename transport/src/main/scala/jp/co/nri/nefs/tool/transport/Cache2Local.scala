@@ -16,15 +16,7 @@ object Regexs {
       ).mkString("_") + ".xml"
     }
     def getFrom: String = {
-      if (artifact.contains("-source"))
-        "public-source"
-      else if (site.contains("maven"))
-        if (scalaVersion.isDefined) "public-maven-scala" else "public"
-      else if (site.contains("scala-sbt")){
-        if (scalaVersion.isDefined) "public-scala" else "public-scala-noversion"
-      }
-      else
-        throw new java.lang.RuntimeException("no such from")
+      "normal"
     }
     def getTo: String = {
       scalaVersion match {
@@ -36,7 +28,10 @@ object Regexs {
   def of(site: String, organisationSlash: String, moduleOrg: String,
          revision: String, artifact: String, ext: String,
          scalaInfo:Option[String], sbtInfo: Option[String]): Option[Artifact] = {
-    lazy val regex = """(.*)_(.*)_(.*)""".r
+    //sbt-sonatype_2.12_1.0 これはOK
+    //error_prone_annotations これはNG
+    //{1,2}で直前の1文字以上2文字以下
+    lazy val regex = """(.*)_([0-9]{1,2}\.[0-9]{1,2})_([0-9]{1,2}\.[0-9]{1,2})""".r
     if (artifact.equals("ivy"))
       None
     else {
@@ -57,6 +52,7 @@ object Regexs {
     }
   }
   def getArtifact(line: String): Option[Artifact] = {
+    lazy val mavenExOrg3 = """(.*)https\\:\/\/(repo1.maven.org\/maven2)\/(.*\/.*\/.*)\/(.*)\/(.*)\/(.*)\.(.*)""".r
     lazy val mavenExOrg2 = """(.*)https\\:\/\/(repo1.maven.org\/maven2)\/(.*\/.*)\/(.*)\/(.*)\/(.*)\.(.*)""".r
     lazy val mavenExOrg1 = """(.*)https\\:\/\/(repo1.maven.org\/maven2)\/(.*)\/(.*)\/(.*)\/(.*)\.(.*)""".r
     //https\://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/com.github.gseitz/sbt-release/
@@ -68,6 +64,8 @@ object Regexs {
       case scalasbtEx(_, site, organisationSlash, module, scalaInfo, sbtInfo, revision, _, artifact, ext) =>
         of(site, organisationSlash, module, revision, artifact, ext, Some(scalaInfo), Some(sbtInfo))
       case scalasbtNoVersionEx(_, site, organisationSlash, module, revision, _, artifact, ext) =>
+        of(site, organisationSlash, module, revision, artifact, ext, None, None)
+      case mavenExOrg3(_, site, organisationSlash, module, revision, artifact, ext) =>
         of(site, organisationSlash, module, revision, artifact, ext, None, None)
       case mavenExOrg2(_, site, organisationSlash, module, revision, artifact, ext) =>
         of(site, organisationSlash, module, revision, artifact, ext, None, None)
@@ -107,7 +105,7 @@ case class BuildfileCreator(cachedir: Path, outputdir: Path) {
         }
         buffer += "\t<target name=\"install\" description=\"--> install modules to localrepository\">"
         buffer += "\t\t<ivy:install organisation=\"" + artifact.organisation + "\" module=\"" + artifact.module + "\""
-        buffer += "\t\t\trevision=\"" + artifact.revision + "\" transitive=\"true\" overwrite=\"false\" from=\"" + artifact.getFrom + "\""
+        buffer += "\t\t\trevision=\"" + artifact.revision + "\" transitive=\"true\" overwrite=\"true\" from=\"" + artifact.getFrom + "\""
         buffer += "\t\t\tto=\"" + artifact.getTo + "\" />"
         buffer += "\t</target>"
         buffer += "</project>"

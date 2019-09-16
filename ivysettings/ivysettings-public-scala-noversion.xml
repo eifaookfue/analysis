@@ -17,9 +17,10 @@
    under the License.
 -->
 <ivysettings>
-    <property name="ivy.ibiblio.default.artifact.root"             value="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/"/>
-    <property name="ivy.ibiblio.default.artifact.pattern" value="[organisation]/[module]/[revision]/[type]s/[module].[ext]"/>
     <resolvers>
-        <ivyrep name="public-scala-noversion" ivyroot="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"/>
+        <ivyrep name="public-scala-noversion" ivyroot="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"
+                ivypattern="[organisation]/[module]/([branch]/)[revision]/[artifact](-[revision]).[ext]"
+                artroot="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"
+                artpattern="[organisation]/[module]/([branch]/)[revision]/[artifact](-[revision]).[ext]"/>
     </resolvers>
 </ivysettings>
