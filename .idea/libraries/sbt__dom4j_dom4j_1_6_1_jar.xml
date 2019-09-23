@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="sbt: dom4j:dom4j:1.6.1:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/dom4j/dom4j/1.6.1/jars/dom4j.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

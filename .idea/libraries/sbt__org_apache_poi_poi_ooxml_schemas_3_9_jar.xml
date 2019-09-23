@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="sbt: org.apache.poi:poi-ooxml-schemas:3.9:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/org.apache.poi/poi-ooxml-schemas/3.9/jars/poi-ooxml-schemas.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

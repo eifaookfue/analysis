@@ -15,11 +15,12 @@ import sbt._
       Library.slick,
       Library.slickHikariCP,
       Library.h2 % "test",
-      Library.mysql
+      Library.mysql,
+      Library.poi,
+      Library.poi_ooxml
     )
 
     val transport = Seq(
-      Library.nefs_common_util,
       Library.logback
     )
   }
@@ -33,6 +34,8 @@ import sbt._
     val mysql        = "8.0.15"
     val nefs_common_util = "1.0.0-SNAPSHOT"
     val logback      = "1.0.13"
+    val poi          = "3.9"
+    val poi_ooxml    = "3.9"
   }
 
   object Library {
@@ -45,7 +48,8 @@ import sbt._
     val h2                  = "com.h2database"             %  "h2"                       % Version.h2
     val sacalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"            % Version.scalaLogging
     val mysql               = "mysql"                      % "mysql-connector-java"      % Version.mysql
-    val nefs_common_util    = "jp.co.nri.nefs.common"      % "nefs-common-util"          % Version.nefs_common_util
     val logback             = "ch.qos.logback"             % "logback-core"              % Version.logback
+    val poi                 = "org.apache.poi"             % "poi"                       % Version.poi
+    val poi_ooxml           = "org.apache.poi"             % "poi-ooxml"                 % Version.poi_ooxml
   }
 

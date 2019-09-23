@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="sbt: commons-codec:commons-codec:1.5:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/commons-codec/commons-codec/1.5/jars/commons-codec.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

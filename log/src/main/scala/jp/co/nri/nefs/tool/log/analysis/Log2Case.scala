@@ -4,18 +4,16 @@ import java.io.{ObjectInputStream, ObjectOutputStream}
 import java.nio.file.{Files, Path, Paths}
 import java.sql.Timestamp
 import java.util.Date
-import java.util.stream.Collectors
-
 import jp.co.nri.nefs.tool.log.common.model.WindowDetail
 import jp.co.nri.nefs.tool.log.common.utils.FileUtils._
-import jp.co.nri.nefs.tool.log.common.utils.ZipUtils._
 import jp.co.nri.nefs.tool.log.common.utils.RegexUtils._
+import jp.co.nri.nefs.tool.log.common.utils.ZipUtils._
+import org.apache.poi.ss.usermodel._
 
 import scala.collection.JavaConverters._
 import scala.collection._
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
-
 
 class Log2Case(outputdir: Path) {
 
@@ -69,9 +67,10 @@ class Log2Case(outputdir: Path) {
 
   def execute(path: Path): Unit = {
 
+    import Utils._
     if (isZipFile(path)){
       val expandedDir = unzip(path)
-      val paths = Files.list(expandedDir).collect(Collectors.toList()).asScala.toList
+      val paths = for (file <- Files.list(expandedDir).iterator().asScala.toList) yield file
       execute(paths)
       delete(expandedDir)
     } else {
@@ -149,6 +148,9 @@ class Log2Case(outputdir: Path) {
 
   }
 
+}
+
+object Utils {
   def getObjFile(name: String): String = {
     getBase(name) + ".obj"
   }
@@ -162,31 +164,40 @@ class Log2Case(outputdir: Path) {
 
 }
 
+
 object Log2Case {
   type OptionMap = Map[Symbol, String]
   val usage = """
-        Usage: jp.co.nri.nefs.tool.log.analysis.Log2Case [--searchdir dir | --file file] --outputdir dir
+        Usage: jp.co.nri.nefs.tool.log.analysis.Log2Case [--searchdir dir | --file file | --excelFile file] --outputdir dir
         """
+
+  sealed trait EExecutionType
+  case object LOGDIR extends EExecutionType
+  case object LOGFILE extends EExecutionType
+  case object EXCELFILE extends EExecutionType
+
+
 
   def main(args: Array[String]): Unit = {
 
     //lazy val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).log$""".r
     lazy val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).(log|zip)$""".r
     val options = nextOption(Map(), args.toList)
-    val (isSearchDir, dirOrFile, outputdir) = getOption(options)
-    val log2case = new Log2Case(Paths.get(outputdir))
-    if (isSearchDir) {
-      val paths = Files.walk(Paths.get(dirOrFile)).filter(_.toFile.isFile).filter(p => {
-        p.getFileName.toString match {
-          case regex(_, _, _, _, _, _) => true
-          case _ =>
-            println(s"skipped $p because not a valid format.")
-            false
-        }
-      }).collect(Collectors.toList())
-      log2case.execute(paths.asScala.toList)
-    } else {
-      log2case.execute(Paths.get(dirOrFile))
+    val (executionType, dirOrFile, outputdir) = getOption(options)
+    val log2case = new Log2Case(outputdir)
+    executionType match {
+      case LOGDIR =>
+        val paths = for {
+          path <- Files.walk(dirOrFile).iterator().asScala.toList
+          if path.toFile.isFile
+          if path.getFileName.toString.matches(regex.regex)
+        } yield path
+        log2case.execute(paths)
+      case LOGFILE =>
+        log2case.execute(dirOrFile)
+      case EXCELFILE =>
+        val excel2Case = new Excel2Case(outputdir)
+        excel2Case.execute(dirOrFile)
     }
   }
 
@@ -195,15 +206,24 @@ object Log2Case {
     * @param options オプションのマップ
     * @return searchdirが指定されているか
     */
-  def getOption(options: OptionMap): (Boolean, String, String) = {
-    val searchdir = options.get(Symbol("searchdir"))
-    val file = options.get(Symbol("file"))
-    val outpudir = options.get(Symbol("outputdir"))
-    if ((searchdir.isEmpty && file.isEmpty) || (searchdir.nonEmpty && file.nonEmpty) || outpudir.isEmpty) {
+  def getOption(options: OptionMap): (EExecutionType, Path, Path) = {
+    val searchdir = options.get(Symbol("searchdir")).map(Paths.get(_))
+    val file = options.get(Symbol("file")).map(Paths.get(_))
+    val excelFile = options.get(Symbol("excelFile")).map(Paths.get(_))
+    val outputdir = options.get(Symbol("outputdir")).map(Paths.get(_))
+
+    val executionType = if (searchdir.isDefined && file.isEmpty && excelFile.isEmpty) LOGDIR
+      else if (file.isDefined && searchdir.isEmpty && excelFile.isEmpty) LOGFILE
+      else if (excelFile.isDefined && searchdir.isEmpty && file.isEmpty) EXCELFILE
+      else {
+        println(usage)
+        throw new java.lang.IllegalArgumentException
+      }
+    if (outputdir.isEmpty) {
       println(usage)
       throw new java.lang.IllegalArgumentException
     }
-    (searchdir.nonEmpty, searchdir.getOrElse(file.get), outpudir.get)
+    (executionType, searchdir.getOrElse(file.getOrElse(excelFile.get)), outputdir.get)
   }
 
   def nextOption(map: OptionMap, list: List[String]): OptionMap = {
@@ -213,11 +233,60 @@ object Log2Case {
         nextOption(map ++ Map(Symbol("searchdir") -> value), tail)
       case "--file" :: value :: tail =>
         nextOption(map ++ Map(Symbol("file") -> value), tail)
+      case "--excelFile" :: value :: tail =>
+        nextOption(map ++ Map(Symbol("excelFile") -> value), tail)
       case "--outputdir" :: value :: tail =>
         nextOption(map ++ Map(Symbol("outputdir") -> value), tail)
       case _ => println("Unknown option")
         println(usage)
         sys.exit(1)
+    }
+  }
+}
+
+class Excel2Case(outputdir: Path) {
+  import jp.co.nri.nefs.tool.log.common.utils.RichCell.cellToRichCell
+  import Utils._
+  def execute(path: Path): Unit = {
+    val book = WorkbookFactory.create(path.toFile)
+    //val sheet = book.getSheet("Sheet1")
+    val sheets = for {
+      no <- 0 until book.getNumberOfSheets
+      name = book.getSheetName(no)
+      if name.contains("WindowDetail")
+      sheet = book.getSheetAt(no)
+    } yield sheet
+    val windowDetails = for {
+      sheet <- sheets
+      (row, index) <- sheet.iterator().asScala.zipWithIndex
+      if index > 0 //先頭行スキップ
+      iterator = row.iterator()
+      appName = iterator.next().getValue[String].get
+      computerName = iterator.next().getValue[String].get
+      userId = iterator.next().getValue[String].get
+      tradeDate = iterator.next().getValue[String].get
+      lineNo = iterator.next().getValue[Long].get
+      handler = iterator.next().getValue[String].get
+      windowName = iterator.next().getValue[String]
+      destinationType = iterator.next().getValue[String]
+      action = iterator.next().getValue[String]
+      method = iterator.next().getValue[String]
+      time = iterator.next().getValue[Timestamp].get
+      startupTime = iterator.next().getValue[Long].get
+      windowDetail = WindowDetail(appName,computerName,userId,tradeDate, lineNo,
+        handler, windowName, destinationType, action, method, time, startupTime)
+    } yield windowDetail
+
+    val outpath = outputdir.resolve(getObjFile(path.getFileName.toFile.toString))
+    val ostream = new ObjectOutputStream(Files.newOutputStream(outpath))
+    using(ostream){ os =>
+      windowDetails.foreach( w => {
+        os.writeObject(w)
+      })
+    }
+    val istream = new ObjectInputStream(Files.newInputStream(outpath))
+    using(istream){is =>
+      Iterator.continually(is.readObject()).takeWhile(_ != null).foreach(v => println(v))
     }
   }
 }

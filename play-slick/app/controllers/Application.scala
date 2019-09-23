@@ -1,13 +1,9 @@
 package controllers
 
 import javax.inject.Inject
-
 import dao.WindowDetailDAO
-import models.WindowDetail
-import play.api.data.Form
-import play.api.data.Forms.{ date, longNumber, mapping, nonEmptyText, optional }
 import play.api.i18n.I18nSupport
-import play.api.mvc.{ AbstractController, ControllerComponents, Flash, RequestHeader }
+import play.api.mvc.{AbstractController, ControllerComponents, Result}
 import views.html
 
 import scala.concurrent.ExecutionContext
@@ -19,7 +15,7 @@ class Application @Inject() (
 )(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents) with I18nSupport {
 
   /** This result directly redirect to the application home.*/
-  val Home = Redirect(routes.Application.list(0, 2, None, None))
+  val Home: Result = Redirect(routes.Application.list(0, 2, None, None))
 
   /** Describe the computer form (used in both edit and create screens).*/
 
@@ -41,17 +37,12 @@ class Application @Inject() (
     windowDetails.map(cs => Ok(html.list(cs, orderBy, filterHandler, filterWindowName)))
   }
 
-  def analyze(pathname: String) = Action.async { implicit request =>
-    val page = 0
-    val orderBy = 0
-    val filterHandler = None
-    val filterWindowName = None
+  def load(pathname: String) = Action.async { implicit request =>
+
 
     for {
-      _ <- windowDetailDao.analyze(pathname)
-    } yield Home.flashing("success" -> "successa")
-
-    //windowDetails.map(cs => Ok(html.list(cs, orderBy, filterHandler, filterWindowName)))
+      _ <- windowDetailDao.load(pathname)
+    } yield Home.flashing("success" -> "success")
 
   }
 

@@ -21,6 +21,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="core" exported="" />
+    <orderEntry type="library" name="sbt: org.apache.poi:poi:3.9:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: io.netty:netty-transport-native-epoll:4.1.31.Final:jar" level="project" />
     <orderEntry type="library" name="sbt: aopalliance:aopalliance:1.0:jar" level="project" />
     <orderEntry type="library" name="sbt: cglib:cglib-nodep:3.2.4:jar" level="project" />
@@ -160,5 +161,12 @@
     <orderEntry type="library" name="sbt: org.checkerframework:checker-qual:2.5.2:jar" level="project" />
     <orderEntry type="library" name="sbt: org.codehaus.mojo:animal-sniffer-annotations:1.17:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.eclipse.jetty.websocket:websocket-common:9.4.12.v20180830:jar" level="project" />
+    <orderEntry type="module" module-name="log" exported="" />
+    <orderEntry type="library" name="sbt: dom4j:dom4j:1.6.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.poi:poi-ooxml:3.9:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.poi:poi-ooxml-schemas:3.9:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.xmlbeans:xmlbeans:2.3.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: stax:stax-api:1.0.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: xml-apis:xml-apis:1.0.b2:jar" level="project" />
   </component>
 </module>

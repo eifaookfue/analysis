@@ -1,4 +1,4 @@
-@(currentPage: Page[WindowDetail], currentOrderBy: Int, currentFilterHandler: Option[String], currentFilterWindowName: Option[String])(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
+@(currentPage: Page[jp.co.nri.nefs.tool.log.common.model.WindowDetail], currentOrderBy: Int, currentFilterHandler: Option[String], currentFilterWindowName: Option[String])(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
 
 @****************************************
 * Helper generating navigation links    *
@@ -44,15 +44,18 @@
         <table class="windowDetails zebra-striped">
             <thead>
                 <tr>
-                    @header(1, "Handler")
-                    @header(2, "WindowName")
-                    @header(3, "DestinationType")
-                    @header(4, "Action")
-                    @header(5, "Method")
-                    @header(6, "UserName")
-                    @header(7, "TradeDate")
-                    @header(8, "Time")
-                    @header(9, "StartupTime")
+                    @header(1, "AppName")
+                    @header(2, "ComputerName")
+                    @header(3, "UserId")
+                    @header(4, "TradeDate")
+                    @header(5, "LineNo")
+                    @header(6, "Handler")
+                    @header(7, "WindowName")
+                    @header(8, "DestinationType")
+                    @header(9, "Action")
+                    @header(10, "Method")
+                    @header(11, "Time")
+                    @header(12, "StartupTime")
                 </tr>
             </thead>
             <tbody>
@@ -60,13 +63,16 @@
                 @windowDetails.map {
                     case windowDetail => {
                         <tr>
+                            <td>@windowDetail.appName</td>
+                            <td>@windowDetail.computerName</td>
+                            <td>@windowDetail.userId</td>
+                            <td>@windowDetail.tradeDate</td>
+                            <td>@windowDetail.lineNo</td>
                             <td>@windowDetail.handler</td>
                             <td>@windowDetail.windowName</td>
                             <td>@windowDetail.destinationType</td>
                             <td>@windowDetail.action</td>
                             <td>@windowDetail.method</td>
-                            <td>@windowDetail.userName</td>
-                            <td>@windowDetail.tradeDate</td>
                             <td>@windowDetail.time.format("yyyy-MM-dd HH:mm:ss.SSS")</td>
                             <td>@windowDetail.startupTime</td>
                         </tr>

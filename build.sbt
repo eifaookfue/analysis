@@ -23,6 +23,13 @@ runLog2Case := {
   println("Done!")
 }
 
+lazy val runExcel2Case = taskKey[Unit]("A task that hard codes the values to `run`")
+runExcel2Case := {
+  val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Log2Case --excelFile" +
+    " D:\\data\\WindowDetail.xlsx --outputdir D:\\tmp5").value
+  println("Done!")
+}
+
 
 lazy val runCase2Table = taskKey[Unit]("A task that hard codes the values to `run`")
 runCase2Table := {
@@ -60,7 +67,7 @@ runAntExecute := {
 lazy val runAntExecuteTest = taskKey[Unit]("A task that hard codes the values to `run`")
 runAntExecuteTest := {
   val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Cache2Local " +
-    "--execfile D:\\cache2Local\\asm_asm-parent_3.1_null_null.xml").value
+    "--execfile D:\\cache2Local\\org.xerial.sbt_sbt-sonatype_2.0_1.0_2.12.xml").value
   println("Done!")
 }
 
@@ -92,6 +99,7 @@ lazy val `play-slick` = (project in file("play-slick") )
   .settings(javaOptions in Test += "-Dslick.dbs.default.connectionTimeout=30 seconds")
   .settings(commonSettings: _*)
   .dependsOn(core)
+  .dependsOn(log)
 
 lazy val core =(project in file("src/core"))
   //.enablePlugins(PlayLibrary, Playdoc)

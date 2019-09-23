@@ -19,8 +19,8 @@
 <ivysettings>
     <resolvers>
         <ivyrep name="public-scala-noversion" ivyroot="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"
-                ivypattern="[organisation]/[module]/([branch]/)[revision]/[artifact](-[revision]).[ext]"
+                ivypattern="[organisation]/[module]/([branch]/)[revision]/[type]s/[artifact](-[classifier]).[ext]"
                 artroot="https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"
-                artpattern="[organisation]/[module]/([branch]/)[revision]/[artifact](-[revision]).[ext]"/>
+                artpattern="[organisation]/[module]/([branch]/)[revision]/[type]s/[artifact](-[classifier]).[ext]"/>
     </resolvers>
 </ivysettings>

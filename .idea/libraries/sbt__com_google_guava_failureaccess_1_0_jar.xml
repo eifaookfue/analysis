@@ -2,6 +2,7 @@
   <library name="sbt: com.google.guava:failureaccess:1.0:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.google.guava/failureaccess/jars/failureaccess-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/com.google.guava/failureaccess/1.0/jars/failureaccess.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
