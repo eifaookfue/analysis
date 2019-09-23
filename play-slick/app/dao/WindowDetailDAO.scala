@@ -1,7 +1,7 @@
 package dao
 
 import java.io.{EOFException, ObjectInputStream}
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.sql.Timestamp
 
 import javax.inject.{Inject, Singleton}
@@ -10,7 +10,7 @@ import models.Page
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 import slick.lifted.ColumnOrdered
-
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -125,22 +125,37 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     } catch { case _ : EOFException => null }
   }
 
-
-  def load(pathname: String): Future[Unit] = {
-
-    /*
+  private def createWindowDetailListByFile(path: Path): List[WindowDetail] = {
     val istream = new ObjectInputStream(Files.newInputStream(path))
     using(istream) { is =>
       Iterator.continually(readWindowDetail(is)).takeWhile(_ != null).toList
     }
-*/
+  }
 
-    val path = Paths.get("D:\\", pathname)
-    val istream = new ObjectInputStream(Files.newInputStream(path))
-    val windowDetailList: List[WindowDetail] = using(istream) { is =>
-      Iterator.continually(readWindowDetail(is)).takeWhile(_ != null).toList
+  private def createWindowDetailListByDir(path: Path): List[WindowDetail] = {
+    val files = Files.list(path).iterator().asScala.toList
+    for ( f <- files; w <- createWindowDetailListByFile(f) ) yield w
+  }
+
+  private def recreate(): Unit = {
+    val schema = windowDetails.schema
+    schema.create.statements.foreach(println)
+    val setup = DBIO.seq(
+      schema.dropIfExists,
+      schema.createIfNotExists
+    )
+    val setupFuture = db.run(setup)
+    Await.result(setupFuture, Duration.Inf)
+  }
+
+  def load(name: String, isRecreate: Boolean): Future[Unit] = {
+
+    if (isRecreate) {
+      recreate()
     }
 
+    val path = Paths.get("D:\\", name)
+    val windowDetailList = createWindowDetailListByDir(path)
     //これでうまくいくが一意制約エラーがでたときに、そこで止まってしまう
     //db.run(windowDetails ++= windowDetailList).map(_ => ())
 

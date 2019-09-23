@@ -37,11 +37,10 @@ class Application @Inject() (
     windowDetails.map(cs => Ok(html.list(cs, orderBy, filterHandler, filterWindowName)))
   }
 
-  def load(pathname: String) = Action.async { implicit request =>
-
-
+  def load(name: String, isRecreate: Boolean) = Action.async { implicit request =>
+    println("called")
     for {
-      _ <- windowDetailDao.load(pathname)
+      _ <- windowDetailDao.load(name, isRecreate)
     } yield Home.flashing("success" -> "success")
 
   }
