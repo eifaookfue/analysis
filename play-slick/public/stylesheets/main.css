@@ -22,6 +22,14 @@ section#main .topRight {
     top: 70px;
 }
 
+input.appName {
+	width: 80px
+}
+
+table.windowDetails .colAppName {
+    width: 80%
+}
+
 table.computers em {
     color: #aaa;
 }

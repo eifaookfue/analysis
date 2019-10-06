@@ -107,7 +107,7 @@ class Log2Case(outputdir: Path) {
           val method = None
           val windowDetail = WindowDetail.apply(fileInfo.appName, fileInfo.computer, fileInfo.userId,
             fileInfo.tradeDate, lineNo, handler, windowName, destinationType, action, method,
-            lineInfo.datetime, startupTime)
+            lineInfo.datetime, startupTime, path.toString)
           //たとえばNewOrderListのDialogがOpenされた後にSelect Basketが起動するケースは
           //handelerをNewOrderListとする
           handler = windowName.getOrElse("")
@@ -273,8 +273,9 @@ class Excel2Case(outputdir: Path) {
       method = iterator.next().getValue[String]
       time = iterator.next().getValue[Timestamp].get
       startupTime = iterator.next().getValue[Long].get
+      logFile = iterator.next().getValue[String].get
       windowDetail = WindowDetail(appName,computerName,userId,tradeDate, lineNo,
-        handler, windowName, destinationType, action, method, time, startupTime)
+        handler, windowName, destinationType, action, method, time, startupTime, logFile)
     } yield windowDetail
 
     val outpath = outputdir.resolve(getObjFile(path.getFileName.toFile.toString))

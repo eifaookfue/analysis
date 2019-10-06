@@ -26,7 +26,7 @@ runLog2Case := {
 lazy val runExcel2Case = taskKey[Unit]("A task that hard codes the values to `run`")
 runExcel2Case := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Log2Case --excelFile" +
-    " D:\\data\\WindowDetail.xlsx --outputdir D:\\tmp5").value
+    " D:\\data\\WindowDetail.xlsx --outputdir D:\\case").value
   println("Done!")
 }
 

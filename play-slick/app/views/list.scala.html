@@ -1,4 +1,10 @@
-@(currentPage: Page[jp.co.nri.nefs.tool.log.common.model.WindowDetail], currentOrderBy: Int, currentFilterHandler: Option[String], currentFilterWindowName: Option[String])(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
+@import _root_.java.sql.Timestamp
+@(currentPage: Page[jp.co.nri.nefs.tool.log.common.model.WindowDetail],
+currentOrderBy: Int, filterAppName: Option[String], filterComputerName: Option[String],
+filterUserId: Option[String], filterTradeDate: Option[String], filterLineNo: Option[Long],
+filterHandler: Option[String], filterWindowName: Option[String], filterDestinationType: Option[String],
+filterAction: Option[String], filterMethod: Option[String],
+filterTime: Option[Timestamp], filterStartupTime: Option[Long])(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
 
 @****************************************
 * Helper generating navigation links    *
@@ -6,7 +12,7 @@
 @link(newPage: Int, newOrderBy: Option[Int] = None) = @{
     routes.Application.list(newPage, newOrderBy.map { orderBy =>
         if(orderBy == scala.math.abs(currentOrderBy)) -currentOrderBy else orderBy
-    }.getOrElse(currentOrderBy), currentFilterHandler, currentFilterWindowName)
+    }.getOrElse(currentOrderBy), filterHandler, filterWindowName)
     
 }
 
@@ -14,7 +20,7 @@
 * Helper generating table headers *
 ***********************************@
 @header(orderBy: Int, title: String) = {
-    <th class="col@orderBy header @if(scala.math.abs(currentOrderBy) == orderBy) { @{if(currentOrderBy < 0) "headerSortDown" else "headerSortUp"} }">
+    <th class="col@title header @if(scala.math.abs(currentOrderBy) == orderBy) { @{if(currentOrderBy < 0) "headerSortDown" else "headerSortUp"} }">
         <a href="@link(0, Some(orderBy))">@title</a>
     </th>
 }
@@ -32,8 +38,18 @@
     <div id="actions">
 
         @helper.form(action=routes.Application.list()) {
-        <input type="search" id="searchbox1" name="hf" value="@currentFilterHandler" placeholder="Filter by Handler"/>
-        <input type="search" id="searchbox2" name="wf" value="@currentFilterWindowName" placeholder="Filter by WindowName"/>
+        <input type="search" id="searchbox1" name="af" value="@filterAppName" class="appName"/>
+        <input type="search" id="searchbox2" name="cf" value="@filterComputerName" />
+        <input type="search" id="searchbox3" name="uf" value="@filterUserId" />
+        <input type="search" id="searchbox4" name="tf" value="@filterTradeDate" />
+        <input type="search" id="searchbox5" name="lf" value="@filterLineNo" />
+        <input type="search" id="searchbox6" name="hf" value="@filterHandler" />
+        <input type="search" id="searchbox7" name="wf" value="@filterWindowName" />
+        <input type="search" id="searchbox8" name="df" value="@filterDestinationType" />
+        <input type="search" id="searchbox9" name="if" value="@filterAction" />
+        <input type="search" id="searchbox10" name="mf" value="@filterMethod" />
+        <input type="search" id="searchbox11" name="ef" value="@filterTime" />
+        <input type="search" id="searchbox12" name="sf" value="@filterStartupTime" />
         <input type="submit" id="searchsubmit" value="Filter by name" class="btn primary"/>
         }
 
@@ -56,6 +72,7 @@
                     @header(10, "Method")
                     @header(11, "Time")
                     @header(12, "StartupTime")
+                    @header(13, "Logfile")
                 </tr>
             </thead>
             <tbody>
@@ -75,6 +92,7 @@
                             <td>@windowDetail.method</td>
                             <td>@windowDetail.time.format("yyyy-MM-dd HH:mm:ss.SSS")</td>
                             <td>@windowDetail.startupTime</td>
+                            <td><a href=@windowDetail.logFile>@windowDetail.logFile</a></td>
                         </tr>
                     }
                 }

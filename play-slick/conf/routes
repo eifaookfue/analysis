@@ -6,7 +6,7 @@
 GET     /                           controllers.Application.index
 
 # Computers list (look at the default values for pagination parameters)
-GET     /windowDetails                  controllers.Application.list(p:Int ?= 0, s:Int ?= 0, hf:Option[String] ?= None, wf:Option[String] ?= None)
+GET     /windowDetails                  controllers.Application.list(p:Int ?= 0, s:Int ?= 0, af:Option[String] ?= None, cf:Option[String] ?= None, uf:Option[String] ?= None, tf:Option[String] ?= None, lf:Option[Long] ?= None, hf:Option[String] ?= None, wf:Option[String] ?= None, df:Option[String] ?= None, if:Option[String] ?= None, mf:Option[String] ?= None, ef:Option[Long] ?= None, sf:Option[Long] ?= None)
 
 POST     /load                  controllers.Application.load(name:String, isRecreate:Boolean ?= false)
 

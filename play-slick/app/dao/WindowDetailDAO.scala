@@ -32,7 +32,8 @@ trait WindowDetailComponent {
     def method = column[Option[String]]("METHOD")
     def time = column[Timestamp]("TIME")
     def startupTime = column[Long]("STARTUP_TIME")
-    def * = (appName, computerName, userId, tradeDate, lineNo, handler, windowName, destinationType, action, method, time, startupTime) <> (WindowDetail.tupled, WindowDetail.unapply)
+    def logFile = column[String]("LOGFILE")
+    def * = (appName, computerName, userId, tradeDate, lineNo, handler, windowName, destinationType, action, method, time, startupTime, logFile) <> (WindowDetail.tupled, WindowDetail.unapply)
     def idx_1 = index("idx_1", (appName, computerName, userId, tradeDate, lineNo), unique = true)
     //def nth = Vector(handler, windowName, action, method, userName, tradeDate, time, startupTime )
     // 返り値はAnyでもいいが、ColumnOrderedとしてみた。
@@ -91,16 +92,40 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(windowDetails.filter { windowDetail => windowDetail.windowName.toLowerCase like filterHandler.map(_.toLowerCase).getOrElse("") }.length.result)
   }
 
-  /** Return a page of WindowDetail */
-  def list(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1, filterHandler: Option[String] = None, filterWindowName: Option[String] = None): Future[Page[WindowDetail]] = {
 
+
+  /** Return a page of WindowDetail */
+  def list(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1,
+           filterAppName: Option[String] = None,
+           filterComputerName: Option[String] = None,
+           filterUserId: Option[String] = None,
+           filterTradeDate: Option[String] = None,
+           filterLineNo: Option[Long] = None,
+           filterHandler: Option[String] = None,
+           filterWindowName: Option[String] = None,
+           filterDestinationType: Option[String] = None,
+           filterAction: Option[String] = None,
+           filterMethod: Option[String] = None,
+           filterTime: Option[Timestamp] = None,
+           filterStartupTime: Option[Long] = None,
+          ): Future[Page[WindowDetail]] = {
     val offset = pageSize * page
     //windowNameはOptional。getOrElseを使わないとvalue || is not a member of slick.lifted.Rep[_1]がでてしまう。
     //getOrElse("")とすることで、ifnull(`WINDOW_NAME`,'') like **となる
     val query1 = windowDetails.filter { windowDetail =>
       List(
+        filterAppName.map(windowDetail.appName like _),
+        filterComputerName.map(windowDetail.computerName like _),
+        filterUserId.map(windowDetail.userId like _),
+        filterTradeDate.map(windowDetail.tradeDate like _),
+        filterLineNo.map(windowDetail.lineNo === _),
         filterHandler.map(windowDetail.handler like _),
-        filterWindowName.map(windowDetail.windowName.getOrElse("") like _)
+        filterWindowName.map(windowDetail.windowName.getOrElse("") like _),
+        filterDestinationType.map(windowDetail.destinationType.getOrElse("") like _),
+        filterAction.map(windowDetail.action.getOrElse("") like _),
+        filterMethod.map(windowDetail.method.getOrElse("") like _),
+        filterTime.map(windowDetail.time === _),
+        filterStartupTime.map(windowDetail.startupTime === _),
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     }
     val query2 = query1.sortBy(_.getSortedColumn(orderBy))
