@@ -6,7 +6,7 @@ import java.sql.Timestamp
 
 import javax.inject.{Inject, Singleton}
 import jp.co.nri.nefs.tool.log.common.model.WindowDetail
-import models.Page
+import models.{Page,Params}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 import slick.lifted.ColumnOrdered
@@ -93,39 +93,28 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
 
-
   /** Return a page of WindowDetail */
-  def list(page: Int = 0, pageSize: Int = 10, orderBy: Int = 1,
-           filterAppName: Option[String] = None,
-           filterComputerName: Option[String] = None,
-           filterUserId: Option[String] = None,
-           filterTradeDate: Option[String] = None,
-           filterLineNo: Option[Long] = None,
-           filterHandler: Option[String] = None,
-           filterWindowName: Option[String] = None,
-           filterDestinationType: Option[String] = None,
-           filterAction: Option[String] = None,
-           filterMethod: Option[String] = None,
-           filterTime: Option[Timestamp] = None,
-           filterStartupTime: Option[Long] = None,
-          ): Future[Page[WindowDetail]] = {
-    val offset = pageSize * page
+  def list(params: Params, pageSize: Int = 10): Future[Page[WindowDetail]] = {
+    val page = params.page
+    val orderBy = params.orderBy.getOrElse(1)
+    val offset = page * pageSize
     //windowNameはOptional。getOrElseを使わないとvalue || is not a member of slick.lifted.Rep[_1]がでてしまう。
     //getOrElse("")とすることで、ifnull(`WINDOW_NAME`,'') like **となる
+    //画面のサーチボックスに何も入力しなかった場合、NoneではなくSome()が送られてきてしまうため、Option型に変更
     val query1 = windowDetails.filter { windowDetail =>
       List(
-        filterAppName.map(windowDetail.appName like _),
-        filterComputerName.map(windowDetail.computerName like _),
-        filterUserId.map(windowDetail.userId like _),
-        filterTradeDate.map(windowDetail.tradeDate like _),
-        filterLineNo.map(windowDetail.lineNo === _),
-        filterHandler.map(windowDetail.handler like _),
-        filterWindowName.map(windowDetail.windowName.getOrElse("") like _),
-        filterDestinationType.map(windowDetail.destinationType.getOrElse("") like _),
-        filterAction.map(windowDetail.action.getOrElse("") like _),
-        filterMethod.map(windowDetail.method.getOrElse("") like _),
-        filterTime.map(windowDetail.time === _),
-        filterStartupTime.map(windowDetail.startupTime === _),
+        params.appName.filter(_.trim.nonEmpty).map(windowDetail.appName like "%" + _ +  "%"),
+        params.computerName.filter(_.trim.nonEmpty).map(windowDetail.computerName like "%" + _ +  "%"),
+        params.userId.filter(_.trim.nonEmpty).map(windowDetail.userId like "%" + _ +  "%"),
+        params.tradeDate.filter(_.trim.nonEmpty).map(windowDetail.tradeDate like "%" + _ +  "%"),
+        params.lineNo.map(windowDetail.lineNo === _),
+        params.handler.filter(_.trim.nonEmpty).map(windowDetail.handler like "%" + _ +  "%"),
+        params.windowName.filter(_.trim.nonEmpty).map(windowDetail.windowName.getOrElse("") like "%" + _ +  "%"),
+        params.destinationType.filter(_.trim.nonEmpty).map(windowDetail.destinationType.getOrElse("") like "%" + _ +  "%"),
+        params.action.filter(_.trim.nonEmpty).map(windowDetail.action.getOrElse("") like "%" + _ +  "%"),
+        params.method.filter(_.trim.nonEmpty).map(windowDetail.method.getOrElse("") like "%" + _ +  "%"),
+        params.time.map(windowDetail.time === _),
+        params.startupTime.map(windowDetail.startupTime === _)
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     }
     val query2 = query1.sortBy(_.getSortedColumn(orderBy))

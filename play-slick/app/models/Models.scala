@@ -1,7 +1,59 @@
 package models
 
+import java.sql.Timestamp
+
+import play.api.mvc.QueryStringBindable
+
 case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
   lazy val prev = Option(page - 1).filter(_ >= 0)
   lazy val next = Option(page + 1).filter(_ => (offset + items.size) < total)
 }
 
+
+case class Params(page: Int = 0, orderBy: Option[Int]  = None,
+                  appName: Option[String]  = None, computerName: Option[String]  = None, userId:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Long]  = None,
+                  handler: Option[String]  = None, windowName: Option[String]  = None, destinationType: Option[String]  = None,
+                  action: Option[String]  = None, method: Option[String]  = None,
+                  time: Option[Timestamp]  = None, startupTime: Option[Long]  = None, logFile: Option[String]  = None)
+
+
+object Params {
+  implicit def queryStringBindable(implicit intBinder: QueryStringBindable[Int],
+                                   strBinder: QueryStringBindable[String],
+                                   longBinder: QueryStringBindable[Long]): QueryStringBindable[Params] = new QueryStringBindable[Params] {
+    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Params]] = {
+      val page = intBinder.bind("page", params)
+      val orderBy = intBinder.bind("orderBy", params)
+      val appName = strBinder.bind("appName", params)
+      val computerName = strBinder.bind("computerName", params)
+      val userId = strBinder.bind("userId", params)
+      val tradeDate = strBinder.bind("tradeDate", params)
+      val lineNo = longBinder.bind("lineNo", params)
+      val handler = strBinder.bind("handler", params)
+      val windowName = strBinder.bind("windowName", params)
+      val destinationType = strBinder.bind("destinationType", params)
+      val action = strBinder.bind("action", params)
+      val method = strBinder.bind("action", params)
+      val time = longBinder.bind("time", params)
+      val startupTime = longBinder.bind("startupTime", params)
+      val logFile = strBinder.bind("logFile", params)
+      Some(Right(Params(page.map(_.right.get).getOrElse(0),orderBy.map(_.right.get),
+        appName.map(_.right.get),computerName.map(_.right.get), userId.map(_.right.get),
+        tradeDate.map(_.right.get), lineNo.map(_.right.get), handler.map(_.right.get),
+        windowName.map(_.right.get), destinationType.map(_.right.get), action.map(_.right.get),
+        method.map(_.right.get), time.map(e => new Timestamp(e.right.get)),
+        startupTime.map(_.right.get), logFile.map(_.right.get))))
+    }
+    override def unbind(key: String, params: Params): String = {
+      List(Some(intBinder.unbind("page", params.page)), params.orderBy.map(intBinder.unbind("orderBy",_)),
+        params.appName.map(strBinder.unbind("appName",_)), params.computerName.map(strBinder.unbind("computerName",_)),
+        params.userId.map(strBinder.unbind("userId",_)), params.tradeDate.map(strBinder.unbind("tradeDate",_)),
+        params.lineNo.map(longBinder.unbind("lineNo",_)), params.handler.map(strBinder.unbind("handler",_)),
+        params.windowName.map(strBinder.unbind("windowName",_)), params.destinationType.map(strBinder.unbind("destinationType",_)),
+        params.action.map(strBinder.unbind("action",_)), params.method.map(strBinder.unbind("method",_)),
+        params.time.map(t => longBinder.unbind("time",t.getTime)), params.startupTime.map(longBinder.unbind("startupTime",_)),
+        params.logFile.map(strBinder.unbind("logFile",_))
+      ).collect({ case Some(p) => p}).reduceLeft(_ + "&" + _)
+    }
+  }
+}
