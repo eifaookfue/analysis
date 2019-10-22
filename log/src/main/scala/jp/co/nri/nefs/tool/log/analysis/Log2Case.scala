@@ -4,7 +4,8 @@ import java.io.{ObjectInputStream, ObjectOutputStream}
 import java.nio.file.{Files, Path, Paths}
 import java.sql.Timestamp
 import java.util.Date
-import jp.co.nri.nefs.tool.log.common.model.WindowDetail
+
+import jp.co.nri.nefs.tool.log.common.model.{Log, WindowDetail}
 import jp.co.nri.nefs.tool.log.common.utils.FileUtils._
 import jp.co.nri.nefs.tool.log.common.utils.RegexUtils._
 import jp.co.nri.nefs.tool.log.common.utils.ZipUtils._
@@ -21,7 +22,7 @@ class Log2Case(outputdir: Path) {
     * キー：windowName
     * バリュー：Windowクラスのリスト。追加する必要があるためmutableなListBufferを用いる
     */
-  private var windowDetailMap = Map[Option[String], ListBuffer[WindowDetail]]()
+  private var detailMap = Map[Option[String], ListBuffer[WindowDetail]]()
 
   private case class FileInfo(appName: String, env: String, computer: String, userId: String, startTime: String){
     val tradeDate: String = startTime.take(8)
@@ -56,10 +57,6 @@ class Log2Case(outputdir: Path) {
     }
   }
 
-  //java.io.EOFExceptionが出るが無視する
-  private def using[A <: java.io.Closeable](s: A)(f: A => Unit): Unit = {
-    try { f(s) } catch {case _: Exception => } finally { s.close() }
-  }
 
   def execute(paths: List[Path]): Unit = {
     paths.foreach(p => execute(p))
@@ -87,8 +84,9 @@ class Log2Case(outputdir: Path) {
       var handlerStartTime = new Date()
       var handlerEndTime = new Date()
 
-      var lineNo = 1L
-      Files.lines(path).forEach(line => {
+      for { (line, tmpNo) <- Files.lines(path).iterator().asScala.zipWithIndex
+            lineNo = tmpNo + 1
+      } {
         val lineInfo = getLineInfo(line)
         if (lineInfo.message contains "Handler start.") {
           handlerStartTime = lineInfo.datetime
@@ -105,34 +103,39 @@ class Log2Case(outputdir: Path) {
           val destinationType = None
           val action = None
           val method = None
-          val windowDetail = WindowDetail.apply(fileInfo.appName, fileInfo.computer, fileInfo.userId,
-            fileInfo.tradeDate, lineNo, handler, windowName, destinationType, action, method,
-            lineInfo.datetime, startupTime, path.toString)
+          val detail = WindowDetail(0L, lineNo, handler, windowName, destinationType, action, method,
+            lineInfo.datetime, startupTime)
           //たとえばNewOrderListのDialogがOpenされた後にSelect Basketが起動するケースは
           //handelerをNewOrderListとする
           handler = windowName.getOrElse("")
-          windowDetailMap.get(windowName) match {
-            case Some(buf) => buf += windowDetail
-            case None => windowDetailMap += (windowName -> ListBuffer(windowDetail))
+          detailMap.get(windowName) match {
+            case Some(buf) => buf += detail
+            case None => detailMap += (windowName -> ListBuffer(detail))
           }
         }
         else if ((lineInfo.message contains "Button event ends") || (lineInfo.message contains "Button Pressed")) {
           val windowName = getWindowName(lineInfo.message, lineInfo.clazz)
           val action = getButtonAction(lineInfo.message)
-          windowDetailMap.get(windowName) match {
+          detailMap.get(windowName) match {
             case Some(buf) => buf.update(buf.length - 1, buf.last.copy(action = action))
             case None => println("Error")
           }
         }
-        lineNo = lineNo + 1
-      })
+      }
+      val outpathLog = outputdir.resolve(getObjFile(path.getFileName.toFile.toString, "Log"))
+      val ostreamLog = new ObjectOutputStream(Files.newOutputStream(outpathLog))
+      val log = Log(0L, fileInfo.appName, fileInfo.computer, fileInfo.userId, fileInfo.tradeDate)
+      using(ostreamLog){ os =>
+        os.writeObject(log)
+      }
+
       //型を変換しないとIterableとなりSortができない
       //val tmpList: List[WindowDetail] = (for ((k, v) <- windowDetailMap) yield v.last)(collection.breakOut)
       //なぜかIterable[jp.co.nri.nefs.tool.log.common.model.WindowDetail] does not take parametersというエラーがでてしまう
-      val tmp = for ((_, v) <- windowDetailMap) yield v.last
+      val tmp = for ((_, v) <- detailMap) yield v.last
       val tmpList = tmp.toList
       val windowDetailList = tmpList.sortBy(_.lineNo)
-      val outpath = outputdir.resolve(getObjFile(path.getFileName.toFile.toString))
+      val outpath = outputdir.resolve(getObjFile(path.getFileName.toFile.toString, "Detail"))
       val ostream = new ObjectOutputStream(Files.newOutputStream(outpath))
       //    os.writeObject(windowDetailList)
       using(ostream){ os =>
@@ -151,8 +154,8 @@ class Log2Case(outputdir: Path) {
 }
 
 object Utils {
-  def getObjFile(name: String): String = {
-    getBase(name) + ".obj"
+  def getObjFile(name: String, suffix: String): String = {
+    getBase(name) + "_" + suffix + ".obj"
   }
   def getBase(name: String): String = {
     val index = name.lastIndexOf('.')
@@ -161,6 +164,12 @@ object Utils {
     else
       name
   }
+
+  //java.io.EOFExceptionが出るが無視する
+ def using[A <: java.io.Closeable](s: A)(f: A => Unit): Unit = {
+    try { f(s) } catch {case _: Exception => } finally { s.close() }
+ }
+
 
 }
 
@@ -181,7 +190,7 @@ object Log2Case {
   def main(args: Array[String]): Unit = {
 
     //lazy val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).log$""".r
-    lazy val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).(log|zip)$""".r
+    val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).(log|zip)$""".r
     val options = nextOption(Map(), args.toList)
     val (executionType, dirOrFile, outputdir) = getOption(options)
     val log2case = new Log2Case(outputdir)
@@ -247,47 +256,74 @@ object Log2Case {
 class Excel2Case(outputdir: Path) {
   import jp.co.nri.nefs.tool.log.common.utils.RichCell.cellToRichCell
   import Utils._
-  def execute(path: Path): Unit = {
-    val book = WorkbookFactory.create(path.toFile)
-    //val sheet = book.getSheet("Sheet1")
-    val sheets = for {
+
+  private def collectSheets(book: Workbook, keyword: String): Seq[Sheet] = {
+    for {
       no <- 0 until book.getNumberOfSheets
       name = book.getSheetName(no)
-      if name.contains("WindowDetail")
+      if name.contains(keyword)
       sheet = book.getSheetAt(no)
     } yield sheet
-    val windowDetails = for {
-      sheet <- sheets
-      (row, index) <- sheet.iterator().asScala.zipWithIndex
-      if index > 0 //先頭行スキップ
-      iterator = row.iterator()
-      appName = iterator.next().getValue[String].get
-      computerName = iterator.next().getValue[String].get
-      userId = iterator.next().getValue[String].get
-      tradeDate = iterator.next().getValue[String].get
-      lineNo = iterator.next().getValue[Long].get
-      handler = iterator.next().getValue[String].get
-      windowName = iterator.next().getValue[String]
-      destinationType = iterator.next().getValue[String]
-      action = iterator.next().getValue[String]
-      method = iterator.next().getValue[String]
-      time = iterator.next().getValue[Timestamp].get
-      startupTime = iterator.next().getValue[Long].get
-      logFile = iterator.next().getValue[String].get
-      windowDetail = WindowDetail(appName,computerName,userId,tradeDate, lineNo,
-        handler, windowName, destinationType, action, method, time, startupTime, logFile)
-    } yield windowDetail
+  }
 
-    val outpath = outputdir.resolve(getObjFile(path.getFileName.toFile.toString))
+  private def writeObj[T](path: Path, keyword: String, sheet: Sheet)
+                      (f: Sheet => Seq[T]): Unit = {
+    val objs = f(sheet)
+    val index = sheet.getSheetName.replace(keyword, "")
+    val outpath = outputdir.resolve(getObjFile(keyword, index))
     val ostream = new ObjectOutputStream(Files.newOutputStream(outpath))
-    using(ostream){ os =>
-      windowDetails.foreach( w => {
-        os.writeObject(w)
-      })
+    // 書き込み
+    using(ostream) { os =>
+      objs.foreach(l =>
+        os.writeObject(l)
+      )
     }
+    // 念のため読み込みなおしてログ出力
     val istream = new ObjectInputStream(Files.newInputStream(outpath))
-    using(istream){is =>
+    using(istream) { is =>
       Iterator.continually(is.readObject()).takeWhile(_ != null).foreach(v => println(v))
+    }
+  }
+
+  def execute(path: Path): Unit = {
+    val book = WorkbookFactory.create(path.toFile)
+    val logSheets = collectSheets(book, "Log")
+    val detailSheets = collectSheets(book, "WindowDetail")
+
+    for {sheet <- logSheets} {
+      writeObj(path, "Log", sheet){ s =>
+        val logs = for {
+          (row, rownum) <- s.iterator().asScala.zipWithIndex
+          if rownum > 0 //先頭行スキップ
+          iterator = row.iterator()
+          logId = 0L
+          appName = iterator.next().getValue[String].get
+          computerName = iterator.next().getValue[String].get
+          userId = iterator.next().getValue[String].get
+          tradeDate = iterator.next().getValue[String].get
+        } yield Log(logId, appName, computerName, userId, tradeDate)
+        logs.toSeq
+      }
+    }
+
+    for {sheet <- detailSheets}{
+      writeObj(path, "WindowDetail", sheet){ s =>
+        (for {
+          (row, rownum) <- s.iterator().asScala.zipWithIndex
+          if rownum > 0 //先頭行スキップ
+          iterator = row.iterator()
+          lineNo = iterator.next().getValue[Int].get
+          handler = iterator.next().getValue[String].get
+          windowName = iterator.next().getValue[String]
+          destinationType = iterator.next().getValue[String]
+          action = iterator.next().getValue[String]
+          method = iterator.next().getValue[String]
+          time = iterator.next().getValue[Timestamp].get
+          startupTime = iterator.next().getValue[Int].get
+          detail = WindowDetail(0L, lineNo,
+            handler, windowName, destinationType, action, method, time, startupTime)
+        } yield detail).toSeq
+      }
     }
   }
 }

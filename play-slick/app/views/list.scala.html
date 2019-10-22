@@ -1,5 +1,5 @@
 @import _root_.java.sql.Timestamp
-@(currentPage: Page[jp.co.nri.nefs.tool.log.common.model.WindowDetail],
+@(currentPage: Page[(jp.co.nri.nefs.tool.log.common.model.Log, jp.co.nri.nefs.tool.log.common.model.WindowDetail)],
 params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
 
 @****************************************
@@ -54,35 +54,36 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
 
     </div>
 
-    @Option(currentPage.items).filterNot(_.isEmpty).map { windowDetails =>
+    @Option(currentPage.items).filterNot(_.isEmpty).map { logDetails =>
         
         <table class="windowDetails zebra-striped">
             <thead>
                 <tr>
-                    @header(1, "AppName")
-                    @header(2, "ComputerName")
-                    @header(3, "UserId")
-                    @header(4, "TradeDate")
-                    @header(5, "LineNo")
-                    @header(6, "Handler")
-                    @header(7, "WindowName")
-                    @header(8, "DestinationType")
-                    @header(9, "Action")
-                    @header(10, "Method")
-                    @header(11, "Time")
-                    @header(12, "StartupTime")
-                    @header(13, "Logfile")
+                    @header(1, "LogId")
+                    @header(2, "AppName")
+                    @header(3, "ComputerName")
+                    @header(4, "UserId")
+                    @header(5, "TradeDate")
+                    @header(6, "LineNo")
+                    @header(7, "Handler")
+                    @header(8, "WindowName")
+                    @header(9, "DestinationType")
+                    @header(10, "Action")
+                    @header(11, "Method")
+                    @header(12, "Time")
+                    @header(13, "StartupTime")
                 </tr>
             </thead>
             <tbody>
 
-                @windowDetails.map {
-                    case windowDetail => {
+                @logDetails.map {
+                    case (loginfo, windowDetail) => {
                         <tr>
-                            <td>@windowDetail.appName</td>
-                            <td>@windowDetail.computerName</td>
-                            <td>@windowDetail.userId</td>
-                            <td>@windowDetail.tradeDate</td>
+                            <td>@loginfo.logId</td>
+                            <td>@loginfo.appName</td>
+                            <td>@loginfo.computerName</td>
+                            <td>@loginfo.userId</td>
+                            <td>@loginfo.tradeDate</td>
                             <td>@windowDetail.lineNo</td>
                             <td>@windowDetail.handler</td>
                             <td>@windowDetail.windowName</td>
@@ -91,7 +92,6 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
                             <td>@windowDetail.method</td>
                             <td>@windowDetail.time.format("yyyy-MM-dd HH:mm:ss.SSS")</td>
                             <td>@windowDetail.startupTime</td>
-                            <td><a href=@windowDetail.logFile>@windowDetail.logFile</a></td>
                         </tr>
                     }
                 }
@@ -111,7 +111,7 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
                     </li>
                 }
                 <li class="current">
-                    <a>Displaying @(currentPage.offset + 1) to @(currentPage.offset + windowDetails.size) of @currentPage.total</a>
+                    <a>Displaying @(currentPage.offset + 1) to @(currentPage.offset + logDetails.size) of @currentPage.total</a>
                 </li>
                 @currentPage.next.map { page =>
                     <li class="next">

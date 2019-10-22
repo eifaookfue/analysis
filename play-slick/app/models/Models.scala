@@ -5,13 +5,13 @@ import java.sql.Timestamp
 import play.api.mvc.QueryStringBindable
 
 case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
-  lazy val prev = Option(page - 1).filter(_ >= 0)
-  lazy val next = Option(page + 1).filter(_ => (offset + items.size) < total)
+  lazy val prev: Option[Int] = Option(page - 1).filter(_ >= 0)
+  lazy val next: Option[Int] = Option(page + 1).filter(_ => (offset + items.size) < total)
 }
 
 
 case class Params(page: Int = 0, orderBy: Option[Int]  = None,
-                  appName: Option[String]  = None, computerName: Option[String]  = None, userId:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Long]  = None,
+                  appName: Option[String]  = None, computerName: Option[String]  = None, userId:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Int]  = None,
                   handler: Option[String]  = None, windowName: Option[String]  = None, destinationType: Option[String]  = None,
                   action: Option[String]  = None, method: Option[String]  = None,
                   time: Option[Timestamp]  = None, startupTime: Option[Long]  = None, logFile: Option[String]  = None)
@@ -28,7 +28,7 @@ object Params {
       val computerName = strBinder.bind("computerName", params)
       val userId = strBinder.bind("userId", params)
       val tradeDate = strBinder.bind("tradeDate", params)
-      val lineNo = longBinder.bind("lineNo", params)
+      val lineNo = intBinder.bind("lineNo", params)
       val handler = strBinder.bind("handler", params)
       val windowName = strBinder.bind("windowName", params)
       val destinationType = strBinder.bind("destinationType", params)
