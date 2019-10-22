@@ -124,7 +124,7 @@ class Log2Case(outputdir: Path) {
       }
       val outpathLog = outputdir.resolve(getObjFile(path.getFileName.toFile.toString, "Log"))
       val ostreamLog = new ObjectOutputStream(Files.newOutputStream(outpathLog))
-      val log = Log(0L, fileInfo.appName, fileInfo.computer, fileInfo.userId, fileInfo.tradeDate)
+      val log = Log(0L, fileInfo.appName, fileInfo.computer, fileInfo.userId, fileInfo.tradeDate, fileInfo.time)
       using(ostreamLog){ os =>
         os.writeObject(log)
       }
@@ -153,9 +153,16 @@ class Log2Case(outputdir: Path) {
 
 }
 
+object Keywords {
+  val OBJ_SUFFIX = ".obj"
+  val LOG_SUFFIX = "_Log"
+  val WINDOW_DETAIL_SUFFIX = "_WindowDetail"
+}
+
 object Utils {
+  import Keywords._
   def getObjFile(name: String, suffix: String): String = {
-    getBase(name) + "_" + suffix + ".obj"
+    getBase(name) + suffix + OBJ_SUFFIX
   }
   def getBase(name: String): String = {
     val index = name.lastIndexOf('.')
@@ -254,8 +261,8 @@ object Log2Case {
 }
 
 class Excel2Case(outputdir: Path) {
-  import jp.co.nri.nefs.tool.log.common.utils.RichCell.cellToRichCell
   import Utils._
+  import jp.co.nri.nefs.tool.log.common.utils.RichCell.cellToRichCell
 
   private def collectSheets(book: Workbook, keyword: String): Seq[Sheet] = {
     for {
@@ -266,11 +273,11 @@ class Excel2Case(outputdir: Path) {
     } yield sheet
   }
 
-  private def writeObj[T](path: Path, keyword: String, sheet: Sheet)
+  private def writeObj[T](path: Path, sheet: Sheet)
                       (f: Sheet => Seq[T]): Unit = {
+    import Keywords.OBJ_SUFFIX
     val objs = f(sheet)
-    val index = sheet.getSheetName.replace(keyword, "")
-    val outpath = outputdir.resolve(getObjFile(keyword, index))
+    val outpath = outputdir.resolve(sheet.getSheetName + OBJ_SUFFIX)
     val ostream = new ObjectOutputStream(Files.newOutputStream(outpath))
     // 書き込み
     using(ostream) { os =>
@@ -286,12 +293,13 @@ class Excel2Case(outputdir: Path) {
   }
 
   def execute(path: Path): Unit = {
+    import Keywords._
     val book = WorkbookFactory.create(path.toFile)
-    val logSheets = collectSheets(book, "Log")
-    val detailSheets = collectSheets(book, "WindowDetail")
+    val logSheets = collectSheets(book, LOG_SUFFIX)
+    val detailSheets = collectSheets(book, WINDOW_DETAIL_SUFFIX)
 
     for {sheet <- logSheets} {
-      writeObj(path, "Log", sheet){ s =>
+      writeObj(path, sheet){ s =>
         val logs = for {
           (row, rownum) <- s.iterator().asScala.zipWithIndex
           if rownum > 0 //先頭行スキップ
@@ -301,13 +309,14 @@ class Excel2Case(outputdir: Path) {
           computerName = iterator.next().getValue[String].get
           userId = iterator.next().getValue[String].get
           tradeDate = iterator.next().getValue[String].get
-        } yield Log(logId, appName, computerName, userId, tradeDate)
+          time = iterator.next().getValue[Timestamp].get
+        } yield Log(logId, appName, computerName, userId, tradeDate, time)
         logs.toSeq
       }
     }
 
     for {sheet <- detailSheets}{
-      writeObj(path, "WindowDetail", sheet){ s =>
+      writeObj(path, sheet){ s =>
         (for {
           (row, rownum) <- s.iterator().asScala.zipWithIndex
           if rownum > 0 //先頭行スキップ

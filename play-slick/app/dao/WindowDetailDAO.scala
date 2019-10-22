@@ -40,10 +40,6 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   import profile.api._
 
-  val OBJ_SUFFIX = ".obj"
-  val LOG_PREFIX = "Log_"
-  val WINDOW_DETAIL_PREFIX = "WindowDetail_"
-
   val logs = TableQuery[Logs]
   val windowDetails = TableQuery[WindowDetails]
 
@@ -158,6 +154,7 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   def load(name: String, isRecreate: Boolean): Unit = {
+    import jp.co.nri.nefs.tool.log.analysis.Keywords._
 
     if (isRecreate) {
       recreate()
@@ -169,16 +166,16 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val bases = for {
       file <- Files.list(path).iterator().asScala.toList
       name = file.getFileName.toFile.toString
-      if name.startsWith("Log")
-      base = name.replace(LOG_PREFIX, "").replace(OBJ_SUFFIX, "")
+      if name.contains(LOG_SUFFIX)
+      base = name.replace(LOG_SUFFIX, "").replace(OBJ_SUFFIX, "")
     } yield base
 
     for {
       base <- bases
-      logPath = path.resolve(LOG_PREFIX + base + OBJ_SUFFIX)
+      logPath = path.resolve(base + LOG_SUFFIX + OBJ_SUFFIX)
       // Logは1レコードしか存在しない
       logObj = deserializeObjects[Log](logPath).head
-      detailPath = path.resolve(WINDOW_DETAIL_PREFIX + base + OBJ_SUFFIX)
+      detailPath = path.resolve(base + WINDOW_DETAIL_SUFFIX + OBJ_SUFFIX)
       windowDetailObjs = deserializeObjects[WindowDetail](detailPath)
       action = (
         for {
