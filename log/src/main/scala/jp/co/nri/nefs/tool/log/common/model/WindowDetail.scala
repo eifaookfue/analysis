@@ -9,3 +9,5 @@ case class WindowDetail(logId: Long, lineNo: Int,
                 handler: String, windowName: Option[String], destinationType: Option[String],
                 action: Option[String], method: Option[String],
                 time: Timestamp, startupTime: Long)
+
+case class User(userId: String, userName: String)

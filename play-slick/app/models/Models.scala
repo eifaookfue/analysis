@@ -11,7 +11,7 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
 
 
 case class Params(page: Int = 0, orderBy: Option[Int]  = None,
-                  appName: Option[String]  = None, computerName: Option[String]  = None, userId:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Int]  = None,
+                  appName: Option[String]  = None, computerName: Option[String]  = None, userName:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Int]  = None,
                   handler: Option[String]  = None, windowName: Option[String]  = None, destinationType: Option[String]  = None,
                   action: Option[String]  = None, method: Option[String]  = None,
                   time: Option[Timestamp]  = None, startupTime: Option[Long]  = None, logFile: Option[String]  = None)
@@ -47,7 +47,7 @@ object Params {
     override def unbind(key: String, params: Params): String = {
       List(Some(intBinder.unbind("page", params.page)), params.orderBy.map(intBinder.unbind("orderBy",_)),
         params.appName.map(strBinder.unbind("appName",_)), params.computerName.map(strBinder.unbind("computerName",_)),
-        params.userId.map(strBinder.unbind("userId",_)), params.tradeDate.map(strBinder.unbind("tradeDate",_)),
+        params.userName.map(strBinder.unbind("userName",_)), params.tradeDate.map(strBinder.unbind("tradeDate",_)),
         params.lineNo.map(longBinder.unbind("lineNo",_)), params.handler.map(strBinder.unbind("handler",_)),
         params.windowName.map(strBinder.unbind("windowName",_)), params.destinationType.map(strBinder.unbind("destinationType",_)),
         params.action.map(strBinder.unbind("action",_)), params.method.map(strBinder.unbind("method",_)),

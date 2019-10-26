@@ -1,5 +1,6 @@
 @import _root_.java.sql.Timestamp
-@(currentPage: Page[(jp.co.nri.nefs.tool.log.common.model.Log, jp.co.nri.nefs.tool.log.common.model.WindowDetail)],
+@import _root_.jp.co.nri.nefs.tool.log.common.model._
+@(currentPage: Page[(Log, WindowDetail, Option[User])],
 params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mvc.Flash, messages: Messages)
 
 @****************************************
@@ -18,7 +19,7 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
 ***********************************@
 @header(orderBy: Int, title: String) = {
     @defining(params.orderBy.getOrElse(1)) { currentOrderBy =>
-        <th class="col@title header @if(scala.math.abs(currentOrderBy) == orderBy) { @{if(currentOrderBy < 0) "headerSortDown" else "headerSortUp"} }">
+        <th class="col@title header @if(scala.math.abs(currentOrderBy) == orderBy) { @{if(currentOrderBy < 0) "headerSortUp" else "headerSortDown"} }">
             <a href="@link(0, Some(orderBy))">@title</a>
        </th>
     }
@@ -39,7 +40,7 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
         @helper.form(action=routes.Application.list()) {
         <input type="search" id="searchbox1" name="appName" value="@params.appName" class="appName"/>
         <input type="search" id="searchbox2" name="computerName" value="@params.computerName" />
-        <input type="search" id="searchbox3" name="userId" value="@params.userId" />
+        <input type="search" id="searchbox3" name="userId" value="@params.userName" />
         <input type="search" id="searchbox4" name="tradeDate" value="@params.tradeDate" />
         <input type="search" id="searchbox5" name="lineNo" value="@params.lineNo" />
         <input type="search" id="searchbox6" name="handler" value="@params.handler" />
@@ -62,7 +63,7 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
                     @header(1, "LogId")
                     @header(2, "AppName")
                     @header(3, "ComputerName")
-                    @header(4, "UserId")
+                    @header(4, "UserName")
                     @header(5, "TradeDate")
                     @header(6, "LineNo")
                     @header(7, "Handler")
@@ -77,12 +78,12 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
             <tbody>
 
                 @logDetails.map {
-                    case (loginfo, windowDetail) => {
+                    case (loginfo, windowDetail, user) => {
                         <tr>
                             <td>@loginfo.logId</td>
                             <td>@loginfo.appName</td>
                             <td>@loginfo.computerName</td>
-                            <td>@loginfo.userId</td>
+                            <td>@user.map(_.userName)</td>
                             <td>@loginfo.tradeDate</td>
                             <td>@windowDetail.lineNo</td>
                             <td>@windowDetail.handler</td>
