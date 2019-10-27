@@ -35,9 +35,9 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
         </div>
     }
 
-    <div id="actions" style="display:inline-flex">
 
-        @helper.form(action=routes.Application.list()) {
+        @helper.form(action=routes.Application.list(), args=Symbol("class") -> "form-inline") {
+        <div class="form-group">
         <input type="search" id="searchbox1" name="appName" value="@params.appName" class="appName"/>
         <input type="search" id="searchbox2" name="computerName" value="@params.computerName" />
         <input type="search" id="searchbox3" name="userId" value="@params.userName" />
@@ -51,9 +51,9 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
         <input type="search" id="searchbox11" name="time" value="@params.time" />
         <input type="search" id="searchbox12" name="startupTime" value="@params.startupTime" />
         <input type="submit" id="searchsubmit" value="Filter by name" class="btn primary"/>
+        </div>
         }
 
-    </div>
 
     @Option(currentPage.items).filterNot(_.isEmpty).map { logDetails =>
         
