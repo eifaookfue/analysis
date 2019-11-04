@@ -9,6 +9,7 @@ import scala.collection.JavaConverters._
 
 class Processes(isZip: Boolean, searchPath: Path, outputPath: Path) {
   private def arrange(): Unit = {
+    import jp.co.nri.nefs.tool.log.common.utils.RichFiles._
     val zipPaths = Files.list(searchPath).collect(Collectors.toList()).asScala
     for (zipPath <- zipPaths
          if isZipFile(zipPath)
@@ -26,7 +27,7 @@ class Processes(isZip: Boolean, searchPath: Path, outputPath: Path) {
         // 出力先ファイル
         val targetFile = targetDir.resolve(path.getFileName.toFile.toString)
         // 出力フォルダに出力しようとしたファイルの圧縮済みのファイルが存在したら展開する
-        val targetZip = targetDir.resolve(replaceExtensionToZip(path.getFileName.toFile.toString))
+        val targetZip = targetDir.resolve(path.getFileName.toString.newExtension("zip"))
         if (Files.exists(targetZip)) {
           print(s"$targetZip has found, so unzipping...")
           unzip(targetZip, isCreateDir = false)

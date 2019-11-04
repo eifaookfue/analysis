@@ -84,6 +84,26 @@ name := "analysis"
 
 version := "0.1"
 
+lazy val transfer = (project in file("transfer"))
+  .settings(
+    version := "1.0.0",
+    organization := "jp.co.nri.nefs.tool",
+    assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
+    assemblyMergeStrategy in assembly := {
+      case "application.conf" => MergeStrategy.discard
+      case "reference.conf" => MergeStrategy.discard
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
+  )
+  .settings(libraryDependencies ++= Dependencies.transfer)
+  .dependsOn(log)
+
+lazy val json = (project in file("json"))
+  .settings(libraryDependencies ++= Dependencies.json)
+
+
 // バッククォートでくくると-も使用できる？
 lazy val `play-slick` = (project in file("play-slick") )
   .enablePlugins(PlayScala)

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="sbt: com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.1:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/com.typesafe.play/play-ahc-ws-standalone_2.12/2.0.1/jars/play-ahc-ws-standalone_2.12.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

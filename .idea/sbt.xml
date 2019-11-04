@@ -9,10 +9,12 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/imptest" />
+            <option value="$PROJECT_DIR$/json" />
             <option value="$PROJECT_DIR$/log" />
             <option value="$PROJECT_DIR$/play-slick" />
             <option value="$PROJECT_DIR$/project" />
             <option value="$PROJECT_DIR$/src/core" />
+            <option value="$PROJECT_DIR$/transfer" />
             <option value="$PROJECT_DIR$/transport" />
           </set>
         </option>

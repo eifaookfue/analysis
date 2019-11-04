@@ -5,17 +5,32 @@ import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
 
-object ZipUtils {
+import com.typesafe.scalalogging.LazyLogging
 
-  def using[A <: java.io.Closeable](s: A)(f: A => Unit): Unit = {
-    try { f(s) } finally { s.close() }
-  }
+import scala.language.implicitConversions
+import scala.sys.process.{Process, ProcessLogger}
 
-  def zip(path: Path): Unit = {
+
+class ZipCommand(val cmd: String)
+
+object ZipUtils extends LazyLogging{
+
+  import RichFiles._
+  import FileUtils.using
+
+  def zip(path: Path)(implicit zipCmd: ZipCommand = null): Unit = {
     val fileName = path.getFileName.toString
-    val index = fileName.lastIndexOf(".")
-    val base = fileName.substring(0, index)
-    val zipPath = path.getParent.resolve(base + ".zip")
+    val zipPath = path.newExtension("zip")
+    if (zipCmd != null){
+      val processLogger = ProcessLogger(
+        (o: String) => logger.debug(o),
+        (e: String) => logger.warn(e)
+      )
+      val cmd =Seq(zipCmd.cmd, "cvfM", zipPath.toString, "-C", path.getParent.toString, fileName)
+      Process(cmd) !processLogger
+      return
+    }
+
     val ins = Files.newInputStream(path)
     val name = path.getFileName.toString
     val zos = new ZipOutputStream(Files.newOutputStream(zipPath), Charset.forName("Shift_JIS"))
@@ -47,7 +62,7 @@ object ZipUtils {
     if (!isZipFile(path)) {
       throw new java.lang.IllegalArgumentException("Not Zip file")
     }
-    val outPath = if (isCreateDir) getBasePath(path) else path.getParent
+    val outPath = if (isCreateDir) path.basename else path.getParent
     if (isCreateDir) Files.createDirectories(outPath)
 
     val zis = new ZipInputStream(Files.newInputStream(path), Charset.forName("Shift_JIS"))
@@ -78,20 +93,6 @@ object ZipUtils {
       case regex(_,_) => true
       case _ => false
     }
-  }
-
-  def getBasePath(path: Path): Path = {
-    val fileName = path.getFileName.toFile.toString
-    path.getParent.resolve(getBaseName(fileName))
-  }
-
-  def replaceExtensionToZip(fileName: String): String = {
-    getBaseName(fileName) + ".zip"
-  }
-
-  def getBaseName(fileName: String): String = {
-    val index = fileName.lastIndexOf('.')
-    if (index != -1) fileName.substring(0, index) else fileName
   }
 
   def main(args: Array[String]): Unit = {

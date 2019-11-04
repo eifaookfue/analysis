@@ -32,5 +32,8 @@
     <orderEntry type="library" name="sbt: org.apache.xmlbeans:xmlbeans:2.3.0:jar" level="project" />
     <orderEntry type="library" name="sbt: stax:stax-api:1.0.1:jar" level="project" />
     <orderEntry type="library" name="sbt: xml-apis:xml-apis:1.0.b2:jar" level="project" />
+    <orderEntry type="library" name="sbt: ch.qos.logback:logback-classic:1.0.13:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.typesafe.scala-logging:scala-logging_2.12:3.9.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.12.8:jar" level="project" />
   </component>
 </module>

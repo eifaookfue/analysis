@@ -11,13 +11,26 @@ import sbt._
       Library.h2 % "test"
     )
 
+    val transfer = Seq(
+      Library.config,
+      Library.sacalaLogging,
+      Library.logbackClassic
+    )
+
+    val json = Seq(
+      Library.json,
+      Library.ws
+    )
+
     val log = Seq(
       Library.slick,
       Library.slickHikariCP,
       Library.h2 % "test",
       Library.mysql,
       Library.poi,
-      Library.poi_ooxml
+      Library.poi_ooxml,
+      Library.sacalaLogging,
+      Library.logbackClassic
     )
 
     val transport = Seq(
@@ -36,6 +49,8 @@ import sbt._
     val logback      = "1.0.13"
     val poi          = "3.9"
     val poi_ooxml    = "3.9"
+    val ws           = "2.0.1"
+    val config       = "1.3.2"
   }
 
   object Library {
@@ -49,7 +64,11 @@ import sbt._
     val sacalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"            % Version.scalaLogging
     val mysql               = "mysql"                      % "mysql-connector-java"      % Version.mysql
     val logback             = "ch.qos.logback"             % "logback-core"              % Version.logback
+    val logbackClassic      = "ch.qos.logback"             % "logback-classic"           % Version.logback
     val poi                 = "org.apache.poi"             % "poi"                       % Version.poi
     val poi_ooxml           = "org.apache.poi"             % "poi-ooxml"                 % Version.poi_ooxml
+    val json                = "com.typesafe.play"          %% "play-json"                % Version.play
+    val ws                  = "com.typesafe.play"          %% "play-ahc-ws-standalone"   % Version.ws
+    val config              = "com.typesafe"               %  "config"                   % Version.config
   }
 

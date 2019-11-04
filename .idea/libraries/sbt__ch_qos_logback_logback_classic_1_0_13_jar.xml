@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="sbt: ch.qos.logback:logback-classic:1.0.13:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/ch.qos.logback/logback-classic/1.0.13/jars/logback-classic.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

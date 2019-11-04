@@ -3,13 +3,54 @@ package jp.co.nri.nefs.tool.log.common.utils
 import java.io.IOException
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
+import scala.language.implicitConversions
+
+object RichFiles {
+  implicit def stringToRichString(str: String): RichString = new RichString(str)
+  implicit def pathToRichPath(path: Path): RichPath = new RichPath(path)
+}
+
+class RichString(str: String) {
+  def basename: String = {
+    val index = str.lastIndexOf('.')
+    if (index != -1) str.substring(0, index) else str
+  }
+  def extension: String = {
+    val index = str.lastIndexOf('.')
+    if (index != -1) str.substring(index+1) else ""
+  }
+  def newExtension(extension: String): String = {
+    basename + "." + extension
+  }
+}
+
+class RichPath(path: Path) {
+  import RichFiles.stringToRichString
+
+  def basename: Path = {
+    val basename = path.getFileName.toString.basename
+    path.getParent.resolve(basename)
+  }
+  def newExtension(extension: String): Path = {
+    val basename = path.getFileName.toString.basename
+    path.getParent.resolve(basename + "." + extension)
+  }
+}
 
 object FileUtils {
-  /** +
-    *
-    * @param from
-    * @param to
-    */
+
+  def using[A <: java.io.Closeable](s: A)(f: A => Unit): Unit = {
+    try { f(s) } finally { s.close() }
+  }
+
+  def autoClose[A <: AutoCloseable,B](closeable: A)(fun: A ⇒ B): B = {
+    try {
+      fun(closeable)
+    } finally {
+      closeable.close()
+    }
+  }
+
   def copyDir(fromBase: Path, from: Path, toBase: Path): Unit = {
     class Visitor extends SimpleFileVisitor[Path] {
       override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
@@ -40,7 +81,7 @@ object FileUtils {
           Files.copy(dir, target, StandardCopyOption.COPY_ATTRIBUTES)
           println("done.")
         } catch {
-          case e: Exception => println("failed.")
+          case _ : Exception => println("failed.")
         }
         FileVisitResult.CONTINUE
       }
@@ -52,7 +93,7 @@ object FileUtils {
           Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES)
           println("done.")
         } catch {
-          case e: Exception => println("failed.")
+          case _ : Exception => println("failed.")
         }
 
         FileVisitResult.CONTINUE

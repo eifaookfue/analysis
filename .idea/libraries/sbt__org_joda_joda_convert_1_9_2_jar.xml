@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="sbt: org.joda:joda-convert:1.9.2:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/org.joda/joda-convert/1.9.2/jars/joda-convert.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
