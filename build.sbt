@@ -92,6 +92,7 @@ lazy val transfer = (project in file("transfer"))
     assemblyMergeStrategy in assembly := {
       case "application.conf" => MergeStrategy.discard
       case "reference.conf" => MergeStrategy.discard
+      case "logback.xml" => MergeStrategy.discard
       case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)

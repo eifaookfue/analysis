@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.typesafe.play:cachecontrol_2.12:2.0.0-M2:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.typesafe.play/cachecontrol_2.12/jars/cachecontrol_2.12-2.0.0-M2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.typesafe.play/cachecontrol_2.12/srcs/cachecontrol_2.12-2.0.0-M2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

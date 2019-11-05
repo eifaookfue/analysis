@@ -24,7 +24,6 @@ object ConfigKey {
   val TRGFILE_LAD = "trgFileLAD"
   val TARGETFILE_BASE = "targetFileBase"
   val SLEEP_SECONDS = "sleepSeconds"
-  val NUM_OF_THREADS = "numOfThreads"
   val MASKED_KEY_WORDS = "maskedKeyWords"
   val AWAIT_LIMIT_MINUTES = "awaitLimitMinutes"
   val ZIP_CMD = "zipCmd"
@@ -59,6 +58,8 @@ class RichConfig(config: Config) {
 object Transfer extends LazyLogging {
 
   import RichConfig._
+  import FileUtils.autoClose
+
   val config: Config = ConfigFactory.load()
   val LINE_SEPARATOR = ","
   val KEYVALUE_SEPARATOR = "="
@@ -71,7 +72,7 @@ object Transfer extends LazyLogging {
   def main(args: Array[String]): Unit = {
 
     import ConfigKey._
-    import FileUtils.autoClose
+
 
     // ファイルの削除
     val deletedFilePath = config.getString(DELETED_FILE_PATH)
@@ -83,7 +84,7 @@ object Transfer extends LazyLogging {
     }
 
     // トリガファイルの作成
-    val trgFileBase = config.getString(TRGFILE_BASE, logger)
+    val trgFileBase = Option(config.getString(TRGFILE_BASE, logger)).map(Paths.get(_)).orNull
     if (trgFileBase == null){
       logger.info("exit because {} isn't specified. ", TRGFILE_BASE)
       sys.exit()
@@ -110,6 +111,9 @@ object Transfer extends LazyLogging {
       Thread.sleep(sleepSeconds * 1000)
     }
 
+    // 取得できなかったTrgを削除
+    deleteTrg(trgFileBase, trgFileName)
+
     // ファイル一覧の取得
     val lists = autoClose(Files.walk(targetFileTmpToday)){
       stream =>
@@ -117,7 +121,6 @@ object Transfer extends LazyLogging {
     }
 
     // マスク化
-    //implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(config.getInt(NUM_OF_THREADS, logger)))
     val maskedKeyWords = config.getStringList(MASKED_KEY_WORDS, logger)
     val awaitLimitMinutes = config.getInt(AWAIT_LIMIT_MINUTES, logger)
     maskAll(lists, maskedKeyWords, targetFileOut, awaitLimitMinutes)
@@ -127,9 +130,12 @@ object Transfer extends LazyLogging {
     ZipUtils.zip(targetFileOut)
 
     // 削除
-    Thread.sleep(3000)
+    logger.info("Deleting {}", targetFileTmp)
     FileUtils.delete(targetFileTmp)
+    logger.info("done.")
+    logger.info("Deleting {}", targetFileOut)
     FileUtils.delete(targetFileOut)
+    logger.info("done.")
   }
 
   /*
@@ -180,32 +186,59 @@ object Transfer extends LazyLogging {
   }
 
   private def delete(path: Path): Unit = {
-    val lines = Files.lines(path, CHARSETNAME).iterator().asScala
+
+    val lines = autoClose(Files.lines(path, CHARSETNAME))(stream =>
+      stream.iterator().asScala.toList
+    )
     for {
       line <- lines
       if  !line.startsWith("#")
       path = Paths.get(line)
     } {
-      logger.info("Deleting {}", path)
-      Files.delete(path)
+      if (Files.exists(path)){
+        logger.info("Deleting {}", path)
+        Files.delete(path)
+      } else {
+        logger.info("Skiped deleting {}", path)
+      }
+
     }
   }
 
-  private def createTrgFile(trgFileBase: String, trgFileName: String, trgFileDelimiter: String,
+  private def createTrgFile(trgFileBase: Path, trgFileName: String, trgFileDelimiter: String,
                             trgFilePattern: String, trgFileLAD: String, targetFileTmpToday: Path): Unit = {
     Files.createDirectories(targetFileTmpToday)
     logger.info("created {}", targetFileTmpToday)
-    val path = Paths.get(trgFileBase)
-    val list = Files.list(path).iterator().asScala
+    val list = autoClose(Files.list(trgFileBase))(stream =>
+      stream.iterator().asScala.toList)
     for {
       p <- list
+      if Files.isDirectory(p)
       user = p.getFileName.toString
-      outPath = p.resolve(trgFileName)
+      if user.matches("""[0-9]{6}""")
+      trgPath = p.resolve(trgFileName)
       // W:\ASKA\OMS\OMS\USER\L1Support\Transfer\tmp\20191103\356435
       target =  targetFileTmpToday.resolve(user).toString
       str = List(trgFilePattern + trgFileDelimiter + target + trgFileDelimiter + trgFileLAD)
     } {
-      Files.write(outPath, str.asJava)
+      Files.write(trgPath, str.asJava)
+      logger.info("Put {}", trgPath)
+    }
+  }
+
+  private def deleteTrg(trgFileBase: Path, trgFileName: String): Unit = {
+    val list = autoClose(Files.list(trgFileBase))(stream =>
+      stream.iterator().asScala.toList)
+    for {
+      p <- list
+      if Files.isDirectory(p)
+      user = p.getFileName.toString
+      if user.matches("""[0-9]{6}""")
+      trgPath = p.resolve(trgFileName)
+      if Files.exists(trgPath)
+    } {
+      Files.delete(trgPath)
+      logger.info("Deleted {}", trgPath)
     }
   }
   /*

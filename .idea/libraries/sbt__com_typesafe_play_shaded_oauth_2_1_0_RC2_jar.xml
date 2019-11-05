@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.typesafe.play:shaded-oauth:2.1.0-RC2:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.typesafe.play/shaded-oauth/jars/shaded-oauth-2.1.0-RC2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.typesafe.play/shaded-oauth/srcs/shaded-oauth-2.1.0-RC2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

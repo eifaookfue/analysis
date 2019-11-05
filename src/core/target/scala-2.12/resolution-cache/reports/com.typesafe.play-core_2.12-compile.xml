@@ -7,7 +7,7 @@
 		revision="0.1.0-SNAPSHOT"
 		conf="compile"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, pom, scala-tool"
-		date="20190921123929"/>
+		date="20191104213112"/>
 	<dependencies>
 		<module organisation="mysql" name="mysql-connector-java">
 			<revision name="8.0.15" status="release" pubdate="20190428230151" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://dev.mysql.com/doc/connector-j/en/" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="47">

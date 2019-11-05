@@ -4,7 +4,7 @@
 		module="core_2.12"
 		revision="0.1.0-SNAPSHOT"
 		status="integration"
-		publication="20190921123927"
+		publication="20191104213112"
 	>
 		<license name="Apache-2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html" />
 		<description homepage="https://github.com/playframework/analysis">

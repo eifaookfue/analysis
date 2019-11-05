@@ -7,7 +7,7 @@
 		revision="0.1.0-SNAPSHOT"
 		conf="test-internal"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, pom, scala-tool"
-		date="20190921123929"/>
+		date="20191104213112"/>
 	<dependencies>
 		<module organisation="com.typesafe.play" name="play-logback_2.12">
 			<revision name="2.7.0" status="release" pubdate="20190131072356" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://playframework.com" extra-info.apiURL="https://www.playframework.com/documentation/2.7.0/api/scala/index.html" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="48">

@@ -49,7 +49,7 @@ import sbt._
     val logback      = "1.0.13"
     val poi          = "3.9"
     val poi_ooxml    = "3.9"
-    val ws           = "2.0.1"
+    val ws           = "2.1.0-RC2"
     val config       = "1.3.2"
   }
 
