@@ -5,9 +5,9 @@
 		organisation="com.typesafe.play"
 		module="core_2.12"
 		revision="0.1.0-SNAPSHOT"
-		conf="optional"
+		conf="plugin"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, pom, scala-tool"
-		date="20191104213112"/>
+		date="20191109194602"/>
 	<dependencies>
 	</dependencies>
 </ivy-report>

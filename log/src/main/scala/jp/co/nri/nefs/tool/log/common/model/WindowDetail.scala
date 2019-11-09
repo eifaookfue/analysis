@@ -6,8 +6,8 @@ case class Log( logId: Long, appName: String, computerName: String, userId:Strin
                 tradeDate: String, time: Timestamp)
 
 case class WindowDetail(logId: Long, lineNo: Int,
-                handler: String, windowName: Option[String], destinationType: Option[String],
+                handler: Option[String], windowName: Option[String], destinationType: Option[String],
                 action: Option[String], method: Option[String],
-                time: Timestamp, startupTime: Long)
+                time: Timestamp, startupTime: Option[Long])
 
 case class User(userId: String, userName: String)

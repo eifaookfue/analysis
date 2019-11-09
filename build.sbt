@@ -122,7 +122,7 @@ lazy val `play-slick` = (project in file("play-slick") )
   .dependsOn(core)
   .dependsOn(log)
 
-lazy val core =(project in file("src/core"))
+lazy val core =(project in file("core"))
   //.enablePlugins(PlayLibrary, Playdoc)
   .enablePlugins(PlayLibrary)
   .settings(libraryDependencies ++= Dependencies.core)

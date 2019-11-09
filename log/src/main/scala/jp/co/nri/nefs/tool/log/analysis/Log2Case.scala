@@ -1,11 +1,14 @@
 package jp.co.nri.nefs.tool.log.analysis
 
 import java.io.{ObjectInputStream, ObjectOutputStream}
+import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 import java.sql.Timestamp
 import java.util.Date
 
+import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.log.common.model.{Log, WindowDetail}
+import jp.co.nri.nefs.tool.log.common.utils.FileUtils
 import jp.co.nri.nefs.tool.log.common.utils.FileUtils._
 import jp.co.nri.nefs.tool.log.common.utils.RegexUtils._
 import jp.co.nri.nefs.tool.log.common.utils.ZipUtils._
@@ -16,38 +19,41 @@ import scala.collection._
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 
-class Log2Case(outputdir: Path) {
+class Log2Case(outputdir: Path) extends LazyLogging{
 
   /**
     * キー：windowName
     * バリュー：Windowクラスのリスト。追加する必要があるためmutableなListBufferを用いる
     */
-  private var detailMap = Map[Option[String], ListBuffer[WindowDetail]]()
+  private val windowDetailMap = mutable.Map[Option[String], ListBuffer[WindowDetail]]()
+  private val lineRegex = """([0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})\s\[(.*)\]\[(.*)\](.*)\[(.*)\]\[(j.c.*)\]$""".r
+  private val windowNameRegex = """\[(.*)\].*""".r
+  private val buttonActionRegex = """.*\((.*)\).*""".r
+  private val lastAndDelNoRegex = """(.*)\$[0-9]""".r
 
   private case class FileInfo(appName: String, env: String, computer: String, userId: String, startTime: String){
     val tradeDate: String = startTime.take(8)
   }
 
-  private case class LineInfo(datetimeStr: String, logLevel: String, message: String,
+  private case class LineInfo(datetimeStr: String, logLevel: String, appName: String, message: String,
                               thread: String, clazz: String){
     lazy val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
     val datetime = new Timestamp(format.parse(datetimeStr).getTime)
   }
 
-  private def getLineInfo(line: String): LineInfo = {
-    lazy val regex = """(2[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\s[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\.[0-9][0-9][0-9])\s\[(.*)\]\[TradeSheet\](.*)\[(.*)\]\[(j.c.*)\]$""".r
-    val regex(datetimeStr, logLevel, message, thread, clazz) = line
-    LineInfo.apply(datetimeStr, logLevel, message, thread, clazz)
+  private def getLineInfo(line: String): Option[LineInfo] = {
+    line match {
+      case lineRegex(datetimeStr, logLevel, appName, message, thread, clazz) => Some(LineInfo(datetimeStr, logLevel, appName, message, thread, clazz))
+      case _ => None
+    }
   }
 
   private def getWindowName(message: String, clazz: String): Option[String] = {
-    lazy val regex = """\[(.*)\].*""".r
-    regexOption(regex, message).orElse(Some(clazz))
+    regexOption(windowNameRegex, message).orElse(Some(clazz))
   }
 
   private def getButtonAction(message: String) : Option[String] = {
-    lazy val regex = """.*\((.*)\).*""".r
-    regexOption(regex, message)
+    regexOption(buttonActionRegex, message)
   }
 
   private def regexOption(regex: Regex, message: String):Option[String] = {
@@ -57,6 +63,16 @@ class Log2Case(outputdir: Path) {
     }
   }
 
+  /*
+  j.c.n.n.o.r.p.d.AmendOrderSingleDialog$1 => AmendOrderSingleDialogに変換
+   */
+  private def getLastAndDelNo(name: String): String = {
+    val lastName = name.split("\\.").last
+    lastName match {
+      case lastAndDelNoRegex(n) => n
+      case _ => lastName
+    }
+  }
 
   def execute(paths: List[Path]): Unit = {
     paths.foreach(p => execute(p))
@@ -67,30 +83,30 @@ class Log2Case(outputdir: Path) {
     import Utils._
     if (isZipFile(path)){
       val expandedDir = unzip(path)
-      val paths = for (file <- Files.list(expandedDir).iterator().asScala.toList) yield file
+      val paths = FileUtils.autoClose(Files.list(expandedDir)){ stream =>
+        stream.iterator().asScala.toList
+      }
       execute(paths)
       delete(expandedDir)
     } else {
-      //val fileInfo = getFileInfo(path.getFileName.toString)
       val fileInfo =
         getOMSAplInfo(path.getFileName.toString) match {
           case Some(f) => f
           case None =>
-            println("not valid format")
+            logger.info("not valid format")
             return
         }
 
-      var handler: String = ""
-      var handlerStartTime = new Date()
-      var handlerEndTime = new Date()
+      var handler: Option[String] = None
+      var handlerStartTime: Option[Date] = None
+      var handlerEndTime: Option[Date] = None
 
-      for { (line, tmpNo) <- Files.lines(path).iterator().asScala.zipWithIndex
-            lineNo = tmpNo + 1
-      } {
-        val lineInfo = getLineInfo(line)
+      val stream = Files.lines(path, Charset.forName("MS932"))
+      val lines = stream.iterator().asScala
+      for ( (line, tmpNo) <- lines.zipWithIndex; lineNo = tmpNo + 1; lineInfo <- getLineInfo(line)) {
         if (lineInfo.message contains "Handler start.") {
-          handlerStartTime = lineInfo.datetime
-          handler = lineInfo.clazz
+          handlerStartTime = Some(lineInfo.datetime)
+          handler = Some(lineInfo.clazz)
         }
         //[New Basket]Dialog opened.[main][j.c.n.n.o.r.p.d.b.NewBasketDialog$1]
         //[TradeSheet]Opened.[main][j.c.n.n.o.r.p.d.c.QuestionDialog]
@@ -98,30 +114,37 @@ class Log2Case(outputdir: Path) {
           val windowName = getWindowName(lineInfo.message, lineInfo.clazz)
 
           //else if ("Dialog opened.".equals(message)) {
-          handlerEndTime = lineInfo.datetime
-          val startupTime = handlerEndTime.getTime - handlerStartTime.getTime
+          handlerEndTime = Some(lineInfo.datetime)
+          val startupTime = for (startTime <- handlerStartTime; endTime <- handlerEndTime)
+            yield endTime.getTime - startTime.getTime
+
           val destinationType = None
           val action = None
           val method = None
-          val detail = WindowDetail(0L, lineNo, handler, windowName, destinationType, action, method,
+          val windowDetail = WindowDetail(0L, lineNo, handler, windowName, destinationType, action, method,
             lineInfo.datetime, startupTime)
           //たとえばNewOrderListのDialogがOpenされた後にSelect Basketが起動するケースは
           //handelerをNewOrderListとする
-          handler = windowName.getOrElse("")
-          detailMap.get(windowName) match {
-            case Some(buf) => buf += detail
-            case None => detailMap += (windowName -> ListBuffer(detail))
+          handler = windowName
+          windowDetailMap.get(windowName) match {
+            case Some(buf) => buf += windowDetail
+            case None => windowDetailMap += (windowName -> ListBuffer(windowDetail))
           }
         }
         else if ((lineInfo.message contains "Button event ends") || (lineInfo.message contains "Button Pressed")) {
           val windowName = getWindowName(lineInfo.message, lineInfo.clazz)
           val action = getButtonAction(lineInfo.message)
-          detailMap.get(windowName) match {
+          windowDetailMap.get(windowName) match {
             case Some(buf) => buf.update(buf.length - 1, buf.last.copy(action = action))
-            case None => println("Error")
+            //Button event ends -> MakeSplittableRecケースはスキップ
+            case None => logger.info(s"Skipped because of failing to search $windowName. fileName=${fileInfo.fileName}, lineNo=$lineNo")
           }
+        } else if (lineInfo.message contains "Handler end."){
+          handler = None
+          handlerStartTime = None
         }
       }
+      stream.close()
       val outpathLog = outputdir.resolve(getObjFile(path.getFileName.toFile.toString, "Log"))
       val ostreamLog = new ObjectOutputStream(Files.newOutputStream(outpathLog))
       val log = Log(0L, fileInfo.appName, fileInfo.computer, fileInfo.userId, fileInfo.tradeDate, fileInfo.time)
@@ -130,11 +153,13 @@ class Log2Case(outputdir: Path) {
       }
 
       //型を変換しないとIterableとなりSortができない
-      //val tmpList: List[WindowDetail] = (for ((k, v) <- windowDetailMap) yield v.last)(collection.breakOut)
-      //なぜかIterable[jp.co.nri.nefs.tool.log.common.model.WindowDetail] does not take parametersというエラーがでてしまう
-      val tmp = for ((_, v) <- detailMap) yield v.last
-      val tmpList = tmp.toList
-      val windowDetailList = tmpList.sortBy(_.lineNo)
+      val orgList = (for ((_, v) <- windowDetailMap) yield v.last).toList
+      val convertedList = for {
+        w <- orgList
+        newHandler = w.handler.map(n => getLastAndDelNo(n))
+        newWindowName = w.handler.map(n => getLastAndDelNo(n))
+      } yield w.copy(handler = newHandler, windowName = newWindowName)
+      val windowDetailList = convertedList.sortBy(_.lineNo)
       val outpath = outputdir.resolve(getObjFile(path.getFileName.toFile.toString, "Detail"))
       val ostream = new ObjectOutputStream(Files.newOutputStream(outpath))
       //    os.writeObject(windowDetailList)
@@ -145,7 +170,7 @@ class Log2Case(outputdir: Path) {
       }
       val istream = new ObjectInputStream(Files.newInputStream(outpath))
       using(istream){is =>
-        Iterator.continually(is.readObject()).takeWhile(_ != null).foreach(v => println(v))
+        Iterator.continually(is.readObject()).takeWhile(_ != null).foreach(v => logger.info(v.toString))
       }
     }
 
@@ -322,13 +347,13 @@ class Excel2Case(outputdir: Path) {
           if rownum > 0 //先頭行スキップ
           iterator = row.iterator()
           lineNo = iterator.next().getValue[Int].get
-          handler = iterator.next().getValue[String].get
+          handler = iterator.next().getValue[String]
           windowName = iterator.next().getValue[String]
           destinationType = iterator.next().getValue[String]
           action = iterator.next().getValue[String]
           method = iterator.next().getValue[String]
           time = iterator.next().getValue[Timestamp].get
-          startupTime = iterator.next().getValue[Int].get
+          startupTime = iterator.next().getValue[Long]
           detail = WindowDetail(0L, lineNo,
             handler, windowName, destinationType, action, method, time, startupTime)
         } yield detail).toSeq
