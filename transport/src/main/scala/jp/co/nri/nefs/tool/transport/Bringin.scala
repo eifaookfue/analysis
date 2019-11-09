@@ -3,14 +3,15 @@ package jp.co.nri.nefs.tool.transport
 import java.nio.file.{Files, Path, Paths}
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.stream.Collectors
 
+import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.log.common.utils.FileUtils
 
 import scala.collection.JavaConverters._
 
-object Bringin{
+object Bringin extends LazyLogging {
   def main(args: Array[String]): Unit = {
+    System.setProperty("log.name", "Bringin")
     val usage = """
         Usage: jp.co.nri.nefs.tool.transport.Bringin --cachedir cachedir --afterdate afterdate(yyyy/MM/dd HH:mm:ss) --outputdir outputdir
         """
@@ -53,18 +54,21 @@ object Bringin{
     val afterdate = checkAndGet('afterdate)
     val outputdir = checkAndGet('outputdir)
 
-    val len = cachedir.split("\\\\").length
     val sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
     val base = sdf.parse(afterdate)
     val start = Paths.get(cachedir)
 
-    //Streamのままfor式にいれると、エラーになってしまう
-    val fileList = Files.walk(start).collect(Collectors.toList())
-    val bringSet:Set[Path] = (for (p <- fileList.asScala
+    val fileList = FileUtils.autoClose(Files.walk(start)){stream =>
+      stream.iterator().asScala.toList
+    }
+
+    val bringSet:Set[Path] = (for (p <- fileList
                                    if p.toFile.isFile
+                                   if !p.getFileName.toFile.toString.endsWith("md5")
+                                   if !p.getFileName.toFile.toString.endsWith("sha1")
                                    if p.toFile.lastModified() > base.getTime)
       yield p.getParent)(collection.breakOut) //コレクションの型を変更するにはbreakoutを使う。戻り値の型に変更にしてくれる
-    bringSet.foreach(println _)
+    bringSet.foreach(p => logger.info(p.toString))
 
     val now = "%tY%<tm%<td%<tH%<tM%<tS" format new Date
     val newdir = now + "_" + afterdate.substring(0,4) + afterdate.substring(5,7) + afterdate.substring(8,10)

@@ -46,7 +46,7 @@ runIvyCacheManagement := {
 lazy val runBringin = taskKey[Unit]("A task that hard codes the values to `run`")
 runBringin := {
   val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Bringin " +
-    "--cachedir D:\\Apl\\.ivy2\\cache --afterdate " + """ "2019/07/01 00:00:00" """ + " --outputdir D:\\tmp6").value
+    "--cachedir D:\\Apl\\.ivy2\\local --afterdate " + """ "2019/09/20 00:00:00" """ + " --outputdir D:\\20191109_持ち込み").value
   println("Done!")
 }
 

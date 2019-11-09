@@ -34,7 +34,9 @@ import sbt._
     )
 
     val transport = Seq(
-      Library.logback
+      Library.logback,
+      Library.sacalaLogging,
+      Library.logbackClassic
     )
   }
 

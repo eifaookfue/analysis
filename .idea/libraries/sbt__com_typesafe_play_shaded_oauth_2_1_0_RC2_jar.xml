@@ -2,6 +2,7 @@
   <library name="sbt: com.typesafe.play:shaded-oauth:2.1.0-RC2:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.typesafe.play/shaded-oauth/jars/shaded-oauth-2.1.0-RC2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/com.typesafe.play/shaded-oauth/2.1.0-RC2/jars/shaded-oauth.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

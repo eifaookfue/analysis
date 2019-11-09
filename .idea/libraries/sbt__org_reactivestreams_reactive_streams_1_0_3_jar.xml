@@ -2,6 +2,7 @@
   <library name="sbt: org.reactivestreams:reactive-streams:1.0.3:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/org.reactivestreams/reactive-streams/jars/reactive-streams-1.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/org.reactivestreams/reactive-streams/1.0.3/jars/reactive-streams.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

@@ -3,6 +3,9 @@ package jp.co.nri.nefs.tool.log.common.utils
 import java.io.IOException
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
+
+import com.typesafe.scalalogging.LazyLogging
+
 import scala.language.implicitConversions
 
 object RichFiles {
@@ -37,7 +40,7 @@ class RichPath(path: Path) {
   }
 }
 
-object FileUtils {
+object FileUtils extends LazyLogging {
 
   def using[A <: java.io.Closeable](s: A)(f: A => Unit): Unit = {
     try { f(s) } finally { s.close() }
@@ -76,24 +79,24 @@ object FileUtils {
           }
         }
 
-        print(s"copying from $dir to $target...")
+        logger.info(s"copying from $dir to $target...")
         try {
           Files.copy(dir, target, StandardCopyOption.COPY_ATTRIBUTES)
-          println("done.")
+          logger.info("done.")
         } catch {
-          case _ : Exception => println("failed.")
+          case _ : Exception => logger.warn("failed.")
         }
         FileVisitResult.CONTINUE
       }
 
       override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult =  {
         val target = toBase.resolve(fromBase.relativize(file))
-        print(s"copying from $file to $target...")
+        logger.info(s"copying from $file to $target...")
         try {
           Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES)
-          println("done.")
+          logger.info("done.")
         } catch {
-          case _ : Exception => println("failed.")
+          case _ : Exception => logger.warn("failed.")
         }
 
         FileVisitResult.CONTINUE
