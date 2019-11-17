@@ -22,13 +22,104 @@ section#main .topRight {
     top: 70px;
 }
 
+table {
+    table-layout: fixed
+}
+
+input.logId {
+	width: 72px
+}
 input.appName {
-	width: 80px
+	width: 92px
+}
+input.computerName {
+    width: 122px
+}
+input.userName {
+    width: 92px
+}
+input.tradeDate {
+    width: 92px
+}
+input.lineNo {
+    width: 72px
+}
+input.handler {
+    width: 162px
+}
+input.windowName {
+    width: 122px
+}
+input.destinationType {
+    width: 132px
+}
+input.action {
+    width: 62px
+}
+input.method {
+    width: 112px
+}
+input.time {
+    width: 162px
+}
+input.startupTime {
+    width: 112px
+}
+
+table.windowDetails .colLogId  {
+    width:60px
 }
 
 table.windowDetails .colAppName {
-    width: 80%
+    width: 80px
 }
+
+table.windowDetails .colComputerName {
+    width: 110px
+}
+
+table.windowDetails .colUserName {
+    width: 80px
+}
+
+table.windowDetails .colTradeDate {
+    width: 80px
+}
+
+table.windowDetails .colLineNo {
+    width: 60px
+}
+
+table.windowDetails .colHandler {
+    width: 150px
+}
+
+table.windowDetails .colWindowName {
+    width: 110px
+}
+
+table.windowDetails .colDestinationType {
+    width: 120px
+}
+
+table.windowDetails .colAction {
+    width: 50px
+}
+
+table.windowDetails .colMethod {
+    width: 100px
+}
+
+table.windowDetails .colTime {
+    width: 150px
+}
+
+table.windowDetails .colStartupTime {
+    width: 100px
+}
+
+
+
 
 table.computers em {
     color: #aaa;

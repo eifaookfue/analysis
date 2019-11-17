@@ -37,20 +37,21 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
 
 
         @helper.form(action=routes.Application.list(), args=Symbol("class") -> "form-inline") {
-        <div class="form-group">
-        <input type="search" id="searchbox1" name="appName" value="@params.appName" class="appName"/>
-        <input type="search" id="searchbox2" name="computerName" value="@params.computerName" />
-        <input type="search" id="searchbox3" name="userId" value="@params.userName" />
-        <input type="search" id="searchbox4" name="tradeDate" value="@params.tradeDate" />
-        <input type="search" id="searchbox5" name="lineNo" value="@params.lineNo" />
-        <input type="search" id="searchbox6" name="handler" value="@params.handler" />
-        <input type="search" id="searchbox7" name="windowName" value="@params.windowName" />
-        <input type="search" id="searchbox8" name="destinationType" value="@params.destinationType" />
-        <input type="search" id="searchbox9" name="action" value="@params.action" />
-        <input type="search" id="searchbox10" name="method" value="@params.method" />
-        <input type="search" id="searchbox11" name="time" value="@params.time" />
-        <input type="search" id="searchbox12" name="startupTime" value="@params.startupTime" />
-        <input type="submit" id="searchsubmit" value="Filter by name" class="btn primary"/>
+        <div class="form-group" style="display: inline-flex">
+            <input type="search" id="searchbox1" name="logId" value="@params.logId" class="logId"/>
+            <input type="search" id="searchbox2" name="appName" value="@params.appName" class="appName"/>
+            <input type="search" id="searchbox3" name="computerName" value="@params.computerName" class="computerName"/>
+            <input type="search" id="searchbox4" name="userId" value="@params.userName" class="userName"/>
+            <input type="search" id="searchbox5" name="tradeDate" value="@params.tradeDate" class="tradeDate"/>
+            <input type="search" id="searchbox6" name="lineNo" value="@params.lineNo" class="lineNo"/>
+            <input type="search" id="searchbox7" name="handler" value="@params.handler" class="handler"/>
+            <input type="search" id="searchbox8" name="windowName" value="@params.windowName" class="windowName"/>
+            <input type="search" id="searchbox9" name="destinationType" value="@params.destinationType" class="destinationType"/>
+            <input type="search" id="searchbox10" name="action" value="@params.action" class="action"/>
+            <input type="search" id="searchbox11" name="method" value="@params.method" class="method"/>
+            <input type="search" id="searchbox12" name="time" value="@params.time" class="time"/>
+            <input type="search" id="searchbox13" name="startupTime" value="@params.startupTime" class="startupTime"/>
+            <input type="submit" id="searchsubmit" value="Filter by name" class="btn primary"/>
         </div>
         }
 

@@ -10,7 +10,7 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
 }
 
 
-case class Params(page: Int = 0, orderBy: Option[Int]  = None,
+case class Params(page: Int = 0, orderBy: Option[Int]  = None, logId: Option[Long] = None,
                   appName: Option[String]  = None, computerName: Option[String]  = None, userName:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Int]  = None,
                   handler: Option[String]  = None, windowName: Option[String]  = None, destinationType: Option[String]  = None,
                   action: Option[String]  = None, method: Option[String]  = None,
@@ -25,6 +25,7 @@ object Params {
       val page = intBinder.bind("page", params)
       val orderBy = intBinder.bind("orderBy", params)
       val appName = strBinder.bind("appName", params)
+      val logId = longBinder.bind("logId", params)
       val computerName = strBinder.bind("computerName", params)
       val userId = strBinder.bind("userId", params)
       val tradeDate = strBinder.bind("tradeDate", params)
@@ -38,6 +39,7 @@ object Params {
       val startupTime = longBinder.bind("startupTime", params)
       val logFile = strBinder.bind("logFile", params)
       Some(Right(Params(page.map(_.right.get).getOrElse(0),orderBy.map(_.right.get),
+        logId.map(_.right.get),
         appName.map(_.right.get),computerName.map(_.right.get), userId.map(_.right.get),
         tradeDate.map(_.right.get), lineNo.map(_.right.get), handler.map(_.right.get),
         windowName.map(_.right.get), destinationType.map(_.right.get), action.map(_.right.get),
@@ -46,6 +48,7 @@ object Params {
     }
     override def unbind(key: String, params: Params): String = {
       List(Some(intBinder.unbind("page", params.page)), params.orderBy.map(intBinder.unbind("orderBy",_)),
+        params.logId.map(longBinder.unbind("logId",_)),
         params.appName.map(strBinder.unbind("appName",_)), params.computerName.map(strBinder.unbind("computerName",_)),
         params.userName.map(strBinder.unbind("userName",_)), params.tradeDate.map(strBinder.unbind("tradeDate",_)),
         params.lineNo.map(longBinder.unbind("lineNo",_)), params.handler.map(strBinder.unbind("handler",_)),
