@@ -64,8 +64,8 @@ object Bringin extends LazyLogging {
 
     val bringSet:Set[Path] = (for (p <- fileList
                                    if p.toFile.isFile
-                                   if !p.getFileName.toFile.toString.endsWith("md5")
-                                   if !p.getFileName.toFile.toString.endsWith("sha1")
+                                   //if !p.getFileName.toFile.toString.endsWith("md5")
+                                   //if !p.getFileName.toFile.toString.endsWith("sha1")
                                    if p.toFile.lastModified() > base.getTime)
       yield p.getParent)(collection.breakOut) //コレクションの型を変更するにはbreakoutを使う。戻り値の型に変更にしてくれる
     bringSet.foreach(p => logger.info(p.toString))

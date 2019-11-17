@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="sbt: com.typesafe.play:play-json_2.12:2.8.0-M7:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.typesafe.play/play-json_2.12/jars/play-json_2.12-2.8.0-M7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.ivy2/local/com.typesafe.play/play-json_2.12/2.8.0-M7/jars/play-json_2.12.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.typesafe.play/play-json_2.12/srcs/play-json_2.12-2.8.0-M7-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

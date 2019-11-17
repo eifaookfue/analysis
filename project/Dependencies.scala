@@ -1,6 +1,14 @@
 import sbt._
 
   object Dependencies {
+
+    val websocket = Seq(
+      Library.sacalaLogging,
+      Library.logbackClassic,
+      Library.akka_http,
+      Library.akka_stream
+    )
+
     val core = Seq(
       Library.slick,
       Library.slickHikariCP,
@@ -19,7 +27,8 @@ import sbt._
 
     val json = Seq(
       Library.json,
-      Library.ws
+      Library.ws,
+      Library.wsjson
     )
 
     val log = Seq(
@@ -53,6 +62,8 @@ import sbt._
     val poi_ooxml    = "3.9"
     val ws           = "2.1.0-RC2"
     val config       = "1.3.2"
+    val akka_http    = "10.1.10"
+    val akka_stream  = "2.5.23"
   }
 
   object Library {
@@ -71,6 +82,9 @@ import sbt._
     val poi_ooxml           = "org.apache.poi"             % "poi-ooxml"                 % Version.poi_ooxml
     val json                = "com.typesafe.play"          %% "play-json"                % Version.play
     val ws                  = "com.typesafe.play"          %% "play-ahc-ws-standalone"   % Version.ws
+    val wsjson              = "com.typesafe.play"          %% "play-ws-standalone-json"  % Version.ws
     val config              = "com.typesafe"               %  "config"                   % Version.config
+    val akka_http           = "com.typesafe.akka"          %% "akka-http"                % Version.akka_http
+    val akka_stream         ="com.typesafe.akka"           %% "akka-stream"              % Version.akka_stream
   }
 

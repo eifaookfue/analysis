@@ -46,7 +46,7 @@ runIvyCacheManagement := {
 lazy val runBringin = taskKey[Unit]("A task that hard codes the values to `run`")
 runBringin := {
   val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Bringin " +
-    "--cachedir D:\\Apl\\.ivy2\\local --afterdate " + """ "2019/09/20 00:00:00" """ + " --outputdir D:\\20191109_持ち込み").value
+    "--cachedir D:\\Apl\\.ivy2\\local --afterdate " + """ "2019/09/20 00:00:00" """ + " --outputdir D:\\20191113_持ち込み").value
   println("Done!")
 }
 
@@ -83,6 +83,13 @@ lazy val commonSettings = Seq(
 name := "analysis"
 
 version := "0.1"
+
+//fork := true
+
+lazy val websocket = (project in file("co-jp-nri-nefs-tool-websocket"))
+  .settings(
+    libraryDependencies ++= Dependencies.websocket
+  )
 
 lazy val transfer = (project in file("transfer"))
   .settings(

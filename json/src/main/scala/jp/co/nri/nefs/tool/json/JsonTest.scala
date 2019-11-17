@@ -1,10 +1,9 @@
 
 package jp.co.nri.nefs.tool.json
 
-import play.api.libs.json.{JsArray, Json, Writes}
+import play.api.libs.json.{Json, Writes}
 
-case class IOI(symbol: String, ioiqualifiers: String)
-case class IOIS(iois: Seq[IOI])
+case class IOI(symbol: String, ioiqty: Double, ioiqualifiers: String)
 object JsonTest {
 
 
@@ -15,14 +14,15 @@ object JsonTest {
 
   }
 
-  /*implicit val ioiWrites = new Writes[IOI] {
+  implicit val ioiWrites = new Writes[IOI] {
     def writes(ioi: IOI) = Json.obj(
         "symbol" -> ioi.symbol,
+      "ioiqty" -> ioi.ioiqty,
         "ioiquolifier" -> ioi.ioiqualifiers
     )
-  }*/
+  }
 
-  implicit val ioiWrites = new Writes[Seq[IOI]] {
+  /*implicit val ioiWrites = new Writes[Seq[IOI]] {
     def writes(iois: Seq[IOI]) = {
       val jsons = iois.map(ioi => {
         Json.obj(
@@ -32,9 +32,9 @@ object JsonTest {
       })
       JsArray(jsons)
     }
-  }
+  }*/
 
 
-  val ioi = Seq(IOI("6758", "ABC"), IOI("6502", "DEF"))
+  val ioi = Seq(IOI("6758", 1000,"ABC"), IOI("6502", 2000,"DEF"))
   val json = Json.toJson(ioi)
 }

@@ -22,13 +22,13 @@ trait WindowDetailComponent {
   class WindowDetails(tag: Tag) extends Table[WindowDetail](tag, "WINDOW_DETAIL") {
     def logId = column[Long]("LOG_ID")
     def lineNo = column[Int]("LINE_NO", O.Length(20))
-    def handler = column[String]("HANDLER")
+    def handler = column[Option[String]]("HANDLER")
     def windowName = column[Option[String]]("WINDOW_NAME")
     def destinationType = column[Option[String]]("DESTINATION_TYPE")
     def action = column[Option[String]]("ACTION")
     def method = column[Option[String]]("METHOD")
     def time = column[Timestamp]("TIME")
-    def startupTime = column[Long]("STARTUP_TIME")
+    def startupTime = column[Option[Long]]("STARTUP_TIME")
     def * = (logId, lineNo, handler, windowName, destinationType, action, method, time, startupTime) <> (WindowDetail.tupled, WindowDetail.unapply)
     def pk = primaryKey("pk_1", (logId, lineNo))
   }
@@ -72,13 +72,13 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
         params.userName.filter(_.trim.nonEmpty).map(u.map(_.userName).getOrElse("") like "%" + _ +  "%"),
         params.tradeDate.filter(_.trim.nonEmpty).map(l.tradeDate like "%" + _ +  "%"),
         params.lineNo.map(w.lineNo === _),
-        params.handler.filter(_.trim.nonEmpty).map(w.handler like "%" + _ +  "%"),
+        params.handler.filter(_.trim.nonEmpty).map(w.handler.getOrElse("") like "%" + _ +  "%"),
         params.windowName.filter(_.trim.nonEmpty).map(w.windowName.getOrElse("") like "%" + _ +  "%"),
         params.destinationType.filter(_.trim.nonEmpty).map(w.destinationType.getOrElse("") like "%" + _ +  "%"),
         params.action.filter(_.trim.nonEmpty).map(w.action.getOrElse("") like "%" + _ +  "%"),
         params.method.filter(_.trim.nonEmpty).map(w.method.getOrElse("") like "%" + _ +  "%"),
         params.time.map(w.time === _),
-        params.startupTime.map(w.startupTime === _)
+        params.startupTime.map(w.startupTime.getOrElse(0L) === _)
       ).collect({ case Some(criteria) => criteria }).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     } yield (l, w, u)
 

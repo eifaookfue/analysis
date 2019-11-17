@@ -11,6 +11,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-slick.iml" filepath="$PROJECT_DIR$/.idea/modules/play-slick.iml" />
       <module fileurl="file://$PROJECT_DIR$/transfer/transfer.iml" filepath="$PROJECT_DIR$/transfer/transfer.iml" />
       <module fileurl="file://$PROJECT_DIR$/transport/transport.iml" filepath="$PROJECT_DIR$/transport/transport.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/websocket.iml" filepath="$PROJECT_DIR$/.idea/modules/websocket.iml" />
     </modules>
   </component>
 </project>

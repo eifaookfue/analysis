@@ -7,7 +7,7 @@
 		revision="0.1.0-SNAPSHOT"
 		conf="runtime-internal"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, pom, scala-tool"
-		date="20191109194602"/>
+		date="20191110082745"/>
 	<dependencies>
 		<module organisation="mysql" name="mysql-connector-java">
 			<revision name="8.0.15" status="release" pubdate="20190428230151" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://dev.mysql.com/doc/connector-j/en/" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="47">
@@ -34,9 +34,9 @@
 			</revision>
 		</module>
 		<module organisation="com.typesafe.play" name="play-jdbc-api_2.12">
-			<revision name="2.7.0" status="release" pubdate="20190217192652" resolver="local" artresolver="local" homepage="https://playframework.com" extra-info.apiURL="https://www.playframework.com/documentation/2.7.0/api/scala/index.html" downloaded="false" searched="true" default="false" conf="default, compile, runtime, default(compile), master" position="6">
+			<revision name="2.7.0" status="release" pubdate="20190217192652" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://playframework.com" extra-info.apiURL="https://www.playframework.com/documentation/2.7.0/api/scala/index.html" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="6">
 				<license name="Apache-2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
-				<metadata-artifact status="no" details="" size="3060" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.play\play-jdbc-api_2.12\ivy-2.7.0.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.typesafe.play\play-jdbc-api_2.12\2.7.0\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.play\play-jdbc-api_2.12\2.7.0\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="3013" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.play\play-jdbc-api_2.12\ivy-2.7.0.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.play\play-jdbc-api_2.12\2.7.0\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="core_2.12" conf="compile, runtime-internal, runtime, optional" rev="2.7.0" rev-constraint-default="2.7.0" rev-constraint-dynamic="2.7.0" callerrev="0.1.0-SNAPSHOT"/>
 				<artifacts>
 					<artifact name="play-jdbc-api_2.12" type="jar" ext="jar" status="no" details="" size="15441" time="0" location="D:\Apl\.ivy2\local\com.typesafe.play\play-jdbc-api_2.12\2.7.0\jars\play-jdbc-api_2.12.jar">
@@ -46,9 +46,9 @@
 			</revision>
 		</module>
 		<module organisation="com.typesafe.play" name="play_2.12">
-			<revision name="2.7.0" status="release" pubdate="20190131072541" resolver="local" artresolver="local" homepage="https://playframework.com" extra-info.apiURL="https://www.playframework.com/documentation/2.7.0/api/scala/index.html" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="7">
+			<revision name="2.7.0" status="release" pubdate="20190131072541" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://playframework.com" extra-info.apiURL="https://www.playframework.com/documentation/2.7.0/api/scala/index.html" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="7">
 				<license name="Apache-2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
-				<metadata-artifact status="no" details="" size="7860" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.play\play_2.12\ivy-2.7.0.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.typesafe.play\play_2.12\2.7.0\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.play\play_2.12\2.7.0\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="7779" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.play\play_2.12\ivy-2.7.0.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.play\play_2.12\2.7.0\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play-jdbc-api_2.12" conf="default, compile, runtime, master" rev="2.7.0" rev-constraint-default="2.7.0" rev-constraint-dynamic="2.7.0" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="play_2.12" type="jar" ext="jar" status="no" details="" size="2872984" time="0" location="D:\Apl\.ivy2\local\com.typesafe.play\play_2.12\2.7.0\jars\play_2.12.jar">
@@ -58,9 +58,9 @@
 			</revision>
 		</module>
 		<module organisation="com.typesafe" name="ssl-config-core_2.12">
-			<revision name="0.3.7" status="release" pubdate="20181025102015" resolver="local" artresolver="local" homepage="https://github.com/lightbend/ssl-config" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master, master(*)" position="16">
+			<revision name="0.3.7" status="release" pubdate="20181025102015" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/lightbend/ssl-config" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master, master(*)" position="16">
 				<license name="Apache-2.0" url="https://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="no" details="" size="3785" time="0" location="D:\Apl\.ivy2\cache\com.typesafe\ssl-config-core_2.12\ivy-0.3.7.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.typesafe\ssl-config-core_2.12\0.3.7\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe\ssl-config-core_2.12\0.3.7\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="3734" time="0" location="D:\Apl\.ivy2\cache\com.typesafe\ssl-config-core_2.12\ivy-0.3.7.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe\ssl-config-core_2.12\0.3.7\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="0.3.7" rev-constraint-default="0.3.7" rev-constraint-dynamic="0.3.7" callerrev="2.7.0"/>
 				<caller organisation="com.typesafe.akka" name="akka-stream_2.12" conf="compile, runtime" rev="0.3.6" rev-constraint-default="0.3.6" rev-constraint-dynamic="0.3.6" callerrev="2.5.19"/>
 				<artifacts>
@@ -90,8 +90,8 @@
 			</revision>
 		</module>
 		<module organisation="javax.transaction" name="jta">
-			<revision name="1.1" status="release" pubdate="20081028102721" resolver="local" artresolver="local" homepage="http://java.sun.com/products/jta" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="45">
-				<metadata-artifact status="no" details="" size="2468" time="0" location="D:\Apl\.ivy2\cache\javax.transaction\jta\ivy-1.1.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\javax.transaction\jta\1.1\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\javax.transaction\jta\1.1\ivys\ivy.xml"/>
+			<revision name="1.1" status="release" pubdate="20081028102721" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://java.sun.com/products/jta" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="45">
+				<metadata-artifact status="no" details="" size="2431" time="0" location="D:\Apl\.ivy2\cache\javax.transaction\jta\ivy-1.1.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\javax.transaction\jta\1.1\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="1.1" rev-constraint-default="1.1" rev-constraint-dynamic="1.1" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="jta" type="jar" ext="jar" status="no" details="" size="15071" time="0" location="D:\Apl\.ivy2\local\javax.transaction\jta\1.1\jars\jta.jar">
@@ -101,10 +101,10 @@
 			</revision>
 		</module>
 		<module organisation="javax.xml.bind" name="jaxb-api">
-			<revision name="2.3.1" status="release" pubdate="20180912222852" resolver="local" artresolver="local" homepage="" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="43">
+			<revision name="2.3.1" status="release" pubdate="20180912222852" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="43">
 				<license name="CDDL 1.1" url="https://oss.oracle.com/licenses/CDDL+GPL-1.1"/>
 				<license name="GPL2 w/ CPE" url="https://oss.oracle.com/licenses/CDDL+GPL-1.1"/>
-				<metadata-artifact status="no" details="" size="4442" time="0" location="D:\Apl\.ivy2\cache\javax.xml.bind\jaxb-api\ivy-2.3.1.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\javax.xml.bind\jaxb-api\2.3.1\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\javax.xml.bind\jaxb-api\2.3.1\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="4382" time="0" location="D:\Apl\.ivy2\cache\javax.xml.bind\jaxb-api\ivy-2.3.1.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\javax.xml.bind\jaxb-api\2.3.1\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="2.3.1" rev-constraint-default="2.3.1" rev-constraint-dynamic="2.3.1" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="jaxb-api" type="jar" ext="jar" status="no" details="" size="128076" time="0" location="D:\Apl\.ivy2\local\javax.xml.bind\jaxb-api\2.3.1\jars\jaxb-api.jar">
@@ -114,9 +114,9 @@
 			</revision>
 		</module>
 		<module organisation="javax.activation" name="javax.activation-api">
-			<revision name="1.2.0" status="release" pubdate="20170907081319" resolver="local" artresolver="local" homepage="" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="44">
+			<revision name="1.2.0" status="release" pubdate="20170907081319" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="44">
 				<license name="CDDL/GPLv2+CE" url="https://github.com/javaee/activation/blob/master/LICENSE.txt"/>
-				<metadata-artifact status="no" details="" size="5423" time="0" location="D:\Apl\.ivy2\cache\javax.activation\javax.activation-api\ivy-1.2.0.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\javax.activation\javax.activation-api\1.2.0\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\javax.activation\javax.activation-api\1.2.0\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="5365" time="0" location="D:\Apl\.ivy2\cache\javax.activation\javax.activation-api\ivy-1.2.0.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\javax.activation\javax.activation-api\1.2.0\ivys\ivy.xml"/>
 				<caller organisation="javax.xml.bind" name="jaxb-api" conf="compile, runtime" rev="1.2.0" rev-constraint-default="1.2.0" rev-constraint-dynamic="1.2.0" callerrev="2.3.1"/>
 				<artifacts>
 					<artifact name="javax.activation-api" type="jar" ext="jar" status="no" details="" size="56674" time="0" location="D:\Apl\.ivy2\local\javax.activation\javax.activation-api\1.2.0\jars\javax.activation-api.jar">
@@ -126,9 +126,9 @@
 			</revision>
 		</module>
 		<module organisation="io.jsonwebtoken" name="jjwt">
-			<revision name="0.9.1" status="release" pubdate="20180706075143" resolver="local" artresolver="local" homepage="https://github.com/jwtk/jjwt" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="42">
+			<revision name="0.9.1" status="release" pubdate="20180706075143" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/jwtk/jjwt" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="42">
 				<license name="Apache License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="no" details="" size="5996" time="0" location="D:\Apl\.ivy2\cache\io.jsonwebtoken\jjwt\ivy-0.9.1.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\io.jsonwebtoken\jjwt\0.9.1\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\io.jsonwebtoken\jjwt\0.9.1\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="5927" time="0" location="D:\Apl\.ivy2\cache\io.jsonwebtoken\jjwt\ivy-0.9.1.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\io.jsonwebtoken\jjwt\0.9.1\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="0.9.1" rev-constraint-default="0.9.1" rev-constraint-dynamic="0.9.1" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="jjwt" type="jar" ext="jar" status="no" details="" size="113618" time="0" location="D:\Apl\.ivy2\local\io.jsonwebtoken\jjwt\0.9.1\jars\jjwt.jar">
@@ -138,9 +138,9 @@
 			</revision>
 		</module>
 		<module organisation="com.google.guava" name="guava">
-			<revision name="27.0-jre" status="release" pubdate="20181019031816" resolver="local" artresolver="local" homepage="" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="34">
+			<revision name="27.0-jre" status="release" pubdate="20181019031816" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="34">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="no" details="" size="8932" time="0" location="D:\Apl\.ivy2\cache\com.google.guava\guava\ivy-27.0-jre.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.google.guava\guava\27.0-jre\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.guava\guava\27.0-jre\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="8843" time="0" location="D:\Apl\.ivy2\cache\com.google.guava\guava\ivy-27.0-jre.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.guava\guava\27.0-jre\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="27.0-jre" rev-constraint-default="27.0-jre" rev-constraint-dynamic="27.0-jre" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="guava" type="bundle" ext="jar" status="no" details="" size="2747878" time="0" location="D:\Apl\.ivy2\local\com.google.guava\guava\27.0-jre\bundles\guava.jar">
@@ -150,9 +150,9 @@
 			</revision>
 		</module>
 		<module organisation="org.codehaus.mojo" name="animal-sniffer-annotations">
-			<revision name="1.17" status="release" pubdate="20180622102035" resolver="local" artresolver="local" homepage="" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="41">
+			<revision name="1.17" status="release" pubdate="20180622102035" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="41">
 				<license name="MIT license" url="http://www.opensource.org/licenses/mit-license.php"/>
-				<metadata-artifact status="no" details="" size="5553" time="0" location="D:\Apl\.ivy2\cache\org.codehaus.mojo\animal-sniffer-annotations\ivy-1.17.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\org.codehaus.mojo\animal-sniffer-annotations\1.17\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\org.codehaus.mojo\animal-sniffer-annotations\1.17\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="5491" time="0" location="D:\Apl\.ivy2\cache\org.codehaus.mojo\animal-sniffer-annotations\ivy-1.17.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\org.codehaus.mojo\animal-sniffer-annotations\1.17\ivys\ivy.xml"/>
 				<caller organisation="com.google.guava" name="guava" conf="compile, runtime" rev="1.17" rev-constraint-default="1.17" rev-constraint-dynamic="1.17" callerrev="27.0-jre"/>
 				<artifacts>
 					<artifact name="animal-sniffer-annotations" type="jar" ext="jar" status="no" details="" size="3448" time="0" location="D:\Apl\.ivy2\local\org.codehaus.mojo\animal-sniffer-annotations\1.17\jars\animal-sniffer-annotations.jar">
@@ -162,9 +162,9 @@
 			</revision>
 		</module>
 		<module organisation="com.google.j2objc" name="j2objc-annotations">
-			<revision name="1.1" status="release" pubdate="20170119080659" resolver="local" artresolver="local" homepage="https://github.com/google/j2objc/" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="40">
+			<revision name="1.1" status="release" pubdate="20170119080659" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/google/j2objc/" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="40">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="no" details="" size="3207" time="0" location="D:\Apl\.ivy2\cache\com.google.j2objc\j2objc-annotations\ivy-1.1.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.google.j2objc\j2objc-annotations\1.1\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.j2objc\j2objc-annotations\1.1\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="3165" time="0" location="D:\Apl\.ivy2\cache\com.google.j2objc\j2objc-annotations\ivy-1.1.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.j2objc\j2objc-annotations\1.1\ivys\ivy.xml"/>
 				<caller organisation="com.google.guava" name="guava" conf="compile, runtime" rev="1.1" rev-constraint-default="1.1" rev-constraint-dynamic="1.1" callerrev="27.0-jre"/>
 				<artifacts>
 					<artifact name="j2objc-annotations" type="jar" ext="jar" status="no" details="" size="8782" time="0" location="D:\Apl\.ivy2\local\com.google.j2objc\j2objc-annotations\1.1\jars\j2objc-annotations.jar">
@@ -174,9 +174,9 @@
 			</revision>
 		</module>
 		<module organisation="com.google.errorprone" name="error_prone_annotations">
-			<revision name="2.2.0" status="release" pubdate="20180109082952" resolver="local" artresolver="local" homepage="" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="39">
+			<revision name="2.2.0" status="release" pubdate="20180109082952" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="39">
 				<license name="Apache 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="no" details="" size="4144" time="0" location="D:\Apl\.ivy2\cache\com.google.errorprone\error_prone_annotations\ivy-2.2.0.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.google.errorprone\error_prone_annotations\2.2.0\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.errorprone\error_prone_annotations\2.2.0\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="4095" time="0" location="D:\Apl\.ivy2\cache\com.google.errorprone\error_prone_annotations\ivy-2.2.0.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.errorprone\error_prone_annotations\2.2.0\ivys\ivy.xml"/>
 				<caller organisation="com.google.guava" name="guava" conf="compile, runtime" rev="2.2.0" rev-constraint-default="2.2.0" rev-constraint-dynamic="2.2.0" callerrev="27.0-jre"/>
 				<artifacts>
 					<artifact name="error_prone_annotations" type="jar" ext="jar" status="no" details="" size="13694" time="0" location="D:\Apl\.ivy2\local\com.google.errorprone\error_prone_annotations\2.2.0\jars\error_prone_annotations.jar">
@@ -186,9 +186,9 @@
 			</revision>
 		</module>
 		<module organisation="org.checkerframework" name="checker-qual">
-			<revision name="2.5.2" status="release" pubdate="20180602035723" resolver="local" artresolver="local" homepage="https://checkerframework.org" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="38">
+			<revision name="2.5.2" status="release" pubdate="20180602035723" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://checkerframework.org" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="38">
 				<license name="The MIT License" url="http://opensource.org/licenses/MIT"/>
-				<metadata-artifact status="no" details="" size="2763" time="0" location="D:\Apl\.ivy2\cache\org.checkerframework\checker-qual\ivy-2.5.2.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\org.checkerframework\checker-qual\2.5.2\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\org.checkerframework\checker-qual\2.5.2\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="2723" time="0" location="D:\Apl\.ivy2\cache\org.checkerframework\checker-qual\ivy-2.5.2.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\org.checkerframework\checker-qual\2.5.2\ivys\ivy.xml"/>
 				<caller organisation="com.google.guava" name="guava" conf="compile, runtime" rev="2.5.2" rev-constraint-default="2.5.2" rev-constraint-dynamic="2.5.2" callerrev="27.0-jre"/>
 				<artifacts>
 					<artifact name="checker-qual" type="jar" ext="jar" status="no" details="" size="193322" time="0" location="D:\Apl\.ivy2\local\org.checkerframework\checker-qual\2.5.2\jars\checker-qual.jar">
@@ -198,9 +198,9 @@
 			</revision>
 		</module>
 		<module organisation="com.google.code.findbugs" name="jsr305">
-			<revision name="3.0.2" status="release" pubdate="20170331135548" resolver="local" artresolver="local" homepage="http://findbugs.sourceforge.net/" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="37">
+			<revision name="3.0.2" status="release" pubdate="20170331135548" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://findbugs.sourceforge.net/" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="37">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="no" details="" size="3301" time="0" location="D:\Apl\.ivy2\cache\com.google.code.findbugs\jsr305\ivy-3.0.2.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.google.code.findbugs\jsr305\3.0.2\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.code.findbugs\jsr305\3.0.2\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="3259" time="0" location="D:\Apl\.ivy2\cache\com.google.code.findbugs\jsr305\ivy-3.0.2.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.code.findbugs\jsr305\3.0.2\ivys\ivy.xml"/>
 				<caller organisation="com.google.guava" name="guava" conf="compile, runtime" rev="3.0.2" rev-constraint-default="3.0.2" rev-constraint-dynamic="3.0.2" callerrev="27.0-jre"/>
 				<artifacts>
 					<artifact name="jsr305" type="jar" ext="jar" status="no" details="" size="19936" time="0" location="D:\Apl\.ivy2\local\com.google.code.findbugs\jsr305\3.0.2\jars\jsr305.jar">
@@ -210,9 +210,9 @@
 			</revision>
 		</module>
 		<module organisation="com.google.guava" name="listenablefuture">
-			<revision name="9999.0-empty-to-avoid-conflict-with-guava" status="release" pubdate="20180912044043" resolver="local" artresolver="local" homepage="" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="36">
+			<revision name="9999.0-empty-to-avoid-conflict-with-guava" status="release" pubdate="20180912044043" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="36">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="no" details="" size="6914" time="0" location="D:\Apl\.ivy2\cache\com.google.guava\listenablefuture\ivy-9999.0-empty-to-avoid-conflict-with-guava.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.google.guava\listenablefuture\9999.0-empty-to-avoid-conflict-with-guava\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.guava\listenablefuture\9999.0-empty-to-avoid-conflict-with-guava\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="6850" time="0" location="D:\Apl\.ivy2\cache\com.google.guava\listenablefuture\ivy-9999.0-empty-to-avoid-conflict-with-guava.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.guava\listenablefuture\9999.0-empty-to-avoid-conflict-with-guava\ivys\ivy.xml"/>
 				<caller organisation="com.google.guava" name="guava" conf="compile, runtime" rev="9999.0-empty-to-avoid-conflict-with-guava" rev-constraint-default="9999.0-empty-to-avoid-conflict-with-guava" rev-constraint-dynamic="9999.0-empty-to-avoid-conflict-with-guava" callerrev="27.0-jre"/>
 				<artifacts>
 					<artifact name="listenablefuture" type="jar" ext="jar" status="no" details="" size="2199" time="0" location="D:\Apl\.ivy2\local\com.google.guava\listenablefuture\9999.0-empty-to-avoid-conflict-with-guava\jars\listenablefuture.jar">
@@ -222,9 +222,9 @@
 			</revision>
 		</module>
 		<module organisation="com.google.guava" name="failureaccess">
-			<revision name="1.0" status="release" pubdate="20180912043959" resolver="local" artresolver="local" homepage="" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="35">
+			<revision name="1.0" status="release" pubdate="20180912043959" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="35">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="no" details="" size="6460" time="0" location="D:\Apl\.ivy2\cache\com.google.guava\failureaccess\ivy-1.0.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.google.guava\failureaccess\1.0\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.guava\failureaccess\1.0\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="6394" time="0" location="D:\Apl\.ivy2\cache\com.google.guava\failureaccess\ivy-1.0.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.google.guava\failureaccess\1.0\ivys\ivy.xml"/>
 				<caller organisation="com.google.guava" name="guava" conf="compile, runtime" rev="1.0" rev-constraint-default="1.0" rev-constraint-dynamic="1.0" callerrev="27.0-jre"/>
 				<artifacts>
 					<artifact name="failureaccess" type="jar" ext="jar" status="no" details="" size="3727" time="0" location="D:\Apl\.ivy2\local\com.google.guava\failureaccess\1.0\jars\failureaccess.jar">
@@ -393,9 +393,9 @@
 			</revision>
 		</module>
 		<module organisation="com.typesafe.akka" name="akka-slf4j_2.12">
-			<revision name="2.5.19" status="release" pubdate="20181207202426" resolver="local" artresolver="local" homepage="http://akka.io/" extra-info.apiURL="http://doc.akka.io/api/akka/2.5.19" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="22">
+			<revision name="2.5.19" status="release" pubdate="20181207202426" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://akka.io/" extra-info.apiURL="http://doc.akka.io/api/akka/2.5.19" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="22">
 				<license name="Apache License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="no" details="" size="3375" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.akka\akka-slf4j_2.12\ivy-2.5.19.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-slf4j_2.12\2.5.19\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-slf4j_2.12\2.5.19\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="3327" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.akka\akka-slf4j_2.12\ivy-2.5.19.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-slf4j_2.12\2.5.19\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="2.5.19" rev-constraint-default="2.5.19" rev-constraint-dynamic="2.5.19" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="akka-slf4j_2.12" type="jar" ext="jar" status="no" details="" size="16031" time="0" location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-slf4j_2.12\2.5.19\jars\akka-slf4j_2.12.jar">
@@ -405,9 +405,9 @@
 			</revision>
 		</module>
 		<module organisation="org.slf4j" name="jcl-over-slf4j">
-			<revision name="1.7.25" status="release" pubdate="20170317013729" resolver="local" artresolver="local" homepage="http://www.slf4j.org" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="21">
+			<revision name="1.7.25" status="release" pubdate="20170317013729" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.slf4j.org" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="21">
 				<license name="MIT License" url="http://www.opensource.org/licenses/mit-license.php"/>
-				<metadata-artifact status="no" details="" size="5693" time="0" location="D:\Apl\.ivy2\cache\org.slf4j\jcl-over-slf4j\ivy-1.7.25.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\org.slf4j\jcl-over-slf4j\1.7.25\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\org.slf4j\jcl-over-slf4j\1.7.25\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="5626" time="0" location="D:\Apl\.ivy2\cache\org.slf4j\jcl-over-slf4j\ivy-1.7.25.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\org.slf4j\jcl-over-slf4j\1.7.25\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="1.7.25" rev-constraint-default="1.7.25" rev-constraint-dynamic="1.7.25" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="jcl-over-slf4j" type="jar" ext="jar" status="no" details="" size="16515" time="0" location="D:\Apl\.ivy2\local\org.slf4j\jcl-over-slf4j\1.7.25\jars\jcl-over-slf4j.jar">
@@ -417,9 +417,9 @@
 			</revision>
 		</module>
 		<module organisation="org.slf4j" name="jul-to-slf4j">
-			<revision name="1.7.25" status="release" pubdate="20170317013746" resolver="local" artresolver="local" homepage="http://www.slf4j.org" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="20">
+			<revision name="1.7.25" status="release" pubdate="20170317013746" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.slf4j.org" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="20">
 				<license name="MIT License" url="http://www.opensource.org/licenses/mit-license.php"/>
-				<metadata-artifact status="no" details="" size="5676" time="0" location="D:\Apl\.ivy2\cache\org.slf4j\jul-to-slf4j\ivy-1.7.25.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\org.slf4j\jul-to-slf4j\1.7.25\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\org.slf4j\jul-to-slf4j\1.7.25\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="5609" time="0" location="D:\Apl\.ivy2\cache\org.slf4j\jul-to-slf4j\ivy-1.7.25.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\org.slf4j\jul-to-slf4j\1.7.25\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="1.7.25" rev-constraint-default="1.7.25" rev-constraint-dynamic="1.7.25" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="jul-to-slf4j" type="jar" ext="jar" status="no" details="" size="4596" time="0" location="D:\Apl\.ivy2\local\org.slf4j\jul-to-slf4j\1.7.25\jars\jul-to-slf4j.jar">
@@ -453,9 +453,9 @@
 			</revision>
 		</module>
 		<module organisation="com.typesafe.play" name="play-streams_2.12">
-			<revision name="2.7.0" status="release" pubdate="20190131072221" resolver="local" artresolver="local" homepage="https://playframework.com" extra-info.apiURL="https://www.playframework.com/documentation/2.7.0/api/scala/index.html" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="10">
+			<revision name="2.7.0" status="release" pubdate="20190131072221" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://playframework.com" extra-info.apiURL="https://www.playframework.com/documentation/2.7.0/api/scala/index.html" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="10">
 				<license name="Apache-2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
-				<metadata-artifact status="no" details="" size="4352" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.play\play-streams_2.12\ivy-2.7.0.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.typesafe.play\play-streams_2.12\2.7.0\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.play\play-streams_2.12\2.7.0\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="4295" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.play\play-streams_2.12\ivy-2.7.0.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.play\play-streams_2.12\2.7.0\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="2.7.0" rev-constraint-default="2.7.0" rev-constraint-dynamic="2.7.0" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="play-streams_2.12" type="jar" ext="jar" status="no" details="" size="88441" time="0" location="D:\Apl\.ivy2\local\com.typesafe.play\play-streams_2.12\2.7.0\jars\play-streams_2.12.jar">
@@ -485,9 +485,9 @@
 			</revision>
 		</module>
 		<module organisation="com.typesafe.akka" name="akka-stream_2.12">
-			<revision name="2.5.19" status="release" pubdate="20181207202619" resolver="local" artresolver="local" homepage="http://akka.io/" extra-info.apiURL="http://doc.akka.io/api/akka/2.5.19" downloaded="false" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="11">
+			<revision name="2.5.19" status="release" pubdate="20181207202619" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://akka.io/" extra-info.apiURL="http://doc.akka.io/api/akka/2.5.19" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="11">
 				<license name="Apache License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="no" details="" size="3564" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.akka\akka-stream_2.12\ivy-2.5.19.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-stream_2.12\2.5.19\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-stream_2.12\2.5.19\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="3515" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.akka\akka-stream_2.12\ivy-2.5.19.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-stream_2.12\2.5.19\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play-streams_2.12" conf="compile, runtime" rev="2.5.19" rev-constraint-default="2.5.19" rev-constraint-dynamic="2.5.19" callerrev="2.7.0"/>
 				<artifacts>
 					<artifact name="akka-stream_2.12" type="jar" ext="jar" status="no" details="" size="4409949" time="0" location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-stream_2.12\2.5.19\jars\akka-stream_2.12.jar">
@@ -497,9 +497,9 @@
 			</revision>
 		</module>
 		<module organisation="com.typesafe.akka" name="akka-protobuf_2.12">
-			<revision name="2.5.19" status="release" pubdate="20181207201838" resolver="local" artresolver="local" homepage="http://akka.io/" extra-info.apiURL="http://doc.akka.io/api/akka/2.5.19" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="15">
+			<revision name="2.5.19" status="release" pubdate="20181207201838" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://akka.io/" extra-info.apiURL="http://doc.akka.io/api/akka/2.5.19" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), runtime, compile(*), master" position="15">
 				<license name="Apache License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="no" details="" size="2864" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.akka\akka-protobuf_2.12\ivy-2.5.19.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-protobuf_2.12\2.5.19\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-protobuf_2.12\2.5.19\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="2820" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.akka\akka-protobuf_2.12\ivy-2.5.19.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-protobuf_2.12\2.5.19\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.akka" name="akka-stream_2.12" conf="compile, runtime" rev="2.5.19" rev-constraint-default="2.5.19" rev-constraint-dynamic="2.5.19" callerrev="2.5.19"/>
 				<artifacts>
 					<artifact name="akka-protobuf_2.12" type="jar" ext="jar" status="no" details="" size="483842" time="0" location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-protobuf_2.12\2.5.19\jars\akka-protobuf_2.12.jar">
@@ -509,9 +509,9 @@
 			</revision>
 		</module>
 		<module organisation="com.typesafe.akka" name="akka-actor_2.12">
-			<revision name="2.5.19" status="release" pubdate="20181207201755" resolver="local" artresolver="local" homepage="http://akka.io/" extra-info.apiURL="http://doc.akka.io/api/akka/2.5.19" downloaded="false" searched="true" default="false" conf="master(*), compile, runtime(*), master(compile), runtime, compile(*), master" position="12">
+			<revision name="2.5.19" status="release" pubdate="20181207201755" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://akka.io/" extra-info.apiURL="http://doc.akka.io/api/akka/2.5.19" downloaded="false" searched="false" default="false" conf="master(*), compile, runtime(*), master(compile), runtime, compile(*), master" position="12">
 				<license name="Apache License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="no" details="" size="3140" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.akka\akka-actor_2.12\ivy-2.5.19.xml" searched="true" original-local-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-actor_2.12\2.5.19\ivys\ivy.xml" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-actor_2.12\2.5.19\ivys\ivy.xml"/>
+				<metadata-artifact status="no" details="" size="3094" time="0" location="D:\Apl\.ivy2\cache\com.typesafe.akka\akka-actor_2.12\ivy-2.5.19.xml" searched="false" origin-is-local="true" origin-location="D:\Apl\.ivy2\local\com.typesafe.akka\akka-actor_2.12\2.5.19\ivys\ivy.xml"/>
 				<caller organisation="com.typesafe.play" name="play_2.12" conf="compile, runtime" rev="2.5.19" rev-constraint-default="2.5.19" rev-constraint-dynamic="2.5.19" callerrev="2.7.0"/>
 				<caller organisation="com.typesafe.akka" name="akka-slf4j_2.12" conf="compile, runtime" rev="2.5.19" rev-constraint-default="2.5.19" rev-constraint-dynamic="2.5.19" callerrev="2.5.19"/>
 				<caller organisation="com.typesafe.akka" name="akka-stream_2.12" conf="compile, runtime" rev="2.5.19" rev-constraint-default="2.5.19" rev-constraint-dynamic="2.5.19" callerrev="2.5.19"/>
