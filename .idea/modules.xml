@@ -6,11 +6,13 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/analysis-build.iml" filepath="$PROJECT_DIR$/.idea/modules/analysis-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/core.iml" filepath="$PROJECT_DIR$/.idea/modules/core.iml" />
       <module fileurl="file://$PROJECT_DIR$/imptest/imptest.iml" filepath="$PROJECT_DIR$/imptest/imptest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jp-co-nri-nefs-tool-util/jp-co-nri-nefs-tool-util.iml" filepath="$PROJECT_DIR$/jp-co-nri-nefs-tool-util/jp-co-nri-nefs-tool-util.iml" />
       <module fileurl="file://$PROJECT_DIR$/json/json.iml" filepath="$PROJECT_DIR$/json/json.iml" />
       <module fileurl="file://$PROJECT_DIR$/log/log.iml" filepath="$PROJECT_DIR$/log/log.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-slick.iml" filepath="$PROJECT_DIR$/.idea/modules/play-slick.iml" />
       <module fileurl="file://$PROJECT_DIR$/transfer/transfer.iml" filepath="$PROJECT_DIR$/transfer/transfer.iml" />
       <module fileurl="file://$PROJECT_DIR$/transport/transport.iml" filepath="$PROJECT_DIR$/transport/transport.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/util.iml" filepath="$PROJECT_DIR$/.idea/modules/util.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/websocket.iml" filepath="$PROJECT_DIR$/.idea/modules/websocket.iml" />
     </modules>
   </component>

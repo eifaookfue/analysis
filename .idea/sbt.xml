@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/co-jp-nri-nefs-tool-websocket" />
             <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/imptest" />
+            <option value="$PROJECT_DIR$/jp-co-nri-nefs-tool-util" />
             <option value="$PROJECT_DIR$/json" />
             <option value="$PROJECT_DIR$/log" />
             <option value="$PROJECT_DIR$/play-slick" />
@@ -20,7 +21,6 @@
           </set>
         </option>
         <option name="sbtVersion" value="1.2.8" />
-        <option name="useAutoImport" value="true" />
       </SbtProjectSettings>
     </option>
     <option name="vmParameters" value="-Dsbt.ivy.home=D:\Apl\.ivy2 -Dsbt.override.build.repos=true" />

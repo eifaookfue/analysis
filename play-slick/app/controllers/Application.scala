@@ -1,5 +1,7 @@
 package controllers
 
+import java.nio.file.{Files, Path, Paths}
+
 import dao.WindowDetailDAO
 import javax.inject.Inject
 import models.Params
@@ -10,6 +12,7 @@ import play.api.libs.json._
 import play.api.mvc.{AbstractController, ControllerComponents, Result}
 import views.html
 
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
 /** Manage a database of computers. */
@@ -129,6 +132,8 @@ class Application @Inject() (
       (JsPath \ "ioiqualifier").read[String]
     )(IOI.apply _)
 
+  implicit val ioisReads: Reads[Seq[IOI]] = Reads.seq(ioiReads)
+
   // 2019/11/17 08:00 これはOK
 /*  implicit val ioisReads: Reads[IOIS] =(
     (JsPath \ "name").read[String] and
@@ -169,9 +174,9 @@ class Application @Inject() (
 
 
   // 2019/11/16 22:20 ためしにこれ消してみる
-  /*implicit val ioiWrites: Writes[IOI] =
+  implicit val ioiWrites: Writes[IOI] =
     (JsPath \ "symbol").write[String].and((JsPath \ "ioiqty").write[Int])
-      .and((JsPath \ "ioiqualifier").write[String])(unlift(IOI.unapply))*/
+      .and((JsPath \ "ioiqualifier").write[String])(unlift(IOI.unapply))
 
   /*implicit val ioisWrites: Writes[IOIS] =
     (JsPath \ "name").write[String].and((JsPath \ "iois").write[Seq[IOI]])(unlift(IOIS.unapply))*/
@@ -221,9 +226,23 @@ class Application @Inject() (
       },
       iois => {
         println(s"iois=$iois")
+        val s = Json.prettyPrint(Json.toJson(iois))
+        println(s)
+        write(s, () => "D:\\tmp\\a.txt")
+
         Ok(Json.obj("status" -> "OK", "message" -> "abcd"))
       }
     )
+  }
+
+  def write(str: String, f: () => String): Path = {
+    val path = Paths.get(f())
+    Files.write(path, Seq(str).asJava)
+  }
+
+  def read(f: () => String): Unit = {
+    val path = Paths.get(f())
+    Files.readAllLines(path).asScala.toList
   }
 
 

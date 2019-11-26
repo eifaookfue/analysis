@@ -3,7 +3,6 @@
 import com.typesafe.tools.mima.plugin.MimaPlugin._
 import interplay.ScalaVersions._
 
-
 lazy val runProcesses = taskKey[Unit]("A task that hard codes the values to `run`")
 runProcesses := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.file.Processes" +
@@ -85,6 +84,10 @@ name := "analysis"
 version := "0.1"
 
 //fork := true
+
+lazy val util = (project in file("jp-co-nri-nefs-tool-util"))
+  .settings(libraryDependencies ++= Dependencies.util)
+
 
 lazy val websocket = (project in file("co-jp-nri-nefs-tool-websocket"))
   .settings(

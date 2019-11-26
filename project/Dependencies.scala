@@ -2,6 +2,11 @@ import sbt._
 
   object Dependencies {
 
+    val util = Seq(
+      Library.sacalaLogging,
+      Library.logbackClassic
+    )
+
     val websocket = Seq(
       Library.sacalaLogging,
       Library.logbackClassic,
