@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.google.code.findbugs:jsr305:3.0.2:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/com.google.code.findbugs/jsr305/3.0.2/jars/jsr305.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.google.code.findbugs/jsr305/srcs/jsr305-3.0.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

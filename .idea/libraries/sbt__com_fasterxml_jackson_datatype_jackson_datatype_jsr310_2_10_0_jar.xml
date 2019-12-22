@@ -3,10 +3,12 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/bundles/jackson-datatype-jsr310-2.10.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.10.0/bundles/jackson-datatype-jsr310.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.10.0/bundles/jackson-datatype-jsr310.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/srcs/jackson-datatype-jsr310-2.10.0-sources.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/srcs/jackson-datatype-jsr310-2.10.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

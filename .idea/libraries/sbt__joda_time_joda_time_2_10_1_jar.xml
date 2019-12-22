@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: joda-time:joda-time:2.10.1:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/joda-time/joda-time/2.10.1/jars/joda-time.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/joda-time/joda-time/srcs/joda-time-2.10.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

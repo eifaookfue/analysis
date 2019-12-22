@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.typesafe.play:play-netty-server_2.12:2.7.0:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/com.typesafe.play/play-netty-server_2.12/2.7.0/jars/play-netty-server_2.12.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.typesafe.play/play-netty-server_2.12/srcs/play-netty-server_2.12-2.7.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

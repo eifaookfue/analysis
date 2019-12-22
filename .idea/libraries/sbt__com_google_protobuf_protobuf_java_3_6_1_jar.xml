@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.google.protobuf:protobuf-java:3.6.1:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/com.google.protobuf/protobuf-java/3.6.1/bundles/protobuf-java.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.google.protobuf/protobuf-java/srcs/protobuf-java-3.6.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

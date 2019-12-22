@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: org.specs2:specs2-mock_2.12:4.3.6:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/org.specs2/specs2-mock_2.12/4.3.6/jars/specs2-mock_2.12.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.specs2/specs2-mock_2.12/srcs/specs2-mock_2.12-4.3.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

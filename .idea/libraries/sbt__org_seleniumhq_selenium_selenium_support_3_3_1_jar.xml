@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: org.seleniumhq.selenium:selenium-support:3.3.1:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/org.seleniumhq.selenium/selenium-support/3.3.1/jars/selenium-support.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.seleniumhq.selenium/selenium-support/srcs/selenium-support-3.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

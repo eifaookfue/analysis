@@ -2,10 +2,12 @@
   <library name="sbt: ch.qos.logback:logback-core:1.0.13:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/ch.qos.logback/logback-core/1.0.13/jars/logback-core.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/ch.qos.logback/logback-core/1.0.13/jars/logback-core.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/ch.qos.logback/logback-core/srcs/logback-core-1.0.13-sources.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/ch.qos.logback/logback-core/srcs/logback-core-1.0.13-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

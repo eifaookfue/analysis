@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: org.reactivestreams:reactive-streams:1.0.2:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/org.reactivestreams/reactive-streams/1.0.2/jars/reactive-streams.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.reactivestreams/reactive-streams/srcs/reactive-streams-1.0.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

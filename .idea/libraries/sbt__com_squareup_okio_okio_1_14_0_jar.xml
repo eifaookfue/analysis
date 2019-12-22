@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.squareup.okio:okio:1.14.0:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/com.squareup.okio/okio/1.14.0/jars/okio.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.squareup.okio/okio/srcs/okio-1.14.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

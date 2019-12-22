@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: org.apache.httpcomponents:httpmime:4.5.6:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/org.apache.httpcomponents/httpmime/4.5.6/jars/httpmime.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.apache.httpcomponents/httpmime/srcs/httpmime-4.5.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

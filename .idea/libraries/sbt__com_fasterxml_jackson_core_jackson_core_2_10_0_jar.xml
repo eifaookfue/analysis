@@ -3,10 +3,12 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.fasterxml.jackson.core/jackson-core/bundles/jackson-core-2.10.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/com.fasterxml.jackson.core/jackson-core/2.10.0/bundles/jackson-core.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/com.fasterxml.jackson.core/jackson-core/2.10.0/bundles/jackson-core.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.fasterxml.jackson.core/jackson-core/srcs/jackson-core-2.10.0-sources.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/srcs/jackson-core-2.10.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

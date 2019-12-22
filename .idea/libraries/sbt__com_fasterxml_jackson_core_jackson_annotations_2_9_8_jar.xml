@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.fasterxml.jackson.core:jackson-annotations:2.9.8:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/com.fasterxml.jackson.core/jackson-annotations/2.9.8/bundles/jackson-annotations.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/srcs/jackson-annotations-2.9.8-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

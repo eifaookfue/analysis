@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: javax.xml.bind:jaxb-api:2.3.1:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/javax.xml.bind/jaxb-api/2.3.1/jars/jaxb-api.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/javax.xml.bind/jaxb-api/srcs/jaxb-api-2.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

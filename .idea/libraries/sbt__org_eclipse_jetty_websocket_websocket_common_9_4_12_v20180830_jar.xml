@@ -3,10 +3,12 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/org.eclipse.jetty.websocket/websocket-common/jars/websocket-common-9.4.12.v20180830.jar!/" />
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/org.eclipse.jetty.websocket/websocket-common/9.4.12.v20180830/jars/websocket-common.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/org.eclipse.jetty.websocket/websocket-common/9.4.12.v20180830/jars/websocket-common.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/org.eclipse.jetty.websocket/websocket-common/srcs/websocket-common-9.4.12.v20180830-sources.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/org.eclipse.jetty.websocket/websocket-common/srcs/websocket-common-9.4.12.v20180830-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

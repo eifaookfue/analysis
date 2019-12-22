@@ -2,8 +2,11 @@
   <library name="sbt: org.apache.poi:poi:3.9:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/org.apache.poi/poi/3.9/jars/poi.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/org.apache.poi/poi/3.9/jars/poi.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.apache.poi/poi/srcs/poi-3.9-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

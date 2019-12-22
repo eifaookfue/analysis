@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: net.java.dev.jna:jna-platform:4.1.0:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/net.java.dev.jna/jna-platform/4.1.0/jars/jna-platform.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/net.java.dev.jna/jna-platform/srcs/jna-platform-4.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

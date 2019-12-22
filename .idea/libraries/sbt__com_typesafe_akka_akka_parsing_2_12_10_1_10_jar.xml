@@ -3,10 +3,12 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.typesafe.akka/akka-parsing_2.12/jars/akka-parsing_2.12-10.1.10.jar!/" />
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/com.typesafe.akka/akka-parsing_2.12/10.1.10/jars/akka-parsing_2.12.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/com.typesafe.akka/akka-parsing_2.12/10.1.10/jars/akka-parsing_2.12.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.typesafe.akka/akka-parsing_2.12/srcs/akka-parsing_2.12-10.1.10-sources.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/com.typesafe.akka/akka-parsing_2.12/srcs/akka-parsing_2.12-10.1.10-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

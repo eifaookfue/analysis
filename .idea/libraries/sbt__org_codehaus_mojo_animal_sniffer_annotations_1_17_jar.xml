@@ -2,10 +2,12 @@
   <library name="sbt: org.codehaus.mojo:animal-sniffer-annotations:1.17:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/org.codehaus.mojo/animal-sniffer-annotations/1.17/jars/animal-sniffer-annotations.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/org.codehaus.mojo/animal-sniffer-annotations/1.17/jars/animal-sniffer-annotations.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/org.codehaus.mojo/animal-sniffer-annotations/srcs/animal-sniffer-annotations-1.17-sources.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/org.codehaus.mojo/animal-sniffer-annotations/srcs/animal-sniffer-annotations-1.17-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

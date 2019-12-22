@@ -2,8 +2,11 @@
   <library name="sbt: dom4j:dom4j:1.6.1:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/dom4j/dom4j/1.6.1/jars/dom4j.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/dom4j/dom4j/1.6.1/jars/dom4j.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/dom4j/dom4j/srcs/dom4j-1.6.1-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

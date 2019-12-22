@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: org.eclipse.jetty:jetty-http:9.4.12.v20180830:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/org.eclipse.jetty/jetty-http/9.4.12.v20180830/jars/jetty-http.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.eclipse.jetty/jetty-http/srcs/jetty-http-9.4.12.v20180830-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

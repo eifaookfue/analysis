@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: io.jsonwebtoken:jjwt:0.9.1:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/io.jsonwebtoken/jjwt/0.9.1/jars/jjwt.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/io.jsonwebtoken/jjwt/srcs/jjwt-0.9.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

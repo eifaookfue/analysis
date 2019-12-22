@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.google.code.gson:gson:2.8.0:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/com.google.code.gson/gson/2.8.0/jars/gson.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.google.code.gson/gson/srcs/gson-2.8.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

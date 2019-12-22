@@ -23,6 +23,6 @@
         <option name="sbtVersion" value="1.2.8" />
       </SbtProjectSettings>
     </option>
-    <option name="vmParameters" value="-Dsbt.ivy.home=D:\Apl\.ivy2 -Dsbt.override.build.repos=true" />
+    <option name="vmParameters" value="-Dsbt.ivy.home=C:\Apl\.ivy2" />
   </component>
 </project>

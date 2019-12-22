@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: cglib:cglib-nodep:3.2.4:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/cglib/cglib-nodep/3.2.4/jars/cglib-nodep.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/cglib/cglib-nodep/srcs/cglib-nodep-3.2.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

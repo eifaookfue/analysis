@@ -3,10 +3,12 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.google.protobuf/protobuf-java/bundles/protobuf-java-3.10.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/com.google.protobuf/protobuf-java/3.10.0/bundles/protobuf-java.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/com.google.protobuf/protobuf-java/3.10.0/bundles/protobuf-java.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/cache/com.google.protobuf/protobuf-java/srcs/protobuf-java-3.10.0-sources.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/com.google.protobuf/protobuf-java/srcs/protobuf-java-3.10.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

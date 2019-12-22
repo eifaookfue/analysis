@@ -2,8 +2,11 @@
   <library name="sbt: commons-codec:commons-codec:1.5:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/commons-codec/commons-codec/1.5/jars/commons-codec.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/commons-codec/commons-codec/1.5/jars/commons-codec.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/commons-codec/commons-codec/srcs/commons-codec-1.5-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

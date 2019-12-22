@@ -2,8 +2,11 @@
   <library name="sbt: org.scala-lang.modules:scala-java8-compat_2.12:0.8.0:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/org.scala-lang.modules/scala-java8-compat_2.12/0.8.0/bundles/scala-java8-compat_2.12.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/org.scala-lang.modules/scala-java8-compat_2.12/0.8.0/bundles/scala-java8-compat_2.12.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.scala-lang.modules/scala-java8-compat_2.12/srcs/scala-java8-compat_2.12-0.8.0-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

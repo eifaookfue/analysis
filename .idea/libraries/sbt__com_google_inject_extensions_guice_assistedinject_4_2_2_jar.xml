@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.google.inject.extensions:guice-assistedinject:4.2.2:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/com.google.inject.extensions/guice-assistedinject/4.2.2/jars/guice-assistedinject.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.google.inject.extensions/guice-assistedinject/srcs/guice-assistedinject-4.2.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

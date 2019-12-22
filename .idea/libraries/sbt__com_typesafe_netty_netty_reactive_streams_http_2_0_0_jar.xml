@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.typesafe.netty:netty-reactive-streams-http:2.0.0:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/com.typesafe.netty/netty-reactive-streams-http/2.0.0/jars/netty-reactive-streams-http.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.typesafe.netty/netty-reactive-streams-http/srcs/netty-reactive-streams-http-2.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -2,6 +2,7 @@
   <library name="sbt: org.apache.xmlbeans:xmlbeans:2.3.0:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/org.apache.xmlbeans/xmlbeans/2.3.0/jars/xmlbeans.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/local/org.apache.xmlbeans/xmlbeans/2.3.0/jars/xmlbeans.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

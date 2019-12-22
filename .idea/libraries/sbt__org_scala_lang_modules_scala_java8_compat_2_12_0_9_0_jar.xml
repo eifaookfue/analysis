@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: org.scala-lang.modules:scala-java8-compat_2.12:0.9.0:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/org.scala-lang.modules/scala-java8-compat_2.12/0.9.0/jars/scala-java8-compat_2.12.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.scala-lang.modules/scala-java8-compat_2.12/srcs/scala-java8-compat_2.12-0.9.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

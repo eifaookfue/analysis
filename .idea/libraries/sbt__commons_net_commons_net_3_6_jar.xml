@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: commons-net:commons-net:3.6:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/commons-net/commons-net/3.6/jars/commons-net.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/commons-net/commons-net/srcs/commons-net-3.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

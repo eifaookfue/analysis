@@ -44,7 +44,8 @@ import sbt._
       Library.poi,
       Library.poi_ooxml,
       Library.sacalaLogging,
-      Library.logbackClassic
+      Library.logbackClassic,
+      Library.scalaz
     )
 
     val transport = Seq(
@@ -69,6 +70,7 @@ import sbt._
     val config       = "1.3.2"
     val akka_http    = "10.1.10"
     val akka_stream  = "2.5.23"
+    val scalaz       = "7.2.14"
   }
 
   object Library {
@@ -91,5 +93,6 @@ import sbt._
     val config              = "com.typesafe"               %  "config"                   % Version.config
     val akka_http           = "com.typesafe.akka"          %% "akka-http"                % Version.akka_http
     val akka_stream         ="com.typesafe.akka"           %% "akka-stream"              % Version.akka_stream
+    val scalaz              = "org.scalaz"                 %% "scalaz-core"              % Version.scalaz
   }
 
