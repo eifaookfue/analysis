@@ -4,7 +4,7 @@
 		module="core_2.12"
 		revision="0.1.0-SNAPSHOT"
 		status="integration"
-		publication="20191130145359"
+		publication="20200101084354"
 	>
 		<license name="Apache-2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html" />
 		<description homepage="https://github.com/playframework/analysis">
@@ -40,5 +40,6 @@
 		<dependency org="com.typesafe.play" name="play-logback_2.12" rev="2.7.0" conf="test->default(compile)"/>
 		<dependency org="com.typesafe.play" name="play-specs2_2.12" rev="2.7.0" conf="test->default(compile)"/>
 		<dependency org="com.h2database" name="h2" rev="1.4.197" conf="test->default(compile)"/>
+		<dependency org="org.scalatest" name="scalatest_2.12" rev="3.0.5" conf="test->default(compile)"/>
 	</dependencies>
 </ivy-module>

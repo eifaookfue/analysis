@@ -75,8 +75,9 @@ lazy val commonSettings = Seq(
   scalacOptions ~= (_.filterNot(_ == "-Xfatal-warnings")),
   scalaVersion := scala212,
   //scalaVersion := "2.12.8",
-  crossScalaVersions := Seq(scala211, scala212)
+  crossScalaVersions := Seq(scala211, scala212),
   //crossScalaVersions := Seq("2.10.7", "2.12.8")
+  libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 )
 
 name := "analysis"

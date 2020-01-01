@@ -6,6 +6,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.sql.Timestamp
 import java.util.Date
 
+import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.log.common.model.{Log, WindowDetail}
 import jp.co.nri.nefs.tool.log.common.utils.FileUtils
@@ -17,20 +18,36 @@ import org.apache.poi.ss.usermodel._
 import scala.collection.JavaConverters._
 import scala.collection._
 import scala.collection.mutable.ListBuffer
-import scala.reflect.ClassTag
 import scala.util.matching.Regex
 
 
-class Log2Case(outputdir: Path) extends LazyLogging{
+class Log2Case(outputdir: Path) extends LazyLogging {
 
-  private trait Naming {def name: String}
-  private trait Starting {def start: LineTime}
-  private trait Ending {def end: Option[LineTime]}
+  private trait Naming {
+    val name: String
+  }
+
+  private trait Starting {
+    val start: LineTime
+  }
+
+  private trait Ending {
+    val end: Option[LineTime]
+  }
+
   private case class LineTime(lineNo: Int, time: Date)
-  private case class Handler(name: String, start: LineTime, end: Option[LineTime] = None) extends Naming with Ending
+
+  private case class Handler(name: String, start: LineTime, end: Option[LineTime] = None) extends Naming with Starting with Ending
+
   private case class Window(name: String, start: LineTime, end: Option[LineTime] = None,
-                            activateStart: Option[LineTime] = None, activateEnd: Option[LineTime] = None) extends Naming with Ending
-  private case class ButtonEvent(event: String, point: LineTime)
+                            relatedHandler: Option[Handler] = None,
+                            relatedButtonEvent: Option[ButtonEvent] = None) extends Naming with Ending
+
+  private case class Action(name: String, start: LineTime, end: Option[LineTime] = None,
+                            relatedHandler: Option[Handler] = None,
+                            relatedButtonEvent: Option[ButtonEvent] = None) extends Naming with Ending
+
+  private case class ButtonEvent(name: String, start: LineTime) extends Naming with Starting
 
   /**
     * キー：windowName
@@ -45,12 +62,12 @@ class Log2Case(outputdir: Path) extends LazyLogging{
   private val buttonActionRegex = """.*\((.*)\).*""".r
   private val lastAndDelNoRegex = """(.*)\$[0-9]""".r
 
-  private case class FileInfo(appName: String, env: String, computer: String, userId: String, startTime: String){
+  private case class FileInfo(appName: String, env: String, computer: String, userId: String, startTime: String) {
     val tradeDate: String = startTime.take(8)
   }
 
   private case class LineInfo(datetimeStr: String, logLevel: String, appName: String, message: String,
-                              thread: String, clazz: String){
+                              thread: String, clazz: String) {
     lazy val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
     val datetime = new Timestamp(format.parse(datetimeStr).getTime)
   }
@@ -64,17 +81,19 @@ class Log2Case(outputdir: Path) extends LazyLogging{
     }
   }
 
-  // [New Split - Parent Order]
-  //
+  /*
+      [TradeSheet][Select Symbol Multi]Dialog opened.[main][j.c.n.n.o.r.p.d.SelectMultiDialog] => Select Symbol Multi
+      [TradeSheet]Opened.[main][j.c.n.n.o.r.p.d.c.QuestionDialog] => j.c.n.n.o.r.p.d.c.QuestionDialog
+   */
   private def getWindowName(message: String, clazz: String): Option[String] = {
     regexOption(windowNameRegex, message).orElse(Some(clazz))
   }
 
-  private def getButtonAction(message: String) : Option[String] = {
+  private def getButtonAction(message: String): Option[String] = {
     regexOption(buttonActionRegex, message)
   }
 
-  private def regexOption(regex: Regex, message: String):Option[String] = {
+  private def regexOption(regex: Regex, message: String): Option[String] = {
     message match {
       case regex(contents) => Some(contents)
       case _ => None
@@ -99,9 +118,9 @@ class Log2Case(outputdir: Path) extends LazyLogging{
   def execute(path: Path): Unit = {
 
     import Utils._
-    if (isZipFile(path)){
+    if (isZipFile(path)) {
       val expandedDir = unzip(path)
-      val paths = FileUtils.autoClose(Files.list(expandedDir)){ stream =>
+      val paths = FileUtils.autoClose(Files.list(expandedDir)) { stream =>
         stream.iterator().asScala.toList
       }
       execute(paths)
@@ -117,10 +136,10 @@ class Log2Case(outputdir: Path) extends LazyLogging{
 
       val stream = Files.lines(path, Charset.forName("MS932"))
       val lines = stream.iterator().asScala
-      for ( (line, tmpNo) <- lines.zipWithIndex; lineNo = tmpNo + 1; lineInfo <- getLineInfo(line)) {
+      for ((line, tmpNo) <- lines.zipWithIndex; lineNo = tmpNo + 1; lineInfo <- getLineInfo(line)) {
         if (lineInfo.message contains "Handler start.") {
           handlerBuffer += Handler(lineInfo.clazz, LineTime(lineNo, lineInfo.datetime))
-        } else if (lineInfo.message contains "Handler end."){
+        } else if (lineInfo.message contains "Handler end.") {
           handlerBuffer.zipWithIndex.reverseIterator
             .find { case (h, _) => h.end.isEmpty && h.name.equals(lineInfo.clazz)
             } match {
@@ -138,12 +157,12 @@ class Log2Case(outputdir: Path) extends LazyLogging{
             case None => logger.warn(s"${fileInfo.fileName}:$lineNo Couldn't find windowName from message.")
           }
         }
-        else if (lineInfo.message contains "Dialog closed."){
+        else if (lineInfo.message contains "Dialog closed.") {
           getWindowName(lineInfo.message, lineInfo.clazz) match {
             case Some(windowName) =>
               windowBuffer.zipWithIndex.reverseIterator.find {
                 case (w, _) => w.end.isEmpty && w.name.equals(windowName)
-                } match {
+              } match {
                 case Some((window, index)) =>
                   windowBuffer.update(index, window.copy(end = Some(LineTime(lineNo, lineInfo.datetime))))
                 case None =>
@@ -163,16 +182,19 @@ class Log2Case(outputdir: Path) extends LazyLogging{
       }
       stream.close()
 
-      for ( w <- windowBuffer ){
-
+      for {
+        (window, index) <- windowBuffer.zipWithIndex
+      } {
+        val handler = FinderFactory.createHandlerFinder(window, handlerBuffer).find
+        windowBuffer.update(index, window.copy(relatedHandler = handler))
+        val buttonEvent = FinderFactory.createButtonEventFinder(window, buttonEventBuffer).find
+        windowBuffer.update(index, window.copy(relatedButtonEvent = buttonEvent))
       }
-
-
 
       val outpathLog = outputdir.resolve(getObjFile(path.getFileName.toFile.toString, "Log"))
       val ostreamLog = new ObjectOutputStream(Files.newOutputStream(outpathLog))
       val log = Log(0L, fileInfo.appName, fileInfo.computer, fileInfo.userId, fileInfo.tradeDate, fileInfo.time)
-      using(ostreamLog){ os =>
+      using(ostreamLog) { os =>
         os.writeObject(log)
       }
 
@@ -187,39 +209,77 @@ class Log2Case(outputdir: Path) extends LazyLogging{
       val outpath = outputdir.resolve(getObjFile(path.getFileName.toFile.toString, "Detail"))
       val ostream = new ObjectOutputStream(Files.newOutputStream(outpath))
       //    os.writeObject(windowDetailList)
-      using(ostream){ os =>
-        windowDetailList.foreach( w => {
+      using(ostream) { os =>
+        windowDetailList.foreach(w => {
           os.writeObject(w)
         })
       }
       val istream = new ObjectInputStream(Files.newInputStream(outpath))
-      using(istream){is =>
+      using(istream) { is =>
         Iterator.continually(is.readObject()).takeWhile(_ != null).foreach(v => logger.info(v.toString))
       }
     }
   }
 
-  private trait Finder[T] { def find: Option[T] }
-  private abstract class WindowFinder[T](window: Window, val targetList: ListBuffer[T]) extends Finder[T]
-  private trait IterateFinder[T] extends Finder[T] {
-    def find: Option[T] = iterate.find(predicate)
-    abstract def iterate: Iterator[T]
-    abstract def predicate: T => Boolean
+  private trait Finder[T] {
+    def find: Option[T]
   }
-  private trait UpwardIterator[T <: Naming with Starting] extends WindowFinder[T] with IterateFinder[T] {
-    def iterate: Iterator[T] =  targetList.reverseIterator
+
+  private abstract class DefaultFinder[T](val window: Window, val targetList: ListBuffer[T]) extends Finder[T]
+
+  private abstract class HandlerFinder[T](val window: Window, val targetList: ListBuffer[T],
+                                          val config: Config) extends Finder[T]
+
+  private trait Iterating[T] extends Finder[T] {
+    val window: Window
+    val targetList: ListBuffer[T]
+
+    def find: Option[T] = iterate.find(predicate)
+
+    def iterate: Iterator[T]
+
+    def predicate: T => Boolean
+  }
+
+  private trait LowerEntryFromStart[T <: Starting] extends Iterating[T] {
+    def iterate: Iterator[T] = targetList.reverseIterator
     def predicate: T => Boolean = t => t.start.lineNo < window.start.lineNo
   }
-  private class MaxLineNoFinder[T <: Starting](finders: Finder[T]*) extends Finder[T] {
-    def find: Option[T] = {
-      for {
-        obj <- finders.map(_.find)
-        out = obj.reduceLeft((a, b) => if (a.start.lineNo > b.start.lineNo) a else b
-      }
-        yield )
+
+  private trait LowerEntryFromEnd[T <: Starting] extends Iterating[T] {
+    def iterate: Iterator[T] = targetList.reverseIterator
+    def predicate: T => Boolean = {t =>
+      window.end.exists(end => t.start.lineNo < end.lineNo && t.start.lineNo > window.start.lineNo)
+      /*window.end match {
+        case Some(end) => t.start.lineNo < end.lineNo
+        case None => false
+      }*/
     }
   }
 
+  private trait HandlerMapping[T <: Naming] extends Finder[T] {
+    val window: Window
+    val config: Config
+
+    //abstract override def find: Option[T] = super.find.flatMap(o => if (!o.name.contains(key)) None else Some(o))
+    // Listの中で一つでも見つかったらそのまま、一つも見つからなかったらNone
+    abstract override def find: Option[T] = super.find.flatMap { o =>
+      if (config.getStringList(window.name).asScala.contains(o.name))
+        Some(o)
+      else
+        None
+    }
+  }
+
+
+  private class MaxLineNoFinder[T <: Starting](finders: Finder[T]*) extends Finder[T] {
+    def find: Option[T] = {
+      finders.map(_.find).maxBy {
+        case Some(o) => o.start.lineNo
+        case _ => Int.MinValue
+      }
+    }
+  }
 
   /*private trait UpwardFinder[T <: Naming with Starting] extends Finder[T]  {
     def find: T = {
@@ -229,14 +289,30 @@ class Log2Case(outputdir: Path) extends LazyLogging{
 
   // WindowがNewSplitの場合、SmartSplitWindowがActivator
   // windowListも検索。SmartSplitが先に見つかったらそっち
-  private class FinderFactory {
+  /*private class FinderFactory {
     def create[T](window: Window, targetList: ListBuffer[T])(implicit m: ClassTag[T]): Finder[T] = {
       val clazz = m.runtimeClass
       if (clazz.equals(classOf[Handler])) {
-        new Finder[Handler](window, targetList) with UpwardIterator[Handler]
+        new WindowFinder[Handler](window, targetList) with Lower[Handler]
       }
     }
+  }*/
+  private object FinderFactory {
+    val config: Config = ConfigFactory.load
+
+    def createHandlerFinder(window: Window, targetList: ListBuffer[Handler]): Finder[Handler] = {
+      new HandlerFinder[Handler](window, targetList, config) with LowerEntryFromStart[Handler] with HandlerMapping[Handler]
+      /*new MaxLineNoFinder[Handler](
+          new DefaultFinder[Handler](window, targetList) with Lower[Handler],
+          new KeyFinder[Handler](window, targetList, "Smart") with Lower[Handler] with KeyIterator[Handler]
+        )*/
+    }
+
+    def createButtonEventFinder(window: Window, targetList: ListBuffer[ButtonEvent]): Finder[ButtonEvent] = {
+      new DefaultFinder[ButtonEvent](window, targetList) with LowerEntryFromEnd[ButtonEvent]
+    }
   }
+
 }
 
 object Keywords {
