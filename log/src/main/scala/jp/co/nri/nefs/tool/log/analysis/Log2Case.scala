@@ -24,8 +24,7 @@ import scala.util.matching.Regex
 class Log2Case(outputdir: Path) extends LazyLogging {
 
   private trait Naming {
-    val orgName: String
-    def name: String = getLastAndDelNo(orgName)
+    val name: String
   }
 
   private trait Starting {
@@ -38,7 +37,10 @@ class Log2Case(outputdir: Path) extends LazyLogging {
 
   private case class LineTime(lineNo: Int, time: Date)
 
-  private case class Handler(orgName: String, start: LineTime, end: Option[LineTime] = None) extends Naming with Starting with Ending
+  private case class Handler(orgName: String, start: LineTime, end: Option[LineTime] = None)
+    extends Naming with Starting with Ending {
+    val name: String = getLastAndDelNo(orgName)
+  }
 
   private trait StartupTiming {
     val start: LineTime
@@ -55,20 +57,23 @@ class Log2Case(outputdir: Path) extends LazyLogging {
     }
   }
 
-  private case class Window(orgName: String, start: LineTime, underlyingClass: String, end: Option[LineTime] = None,
+  private case class Window(name: String, start: LineTime, underlyingClass: String,
+                            end: Option[LineTime] = None,
                             relatedHandler: Option[Handler] = None,
                             relatedButtonEvent: Option[ButtonEvent] = None,
-                            relatedWindow: Option[Window] = None) extends Naming with Ending with StartupTiming
+                            relatedWindow: Option[Window] = None)
+    extends Naming with Starting with Ending with StartupTiming
 
-  private case class Action(orgName: String, start: LineTime, end: Option[LineTime] = None,
+  private case class Action(clazz: String, start: LineTime, end: Option[LineTime] = None,
                             relatedHandler: Option[Handler] = None,
                             relatedButtonEvent: Option[ButtonEvent] = None,
-                            relatedWindow: Option[Window] = None) extends Naming with Ending with StartupTiming
-
-  private case class ButtonEvent(orgName: String, start: LineTime,
-                                 end: Option[LineTime] = None) extends Naming with Starting with Ending {
-    override def name: String = orgName
+                            relatedWindow: Option[Window] = None)
+    extends Naming with Starting with Ending with StartupTiming {
+    val name: String = getLastAndDelNo(clazz)
   }
+
+  private case class ButtonEvent(name: String, start: LineTime,
+                                 end: Option[LineTime] = None) extends Naming with Starting with Ending
 
   private val handlerBuffer = ListBuffer[Handler]()
   private val windowBuffer = ListBuffer[Window]()
@@ -102,8 +107,11 @@ class Log2Case(outputdir: Path) extends LazyLogging {
       [TradeSheet][Select Symbol Multi]Dialog opened.[main][j.c.n.n.o.r.p.d.SelectMultiDialog] => Select Symbol Multi
       [TradeSheet]Opened.[main][j.c.n.n.o.r.p.d.c.QuestionDialog] => j.c.n.n.o.r.p.d.c.QuestionDialog
    */
-  private def getWindowName(message: String, clazz: String): Option[String] = {
-    regexOption(windowNameRegex, message).orElse(Some(clazz))
+  private def getWindowName(message: String, clazz: String): String = {
+    message match {
+      case windowNameRegex(windowName) => windowName
+      case _ => clazz
+    }
   }
 
   private def getButtonAction(message: String): Option[String] = {
@@ -168,27 +176,19 @@ class Log2Case(outputdir: Path) extends LazyLogging {
         //[New Basket]Dialog opened.[main][j.c.n.n.o.r.p.d.b.NewBasketDialog$1]
         //[TradeSheet]Opened.[main][j.c.n.n.o.r.p.d.c.QuestionDialog]
         else if ((lineInfo.message contains "Dialog opened.") || (lineInfo.message contains "Opened.")) {
-          getWindowName(lineInfo.message, lineInfo.clazz) match {
-            case Some(windowName) =>
-              windowBuffer += Window(windowName, LineTime(lineNo, lineInfo.datetime), getLastAndDelNo(lineInfo.clazz))
-            case None => logger.warn(s"${fileInfo.fileName}:$lineNo Couldn't find windowName from message.")
-          }
+          windowBuffer += Window(getWindowName(lineInfo.message, lineInfo.clazz),
+                LineTime(lineNo, lineInfo.datetime), getLastAndDelNo(lineInfo.clazz))
         }
         else if (lineInfo.message contains "Dialog closed.") {
-          getWindowName(lineInfo.message, lineInfo.clazz) match {
-            case Some(windowName) =>
-              windowBuffer.zipWithIndex.reverseIterator.find {
-                case (w, _) => w.end.isEmpty && w.orgName.equals(windowName)
-              } match {
-                case Some((window, index)) =>
-                  windowBuffer.update(index, window.copy(end = Some(LineTime(lineNo, lineInfo.datetime))))
-                case None =>
-                  logger.warn(s"${fileInfo.fileName}:$lineNo Couldn't find window from ListBuffer.")
-              }
-            case None => logger.warn(s"${fileInfo.fileName}:$lineNo Couldn't find windowName from message.")
+          windowBuffer.zipWithIndex.reverseIterator.find {
+            case (w, _) => w.end.isEmpty && w.name.equals(getWindowName(lineInfo.message, lineInfo.clazz))
+          } match {
+              case Some((window, index)) =>
+                windowBuffer.update(index, window.copy(end = Some(LineTime(lineNo, lineInfo.datetime))))
+              case None =>
+                logger.warn(s"${fileInfo.fileName}:$lineNo Couldn't find window from ListBuffer.")
+            }
           }
-
-        }
         else if ((lineInfo.message contains "Button event ends") || (lineInfo.message contains "Button Pressed")) {
           getButtonAction(lineInfo.message) match {
             case Some(action) =>
@@ -228,7 +228,7 @@ class Log2Case(outputdir: Path) extends LazyLogging {
           activator = window.relatedHandler.map(_.name).orElse(window.relatedWindow.map(_.name)),
           windowName = Some(window.name),
           destinationType = None,
-          action = window.relatedButtonEvent.map(_.orgName),
+          action = window.relatedButtonEvent.map(_.name),
           method = None,
           time = new Timestamp(window.start.time.getTime),
           startupTime = window.startupTime
