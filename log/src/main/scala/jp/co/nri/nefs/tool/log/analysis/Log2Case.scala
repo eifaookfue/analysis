@@ -4,6 +4,7 @@ import java.io.{ObjectInputStream, ObjectOutputStream}
 import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 import java.sql.Timestamp
+
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.log.common.model.{Log, WindowDetail}
@@ -19,7 +20,60 @@ import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 
 
-class Log2Case(outputdir: Path) extends LazyLogging {
+trait AnalysisReporterComponent {
+  val analysisReporterFactory: AnalysisReporterFactory
+
+  class AnalysisReporterFactory {
+    private var outputDir: Path = _
+    def setOutputDir(outputDir: Path): Unit = {
+      this.outputDir = outputDir
+    }
+    def create(fileName: String): AnalysisReporter = {
+      val reporter = new AnalysisReporter
+      reporter.setOutputDir(outputDir)
+      reporter.setFileName(fileName)
+    }
+  }
+
+  class AnalysisReporter extends LazyLogging {
+
+    import jp.co.nri.nefs.tool.log.common.utils.RichFiles.stringToRichString
+
+    private var outputDir: Path = _
+    private var fileName: String = _
+    private lazy val outLogPath = outputDir.resolve(fileName.basename + "Log" + Keywords.OBJ_EXTENSION)
+    private lazy val logOutputStream = new ObjectOutputStream(Files.newOutputStream(outLogPath))
+    private lazy val outDetailPath = outputDir.resolve(fileName.basename + "Detail" + Keywords.OBJ_EXTENSION)
+    private lazy val detailOutputStream = new ObjectOutputStream(Files.newOutputStream(outDetailPath))
+
+    def setOutputDir(outputDir: Path): Unit = {
+      this.outputDir = outputDir
+    }
+
+    def setFileName(fileName: String): Unit = {
+      this.fileName = fileName
+    }
+
+    def report(log: Log): Unit = {
+      doReport(log, logOutputStream)
+    }
+
+    def report(detail: WindowDetail): Unit = {
+      doReport(detail, detailOutputStream)
+    }
+
+    private def doReport[T](obj: T, stream: ObjectOutputStream): Unit = {
+      try {
+        logger.info(obj.toString)
+        stream.writeObject(obj)
+      } catch {
+        case _: Exception =>
+      }
+    }
+  }
+}
+
+class Log2Case(outputdir: Path) extends  LazyLogging {
 
   implicit val config: Config = ConfigFactory.load()
 
@@ -63,7 +117,22 @@ class Log2Case(outputdir: Path) extends LazyLogging {
                             relatedHandler: Option[Handler] = None,
                             relatedButtonEvent: Option[ButtonEvent] = None,
                             relatedWindow: Option[Window] = None)
-    extends Naming with Starting with Ending with StartupTiming
+    extends Naming with Starting with Ending with StartupTiming {
+
+    def toWindowDetail: WindowDetail = {
+      WindowDetail(
+        logId = 0L,
+        lineNo = start.lineNo,
+        activator = relatedHandler.map(_.name).orElse(relatedWindow.map(_.name)),
+        windowName = Some(name),
+        destinationType = None,
+        action = relatedButtonEvent.map(_.event),
+        method = None,
+        time = start.time,
+        startupTime = startupTime
+      )
+    }
+  }
 
   private case class Action(name: String, start: LineTime, end: Option[LineTime] = None,
                             relatedHandler: Option[Handler] = None,
@@ -208,25 +277,6 @@ class Log2Case(outputdir: Path) extends LazyLogging {
     logger.warn(s"$fileName:$lineNo Couldn't bind Button Event with window.")
   }
 
-  private def outputWindowDetail(window: Window, objectOutputStream: ObjectOutputStream): Unit = {
-    val detail = WindowDetail(
-      logId = 0L,
-      lineNo = window.start.lineNo,
-      activator = window.relatedHandler.map(_.name).orElse(window.relatedWindow.map(_.name)),
-      windowName = Some(window.name),
-      destinationType = None,
-      action = window.relatedButtonEvent.map(_.event),
-      method = None,
-      time = window.start.time,
-      startupTime = window.startupTime
-    )
-    try {
-      logger.info(detail.toString)
-      objectOutputStream.writeObject(detail)
-    } catch {case _: Exception => }
-  }
-
-
   def execute(paths: List[Path]): Unit = {
     paths.foreach(p => execute(p))
   }
@@ -250,7 +300,7 @@ class Log2Case(outputdir: Path) extends LazyLogging {
             logger.info("$path was not valid format, so skipped analyzing.")
             return
         }
-
+      val analysisReporter = Log2Case.analysisReporterFactory.create(fileInfo.fileName)
       val outpath = outputdir.resolve(path.getFileName.toString.basename + "Detail" + Keywords.OBJ_EXTENSION)
       val objectOutputStream = new ObjectOutputStream(Files.newOutputStream(outpath))
 
@@ -287,7 +337,7 @@ class Log2Case(outputdir: Path) extends LazyLogging {
             }
             bindWithButtonEvent(fileInfo.fileName, lineNo, windowBuffer, buttonEventBuffer.lastOption)
             windowBuffer.reverseIterator.find { w => w.name == windowName } match {
-              case Some(window) => outputWindowDetail(window, objectOutputStream)
+              case Some(window) => analysisReporter.report(window.toWindowDetail)
               case None => logger.warn(s"${fileInfo.fileName}:$lineNo Couldn't find window.")
             }
           }
@@ -350,11 +400,12 @@ object Utils {
 }
 
 
-object Log2Case {
+object Log2Case extends AnalysisReporterComponent {
   type OptionMap = Map[Symbol, String]
   val usage = """
         Usage: jp.co.nri.nefs.tool.log.analysis.Log2Case [--searchdir dir | --file file | --excelFile file] --outputdir dir
         """
+  val analysisReporterFactory = new AnalysisReporterFactory
 
   sealed trait EExecutionType
   case object LOGDIR extends EExecutionType
@@ -368,8 +419,9 @@ object Log2Case {
     //lazy val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).log$""".r
     val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).(log|zip)$""".r
     val options = nextOption(Map(), args.toList)
-    val (executionType, dirOrFile, outputdir) = getOption(options)
-    val log2case = new Log2Case(outputdir)
+    val (executionType, dirOrFile, outputDir) = getOption(options)
+    analysisReporterFactory.setOutputDir(outputDir)
+    val log2case = new Log2Case(outputDir)
     executionType match {
       case LOGDIR =>
         val paths = for {
@@ -381,7 +433,7 @@ object Log2Case {
       case LOGFILE =>
         log2case.execute(dirOrFile)
       case EXCELFILE =>
-        val excel2Case = new Excel2Case(outputdir)
+        val excel2Case = new Excel2Case(outputDir)
         excel2Case.execute(dirOrFile)
     }
   }
@@ -429,7 +481,7 @@ object Log2Case {
   }
 }
 
-class Excel2Case(outputdir: Path) {
+class Excel2Case(outputDir: Path) {
   import Utils._
   import jp.co.nri.nefs.tool.log.common.utils.RichCell.cellToRichCell
 
@@ -446,7 +498,7 @@ class Excel2Case(outputdir: Path) {
                       (f: Sheet => Seq[T]): Unit = {
     import Keywords.OBJ_EXTENSION
     val objs = f(sheet)
-    val outpath = outputdir.resolve(sheet.getSheetName + OBJ_EXTENSION)
+    val outpath = outputDir.resolve(sheet.getSheetName + OBJ_EXTENSION)
     val ostream = new ObjectOutputStream(Files.newOutputStream(outpath))
     // 書き込み
     using(ostream) { os =>
