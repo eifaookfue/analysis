@@ -1,9 +1,16 @@
 <component name="ProjectDictionaryState">
   <dictionary name="user">
     <words>
+      <w>excelfile</w>
       <w>istream</w>
+      <w>logdir</w>
+      <w>nefs</w>
+      <w>objs</w>
       <w>ostream</w>
       <w>outpath</w>
+      <w>outputdir</w>
+      <w>rownum</w>
+      <w>searchdir</w>
     </words>
   </dictionary>
 </component>

@@ -1,6 +1,6 @@
 package jp.co.nri.nefs.tool.log.analysis
 
-import java.io.{ObjectInputStream, ObjectOutputStream}
+import java.io.ObjectOutputStream
 import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 import java.sql.Timestamp
@@ -8,74 +8,115 @@ import java.sql.Timestamp
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.log.common.model.{Log, WindowDetail}
-import jp.co.nri.nefs.tool.log.common.utils.FileUtils
 import jp.co.nri.nefs.tool.log.common.utils.FileUtils._
 import jp.co.nri.nefs.tool.log.common.utils.RegexUtils._
 import jp.co.nri.nefs.tool.log.common.utils.ZipUtils._
-import org.apache.poi.ss.usermodel._
 
 import scala.collection.JavaConverters._
-import scala.collection._
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
+import scala.collection.breakOut
 
+trait ReaderComponent {
+  val reader: Reader
 
-trait AnalysisReporterComponent {
-  val analysisReporterFactory: AnalysisReporterFactory
+  trait Reader {
+    def read: Map[String, java.util.stream.Stream[String]]
+    def closing(): Unit = {}
+  }
 
-  class AnalysisReporterFactory {
-    private var outputDir: Path = _
-    def setOutputDir(outputDir: Path): Unit = {
-      this.outputDir = outputDir
+  class DefaultReader(implicit val config: Config) extends Reader {
+    private val input: Path = Paths.get(config.getString("key"))
+    private val deletingBuffer: ListBuffer[Path] = ListBuffer()
+
+    def read: Map[String, java.util.stream.Stream[String]] = {
+      val buffer = ListBuffer[Path]()
+      pickupPath(buffer, input)
+      (for (path <- buffer) yield {
+        path.getFileName.toString -> Files.lines(path, Charset.forName("MS932"))
+      }) (breakOut)
     }
-    def create(fileName: String): AnalysisReporter = {
-      val reporter = new AnalysisReporter
-      reporter.setOutputDir(outputDir)
-      reporter.setFileName(fileName)
+
+    // 解凍したディレクトリは削除する
+    override def closing(): Unit = {
+      deletingBuffer.foreach(delete)
+    }
+
+    private def pickupPath(buffer: ListBuffer[Path], input: Path): Unit = {
+      if (!Files.isDirectory(input)) {
+        if (isZipFile(input)) {
+          val expandedDir = unzip(input)
+          deletingBuffer += expandedDir
+          val files = autoClose(Files.list(expandedDir)) { stream =>
+            stream.iterator().asScala.toList
+          }
+          for (file <- files) pickupPath(buffer, file)
+        } else {
+          buffer += input
+        }
+      } else {
+        val files = autoClose(Files.list(input)) { stream =>
+          stream.iterator().asScala.toList
+        }
+        for (file <- files) pickupPath(buffer, file)
+      }
     }
   }
 
-  class AnalysisReporter extends LazyLogging {
+}
 
+
+trait AnalysisWriterComponent {
+  val analysisWriterFactory: AnalysisWriterFactory
+
+  trait AnalysisWriterFactory {
+    def create(fileName: String): AnalysisWriter
+  }
+
+  class DefaultAnalysisWriterFactory(implicit val config: Config) extends AnalysisWriterFactory {
+    val key = "outDir"
+    private val outputDir: Path = Paths.get(config.getString("key"))
+    def create(fileName: String): DefaultAnalysisWriter = {
+      new DefaultAnalysisWriter(outputDir, fileName)
+    }
+  }
+
+  trait AnalysisWriter {
+    def write(log: Log): Unit
+    def write(detail: WindowDetail): Unit
+  }
+
+  class DefaultAnalysisWriter(outputDir: Path = null, fileName: String = null) extends AnalysisWriter with LazyLogging {
     import jp.co.nri.nefs.tool.log.common.utils.RichFiles.stringToRichString
 
-    private var outputDir: Path = _
-    private var fileName: String = _
     private lazy val outLogPath = outputDir.resolve(fileName.basename + "Log" + Keywords.OBJ_EXTENSION)
     private lazy val logOutputStream = new ObjectOutputStream(Files.newOutputStream(outLogPath))
     private lazy val outDetailPath = outputDir.resolve(fileName.basename + "Detail" + Keywords.OBJ_EXTENSION)
     private lazy val detailOutputStream = new ObjectOutputStream(Files.newOutputStream(outDetailPath))
 
-    def setOutputDir(outputDir: Path): Unit = {
-      this.outputDir = outputDir
+    def write(log: Log): Unit = {
+      doWrite(log, logOutputStream)
     }
 
-    def setFileName(fileName: String): Unit = {
-      this.fileName = fileName
+    def write(detail: WindowDetail): Unit = {
+      doWrite(detail, detailOutputStream)
     }
 
-    def report(log: Log): Unit = {
-      doReport(log, logOutputStream)
-    }
-
-    def report(detail: WindowDetail): Unit = {
-      doReport(detail, detailOutputStream)
-    }
-
-    private def doReport[T](obj: T, stream: ObjectOutputStream): Unit = {
-      try {
-        logger.info(obj.toString)
-        stream.writeObject(obj)
-      } catch {
-        case _: Exception =>
+    private def doWrite[T](obj: T, stream: ObjectOutputStream): Unit = {
+      autoClose(stream){ s =>
+        try {
+          logger.info(obj.toString)
+          s.writeObject(obj)
+        } catch { case _: Exception => }
       }
     }
+
   }
 }
 
-class Log2Case(outputdir: Path) extends  LazyLogging {
+class LogAnalyzer extends  LazyLogging {
 
-  implicit val config: Config = ConfigFactory.load()
+  import LogAnalyzer.config
 
   private trait Naming {
     val name: String
@@ -175,7 +216,7 @@ class Log2Case(outputdir: Path) extends  LazyLogging {
     val lastAndDelNoRegex: Regex = """(.*)\$[0-9]""".r
   }
 
-  // 2019-10-10 15:54:17.458 [OMS:INFO ][TradeSheet][New Split - Parent Order]Dialog opend.[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]
+  // 2019-10-10 15:54:17.458 [OMS:INFO ][TradeSheet][New Split - Parent Order]Dialog opened.[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]
   // datetimeStr             logLevel   appName     message                                th    clazz
   private def getLineInfo(line: String): Option[LineInfo] = {
     line match {
@@ -277,36 +318,18 @@ class Log2Case(outputdir: Path) extends  LazyLogging {
     logger.warn(s"$fileName:$lineNo Couldn't bind Button Event with window.")
   }
 
-  def execute(paths: List[Path]): Unit = {
-    paths.foreach(p => execute(p))
-  }
-
-  def execute(path: Path): Unit = {
-
-    import jp.co.nri.nefs.tool.log.common.utils.RichFiles.stringToRichString
-    import Utils._
-    if (isZipFile(path)) {
-      val expandedDir = unzip(path)
-      val paths = FileUtils.autoClose(Files.list(expandedDir)) { stream =>
-        stream.iterator().asScala.toList
-      }
-      execute(paths)
-      delete(expandedDir)
-    } else {
+  def analyze(): Unit = {
+    LogAnalyzer.reader.read.foreach {case (fileName, stream) => try {
       val fileInfo =
-        getOMSAplInfo(path.getFileName.toString) match {
+        getOMSAplInfo(fileName) match {
           case Some(f) => f
           case None =>
             logger.info("$path was not valid format, so skipped analyzing.")
             return
         }
-      val analysisReporter = Log2Case.analysisReporterFactory.create(fileInfo.fileName)
-      val outpath = outputdir.resolve(path.getFileName.toString.basename + "Detail" + Keywords.OBJ_EXTENSION)
-      val objectOutputStream = new ObjectOutputStream(Files.newOutputStream(outpath))
-
-      val stream = Files.lines(path, Charset.forName("MS932"))
+      val analysisWriter = LogAnalyzer.analysisWriterFactory.create(fileInfo.fileName)
       val lines = stream.iterator().asScala
-      try {
+
         for ((line, tmpNo) <- lines.zipWithIndex; lineNo = tmpNo + 1; lineInfo <- getLineInfo(line)) {
           if (lineInfo.message contains "Handler start.") {
             handlerBuffer += Handler(lineInfo.underlyingClass, LineTime(lineNo, lineInfo.datetime))
@@ -337,7 +360,7 @@ class Log2Case(outputdir: Path) extends  LazyLogging {
             }
             bindWithButtonEvent(fileInfo.fileName, lineNo, windowBuffer, buttonEventBuffer.lastOption)
             windowBuffer.reverseIterator.find { w => w.name == windowName } match {
-              case Some(window) => analysisReporter.report(window.toWindowDetail)
+              case Some(window) => analysisWriter.write(window.toWindowDetail)
               case None => logger.warn(s"${fileInfo.fileName}:$lineNo Couldn't find window.")
             }
           }
@@ -360,13 +383,7 @@ class Log2Case(outputdir: Path) extends  LazyLogging {
         }
       } finally {
         stream.close()
-        objectOutputStream.close()
-      }
-
-
-      val istream = new ObjectInputStream(Files.newInputStream(outpath))
-      using(istream) { is =>
-        Iterator.continually(is.readObject()).takeWhile(_ != null).foreach(v => logger.info(v.toString))
+        LogAnalyzer.reader.closing()
       }
     }
   }
@@ -378,182 +395,12 @@ object Keywords {
   val WINDOW_DETAIL_SUFFIX = "_WindowDetail"
 }
 
-object Utils {
-  import Keywords._
-  def getObjFile(name: String, suffix: String): String = {
-    getBase(name) + suffix + OBJ_EXTENSION
-  }
-  def getBase(name: String): String = {
-    val index = name.lastIndexOf('.')
-    if (index != -1)
-      name.substring(0, index)
-    else
-      name
-  }
-
-  //java.io.EOFExceptionが出るが無視する
- def using[A <: java.io.Closeable](s: A)(f: A => Unit): Unit = {
-    try { f(s) } catch {case _: Exception => } finally { s.close() }
- }
-
-
-}
-
-
-object Log2Case extends AnalysisReporterComponent {
-  type OptionMap = Map[Symbol, String]
-  val usage = """
-        Usage: jp.co.nri.nefs.tool.log.analysis.Log2Case [--searchdir dir | --file file | --excelFile file] --outputdir dir
-        """
-  val analysisReporterFactory = new AnalysisReporterFactory
-
-  sealed trait EExecutionType
-  case object LOGDIR extends EExecutionType
-  case object LOGFILE extends EExecutionType
-  case object EXCELFILE extends EExecutionType
-
-
+object LogAnalyzer extends ReaderComponent with AnalysisWriterComponent {
+  implicit val config: Config = ConfigFactory.load()
+  val reader = new DefaultReader
+  val analysisWriterFactory = new DefaultAnalysisWriterFactory
 
   def main(args: Array[String]): Unit = {
-
-    //lazy val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).log$""".r
-    val regex = """(.*)_(OMS_.*)_(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_([0-9]*).(log|zip)$""".r
-    val options = nextOption(Map(), args.toList)
-    val (executionType, dirOrFile, outputDir) = getOption(options)
-    analysisReporterFactory.setOutputDir(outputDir)
-    val log2case = new Log2Case(outputDir)
-    executionType match {
-      case LOGDIR =>
-        val paths = for {
-          path <- Files.walk(dirOrFile).iterator().asScala.toList
-          if path.toFile.isFile
-          if path.getFileName.toString.matches(regex.regex)
-        } yield path
-        log2case.execute(paths)
-      case LOGFILE =>
-        log2case.execute(dirOrFile)
-      case EXCELFILE =>
-        val excel2Case = new Excel2Case(outputDir)
-        excel2Case.execute(dirOrFile)
-    }
-  }
-
-  /**
-    *
-    * @param options オプションのマップ
-    * @return searchdirが指定されているか
-    */
-  def getOption(options: OptionMap): (EExecutionType, Path, Path) = {
-    val searchdir = options.get(Symbol("searchdir")).map(Paths.get(_))
-    val file = options.get(Symbol("file")).map(Paths.get(_))
-    val excelFile = options.get(Symbol("excelFile")).map(Paths.get(_))
-    val outputdir = options.get(Symbol("outputdir")).map(Paths.get(_))
-
-    val executionType = if (searchdir.isDefined && file.isEmpty && excelFile.isEmpty) LOGDIR
-      else if (file.isDefined && searchdir.isEmpty && excelFile.isEmpty) LOGFILE
-      else if (excelFile.isDefined && searchdir.isEmpty && file.isEmpty) EXCELFILE
-      else {
-        println(usage)
-        throw new java.lang.IllegalArgumentException
-      }
-    if (outputdir.isEmpty) {
-      println(usage)
-      throw new java.lang.IllegalArgumentException
-    }
-    (executionType, searchdir.getOrElse(file.getOrElse(excelFile.get)), outputdir.get)
-  }
-
-  def nextOption(map: OptionMap, list: List[String]): OptionMap = {
-    list match {
-      case Nil => map
-      case "--searchdir" :: value :: tail =>
-        nextOption(map ++ Map(Symbol("searchdir") -> value), tail)
-      case "--file" :: value :: tail =>
-        nextOption(map ++ Map(Symbol("file") -> value), tail)
-      case "--excelFile" :: value :: tail =>
-        nextOption(map ++ Map(Symbol("excelFile") -> value), tail)
-      case "--outputdir" :: value :: tail =>
-        nextOption(map ++ Map(Symbol("outputdir") -> value), tail)
-      case _ => println("Unknown option")
-        println(usage)
-        sys.exit(1)
-    }
-  }
-}
-
-class Excel2Case(outputDir: Path) {
-  import Utils._
-  import jp.co.nri.nefs.tool.log.common.utils.RichCell.cellToRichCell
-
-  private def collectSheets(book: Workbook, keyword: String): Seq[Sheet] = {
-    for {
-      no <- 0 until book.getNumberOfSheets
-      name = book.getSheetName(no)
-      if name.contains(keyword)
-      sheet = book.getSheetAt(no)
-    } yield sheet
-  }
-
-  private def writeObj[T](path: Path, sheet: Sheet)
-                      (f: Sheet => Seq[T]): Unit = {
-    import Keywords.OBJ_EXTENSION
-    val objs = f(sheet)
-    val outpath = outputDir.resolve(sheet.getSheetName + OBJ_EXTENSION)
-    val ostream = new ObjectOutputStream(Files.newOutputStream(outpath))
-    // 書き込み
-    using(ostream) { os =>
-      objs.foreach(l =>
-        os.writeObject(l)
-      )
-    }
-    // 念のため読み込みなおしてログ出力
-    val istream = new ObjectInputStream(Files.newInputStream(outpath))
-    using(istream) { is =>
-      Iterator.continually(is.readObject()).takeWhile(_ != null).foreach(v => println(v))
-    }
-  }
-
-  def execute(path: Path): Unit = {
-    import Keywords._
-    val book = WorkbookFactory.create(path.toFile)
-    val logSheets = collectSheets(book, LOG_SUFFIX)
-    val detailSheets = collectSheets(book, WINDOW_DETAIL_SUFFIX)
-
-    for {sheet <- logSheets} {
-      writeObj(path, sheet){ s =>
-        val logs = for {
-          (row, rownum) <- s.iterator().asScala.zipWithIndex
-          if rownum > 0 //先頭行スキップ
-          iterator = row.iterator()
-          logId = 0L
-          appName = iterator.next().getValue[String].get
-          computerName = iterator.next().getValue[String].get
-          userId = iterator.next().getValue[String].get
-          tradeDate = iterator.next().getValue[String].get
-          time = iterator.next().getValue[Timestamp].get
-        } yield Log(logId, appName, computerName, userId, tradeDate, time)
-        logs.toSeq
-      }
-    }
-
-    for {sheet <- detailSheets}{
-      writeObj(path, sheet){ s =>
-        (for {
-          (row, rownum) <- s.iterator().asScala.zipWithIndex
-          if rownum > 0 //先頭行スキップ
-          iterator = row.iterator()
-          lineNo = iterator.next().getValue[Int].get
-          handler = iterator.next().getValue[String]
-          windowName = iterator.next().getValue[String]
-          destinationType = iterator.next().getValue[String]
-          action = iterator.next().getValue[String]
-          method = iterator.next().getValue[String]
-          time = iterator.next().getValue[Timestamp].get
-          startupTime = iterator.next().getValue[Long]
-          detail = WindowDetail(0L, lineNo,
-            handler, windowName, destinationType, action, method, time, startupTime)
-        } yield detail).toSeq
-      }
-    }
+    (new LogAnalyzer).analyze()
   }
 }
