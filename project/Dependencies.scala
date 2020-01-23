@@ -13,6 +13,13 @@ import sbt._
       Library.akka_http,
       Library.akka_stream
     )
+    
+    val elp = Seq(
+      Library.sacalaLogging,
+      Library.logbackClassic,
+      Library.akka_http,
+      Library.akka_stream
+    )
 
     val core = Seq(
       Library.slick,

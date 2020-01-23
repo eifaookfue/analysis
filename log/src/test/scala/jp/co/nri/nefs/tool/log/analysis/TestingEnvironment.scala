@@ -4,7 +4,7 @@ import jp.co.nri.nefs.tool.log.common.model.{Log, WindowDetail}
 
 import scala.collection.mutable.ListBuffer
 
-trait TestingEnvironment extends AnalysisWriterComponent {
+trait TestingEnvironment extends LogAnalysisService with ReaderComponent with AnalysisWriterComponent {
 
   val analysisWriterFactory = new MockWriterFactory
   val output: ListBuffer[WindowDetail] = ListBuffer[WindowDetail]()

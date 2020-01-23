@@ -114,9 +114,7 @@ trait AnalysisWriterComponent {
   }
 }
 
-class LogAnalyzer extends  LazyLogging {
-
-  import LogAnalyzer.config
+trait LogAnalysisService extends LazyLogging { this: ReaderComponent with AnalysisWriterComponent =>
 
   private trait Naming {
     val name: String
@@ -153,7 +151,7 @@ class LogAnalyzer extends  LazyLogging {
     }
   }
 
-  private case class Window(name: String, start: LineTime, underlyingClass: String,
+  protected case class Window(name: String, start: LineTime, underlyingClass: String,
                             end: Option[LineTime] = None,
                             relatedHandler: Option[Handler] = None,
                             relatedButtonEvent: Option[ButtonEvent] = None,
@@ -175,19 +173,18 @@ class LogAnalyzer extends  LazyLogging {
     }
   }
 
-  private case class Action(name: String, start: LineTime, end: Option[LineTime] = None,
+  protected case class Action(name: String, start: LineTime, end: Option[LineTime] = None,
                             relatedHandler: Option[Handler] = None,
                             relatedButtonEvent: Option[ButtonEvent] = None,
                             relatedWindow: Option[Window] = None)
     extends Naming with Starting with Ending with StartupTiming
 
-  private case class ButtonEvent(name: String, start: LineTime, event: String,
+  protected case class ButtonEvent(name: String, start: LineTime, event: String,
                                  end: Option[LineTime] = None) extends Naming with Starting with Ending
 
-  private val handlerBuffer = ListBuffer[Handler]()
-  private val windowBuffer = ListBuffer[Window]()
-  private val buttonEventBuffer = ListBuffer[ButtonEvent]()
-  private val lineRegex = """([0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})\s\[(.*)\]\[(.*)\](.*)\[(.*)\]\[(j.c.*)\]$""".r
+  protected val handlerBuffer: ListBuffer[Handler] = ListBuffer[Handler]()
+  protected val windowBuffer: ListBuffer[Window] = ListBuffer[Window]()
+  protected val buttonEventBuffer: ListBuffer[ButtonEvent] = ListBuffer[ButtonEvent]()
   private val windowNameRegex = """\[(.*)\].*""".r
   private val buttonActionRegex = """.*\((.*)\).*""".r
 
@@ -197,11 +194,15 @@ class LogAnalyzer extends  LazyLogging {
     val tradeDate: String = startTime.take(8)
   }
 
-  private case class LineInfo(datetimeStr: String, logLevel: String, appName: String, message: String,
+  protected case class LineInfo(datetimeStr: String, service: String, logLevel: String, appName: String, message: String,
                               thread: String, clazz: String) {
     val datetime = new Timestamp(LineInfo.format.parse(datetimeStr).getTime)
     val underlyingClass: String = getLastAndDelNo(clazz)
 
+    /** "."で区切られた最後の文字列から$数字を取り除いた文字列を返します。
+     * @param name 対象文字列
+     * @return     変換後の文字列
+     */
     def getLastAndDelNo(name: String): String = {
       val lastName = name.split("\\.").last
       lastName match {
@@ -211,18 +212,32 @@ class LogAnalyzer extends  LazyLogging {
     }
   }
 
-  private object LineInfo {
-    val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
-    val lastAndDelNoRegex: Regex = """(.*)\$[0-9]""".r
-  }
+  protected object LineInfo {
+    private val config: Config = ConfigFactory.load()
+    private val timeExpression: String = """([0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})""" + """\s"""
+    private val serviceNames: List[String] = config.getStringList("serviceNames").asScala.toList
+    private val serviceExpression: String  = """\[(""" + serviceNames.mkString("|") + """)""" + ":"
+    private val levels: List[String] = config.getStringList("levels").asScala.toList
+    private val logLevelExpression: String =  """(""" + levels.mkString("|") + """) \]"""
+    private val applications: List[String] = config.getStringList("applications").asScala.toList
+    private val applicationExpression: String = """\[(""" + applications.mkString("|") + """)\]"""
+    private val messageExpression: String = """(.*)"""
+    private val threadExpression: String = """\[(.*)\]"""
+    private val classExpression: String = """\[(j.c.*)\]$"""
+    private val lineRegex = new Regex(timeExpression + serviceExpression + logLevelExpression + applicationExpression +
+      messageExpression + threadExpression + classExpression)
 
-  // 2019-10-10 15:54:17.458 [OMS:INFO ][TradeSheet][New Split - Parent Order]Dialog opened.[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]
-  // datetimeStr             logLevel   appName     message                                th    clazz
-  private def getLineInfo(line: String): Option[LineInfo] = {
-    line match {
-      case lineRegex(datetimeStr, logLevel, appName, message, thread, clazz) => Some(LineInfo(datetimeStr, logLevel, appName, message, thread, clazz))
-      case _ => None
+    private val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
+    private val lastAndDelNoRegex: Regex = """(.*)\$[0-9]""".r
+
+    def valueOf(line: String): Option[LineInfo] = {
+      line match {
+        case lineRegex(datetimeStr, service, logLevel, appName, message, thread, clazz) =>
+          Some(LineInfo(datetimeStr, service, logLevel, appName, message, thread, clazz))
+        case _ => None
+      }
     }
+
   }
 
   /*
@@ -247,26 +262,39 @@ class LogAnalyzer extends  LazyLogging {
     }
   }
 
-
-
-  private def findRelatedHandler(handlerOp: Option[Handler], underlyingClass: String)
-                            (implicit config: Config): Option[Handler] = {
+  /** Window起動時のログに含まれるクラス名が直近のHandlerと紐づく場合、そのHandlerを返します。
+    * 紐づかない場合は、Noneを返します。
+    * マッピングはあらかじめコンフィグファイルで定義しておく必要があります。
+    * @param  handlerOp        直近のHandler
+    * @param  underlyingClass Window起動時のログに含まれるクラス名
+    * @return                   直近のHandler。紐づかない場合はNone
+    */
+  private def findRelatedHandler(handlerOp: Option[Handler], underlyingClass: String): Option[Handler] = {
     try {
-      val values = config.getStringList("HandlerMapping" + "." + underlyingClass).asScala
+      val config = ConfigFactory.load()
+      val values = config.getStringList(ConfigKey.HANDLER_MAPPING + "." + underlyingClass).asScala
       handlerOp.flatMap { handler =>
         if (values.contains(handler.name)) handlerOp else None
       }
-    } catch { case _ :ConfigException.Missing => None }
+    } catch {
+      case _ :ConfigException.Missing =>
+        logger.warn(s"${ConfigKey.HANDLER_MAPPING} was not found in config file")
+        None
+    }
   }
 
-  private def findRelatedWindow(windowOp: Option[Window], underlyingClass: String)
-                               (implicit config: Config): Option[Window] = {
+  private def findRelatedWindow(windowOp: Option[Window], underlyingClass: String): Option[Window] = {
     try {
-      val values = config.getStringList("WindowMapping" + "." + underlyingClass).asScala
+      val config = ConfigFactory.load()
+      val values = config.getStringList(ConfigKey.WINDOW_MAPPING + "." + underlyingClass).asScala
       windowOp.flatMap { window =>
         if (values.contains(window.name)) windowOp else None
       }
-    } catch { case _ :ConfigException.Missing => None }
+    } catch {
+      case _ :ConfigException.Missing =>
+        logger.warn(s"${ConfigKey.WINDOW_MAPPING} was not found in config file")
+        None
+    }
   }
 
   /** 同じ名前でEndがまだ登録されていないオブジェクトをBufferから見つけ出し、Endを更新します。
@@ -318,8 +346,17 @@ class LogAnalyzer extends  LazyLogging {
     logger.warn(s"$fileName:$lineNo Couldn't bind Button Event with window.")
   }
 
+  /*
+  for ((fileName, stream) <- reader.read) yield {
+	Future{
+		analyze()
+	}
+}
+
+   */
+
   def analyze(): Unit = {
-    LogAnalyzer.reader.read.foreach {case (fileName, stream) => try {
+    reader.read.foreach {case (fileName, stream) => try {
       val fileInfo =
         getOMSAplInfo(fileName) match {
           case Some(f) => f
@@ -327,10 +364,10 @@ class LogAnalyzer extends  LazyLogging {
             logger.info("$path was not valid format, so skipped analyzing.")
             return
         }
-      val analysisWriter = LogAnalyzer.analysisWriterFactory.create(fileInfo.fileName)
+      val analysisWriter = analysisWriterFactory.create(fileInfo.fileName)
       val lines = stream.iterator().asScala
 
-        for ((line, tmpNo) <- lines.zipWithIndex; lineNo = tmpNo + 1; lineInfo <- getLineInfo(line)) {
+        for ((line, tmpNo) <- lines.zipWithIndex; lineNo = tmpNo + 1; lineInfo <- LineInfo.valueOf(line)) {
           if (lineInfo.message contains "Handler start.") {
             handlerBuffer += Handler(lineInfo.underlyingClass, LineTime(lineNo, lineInfo.datetime))
           } else if (lineInfo.message contains "Handler end.") {
@@ -383,7 +420,7 @@ class LogAnalyzer extends  LazyLogging {
         }
       } finally {
         stream.close()
-        LogAnalyzer.reader.closing()
+        reader.closing()
       }
     }
   }
@@ -395,12 +432,29 @@ object Keywords {
   val WINDOW_DETAIL_SUFFIX = "_WindowDetail"
 }
 
-object LogAnalyzer extends ReaderComponent with AnalysisWriterComponent {
+object ConfigKey {
+  val HANDLER_MAPPING = "HandlerMapping"
+  val WINDOW_MAPPING = "WindowMapping"
+  val TRGFILE_NAME = "trgFileName"
+  val TRGFILE_PATTERN = "trgFilePattern"
+  val TRGFILE_DELIMITER = "trgFileDelimiter"
+  val TRGFILE_LAD = "trgFileLAD"
+  val TARGETFILE_BASE = "targetFileBase"
+  val SLEEP_SECONDS = "sleepSeconds"
+  val MASKED_KEY_WORDS = "maskedKeyWords"
+  val AWAIT_LIMIT_MINUTES = "awaitLimitMinutes"
+  val ZIP_CMD = "zipCmd"
+}
+
+
+object LogAnalyzer extends
+  LogAnalysisService with
+  ReaderComponent with AnalysisWriterComponent {
   implicit val config: Config = ConfigFactory.load()
   val reader = new DefaultReader
   val analysisWriterFactory = new DefaultAnalysisWriterFactory
 
   def main(args: Array[String]): Unit = {
-    (new LogAnalyzer).analyze()
+    analyze()
   }
 }

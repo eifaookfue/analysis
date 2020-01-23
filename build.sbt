@@ -95,6 +95,11 @@ lazy val websocket = (project in file("co-jp-nri-nefs-tool-websocket"))
     libraryDependencies ++= Dependencies.websocket
   )
 
+lazy val elp = (project in file("elp"))
+  .settings(
+    libraryDependencies ++= Dependencies.elp
+  )
+
 lazy val transfer = (project in file("transfer"))
   .settings(
     version := "1.0.0",
