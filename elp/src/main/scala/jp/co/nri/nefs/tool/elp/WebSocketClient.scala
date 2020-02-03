@@ -1,44 +1,48 @@
 package jp.co.nri.nefs.tool.elp
 
-import akka.Done
 import akka.actor.ActorSystem
+import akka.{Done, NotUsed}
 import akka.http.javadsl.model.ws.Message
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{HttpHeader, StatusCodes}
+import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials}
+import akka.http.scaladsl.model.ws.{TextMessage, WebSocketRequest}
 import akka.stream.Materializer
-import akka.stream.javadsl.JavaFlowSupport.Sink
+import akka.stream.scaladsl._
 import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.LazyLogging
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 
-object WebSocketClient {
+case class UserPass(userName: String, password: String)
+
+object WebSocketClient extends LazyLogging {
   def main(args: Array[String]) = {
-    implicit val system = ActorSystem()
+    implicit val system: ActorSystem = ActorSystem()
     implicit val materializer: Materializer = Materializer.matFromSystem
-
     val config = ConfigFactory.load()
     val baseAddr = config.getString("baseAddr")
     val subscribeURL = "ws://" + baseAddr + "/subscribe-ioi"
-    //implicit val userPass: UserPass
+    implicit val userPass: UserPass = UserPass(config.getString("websocketUser"), config.getString("websocketPassword"))
+    subscribe(subscribeURL)
+  }
 
-    // print each incoming strict text message
-    val printSink: Sink[Message, Future[Done]] =
-      Sink.foreach {
-        case message: TextMessage.Strict =>
-          println(message.text)
-      }
+  def subscribe(url: String)(implicit system: ActorSystem, materializer: Materializer, userPass: UserPass): Unit = {
+    import system.dispatcher
 
-    val helloSource: Source[Message, NotUsed] =
-      Source.single(TextMessage("hello world!"))
+    val flow: Flow[Message, Message, Promise[Option[Message]]] =
+      Flow.fromSinkAndSourceMat(
+        Sink.foreach[Message] {
+          case strictMessage: TextMessage.Strict => logger.info("received strict message"); println(strictMessage.text)
+          case streamedMessage: TextMessage.Streamed => logger.info("received streamed message"); streamedMessage.textStream.runForeach(println)
+          case m => println("other" + m)
+        },
+        Source.maybe[Message])(Keep.right)
 
-    // the Future[Done] is the materialized value of Sink.foreach
-    // and it is completed when the stream completes
-    val flow: Flow[Message, Message, Future[Done]] =
-    Flow.fromSinkAndSourceMat(printSink, helloSource)(Keep.left)
-
-    // upgradeResponse is a Future[WebSocketUpgradeResponse] that
-    // completes or fails when the connection succeeds or fails
-    // and closed is a Future[Done] representing the stream completion from above
-    val (upgradeResponse, closed) =
-    Http().singleWebSocketRequest(WebSocketRequest("ws://echo.websocket.org"), flow)
+    val (upgradeResponse, promise) = Http().singleWebSocketRequest(WebSocketRequest(
+      url,
+      extraHeaders = scala.collection.immutable.Seq(Authorization(BasicHttpCredentials(userPass.userName, userPass.password)).asInstanceOf[HttpHeader])),
+      flow)
 
     val connected = upgradeResponse.map { upgrade =>
       // just like a regular http request we can access response status which is available via upgrade.response.status
@@ -49,10 +53,10 @@ object WebSocketClient {
         throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
       }
     }
-
     // in a real application you would not side effect here
     // and handle errors more carefully
     connected.onComplete(println)
-    closed.foreach(_ => println("closed"))
+
+    //promise.success(None)
   }
 }

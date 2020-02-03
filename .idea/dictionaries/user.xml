@@ -1,16 +1,27 @@
 <component name="ProjectDictionaryState">
   <dictionary name="user">
     <words>
+      <w>addr</w>
       <w>excelfile</w>
+      <w>guice</w>
+      <w>hikari</w>
+      <w>hikaricp</w>
+      <w>hmmss</w>
       <w>istream</w>
+      <w>jdbc</w>
       <w>logdir</w>
+      <w>materializer</w>
       <w>nefs</w>
       <w>objs</w>
+      <w>ooxml</w>
       <w>ostream</w>
       <w>outpath</w>
       <w>outputdir</w>
       <w>rownum</w>
+      <w>scalaz</w>
       <w>searchdir</w>
+      <w>typesafe</w>
+      <w>websocket</w>
     </words>
   </dictionary>
 </component>

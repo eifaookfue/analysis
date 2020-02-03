@@ -2,26 +2,34 @@ import sbt._
 
   object Dependencies {
 
-    val util = Seq(
-      Library.sacalaLogging,
+    val util: Seq[ModuleID] = Seq(
+      Library.scalaLogging,
       Library.logbackClassic
     )
 
-    val websocket = Seq(
-      Library.sacalaLogging,
-      Library.logbackClassic,
+    val websocket: Seq[ModuleID] = Seq(
+      Library.json,
+      Library.ws,
+      Library.ws_json,
       Library.akka_http,
-      Library.akka_stream
+      Library.akka_stream,
+      Library.scalaLogging,
+      Library.logbackClassic,
+      Library.config
     )
     
-    val elp = Seq(
-      Library.sacalaLogging,
-      Library.logbackClassic,
+    val elp: Seq[ModuleID] = Seq(
+      Library.json,
+      Library.ws,
+      Library.ws_json,
       Library.akka_http,
-      Library.akka_stream
+      Library.akka_stream,
+      Library.scalaLogging,
+      Library.logbackClassic,
+      Library.config
     )
 
-    val core = Seq(
+    val core: Seq[ModuleID] = Seq(
       Library.slick,
       Library.slickHikariCP,
       Library.playJdbcApi,
@@ -31,33 +39,35 @@ import sbt._
       Library.h2 % "test"
     )
 
-    val transfer = Seq(
+    val transfer: Seq[ModuleID] = Seq(
       Library.config,
-      Library.sacalaLogging,
+      Library.scalaLogging,
       Library.logbackClassic
     )
 
-    val json = Seq(
+    val json: Seq[ModuleID] = Seq(
       Library.json,
       Library.ws,
-      Library.wsjson
+      Library.ws_json
     )
 
-    val log = Seq(
+    val log: Seq[ModuleID] = Seq(
       Library.slick,
       Library.slickHikariCP,
       Library.h2 % "test",
       Library.mysql,
       Library.poi,
       Library.poi_ooxml,
-      Library.sacalaLogging,
+      Library.scalaLogging,
       Library.logbackClassic,
-      Library.scalaz
+      Library.akka_actor,
+      Library.scalaz,
+      Library.guice
     )
 
-    val transport = Seq(
+    val transport: Seq[ModuleID] = Seq(
       Library.logback,
-      Library.sacalaLogging,
+      Library.scalaLogging,
       Library.logbackClassic
     )
   }
@@ -77,7 +87,9 @@ import sbt._
     val config       = "1.3.2"
     val akka_http    = "10.1.10"
     val akka_stream  = "2.5.23"
+    val akka_actor  =  "2.5.19"
     val scalaz       = "7.2.14"
+    val guice        = "4.2.2"
   }
 
   object Library {
@@ -88,7 +100,7 @@ import sbt._
     val slick               = "com.typesafe.slick"         %% "slick"                    % Version.slick
     val slickHikariCP       = "com.typesafe.slick"         %% "slick-hikaricp"           % Version.slick
     val h2                  = "com.h2database"             %  "h2"                       % Version.h2
-    val sacalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"            % Version.scalaLogging
+    val scalaLogging       = "com.typesafe.scala-logging" %% "scala-logging"            % Version.scalaLogging
     val mysql               = "mysql"                      % "mysql-connector-java"      % Version.mysql
     val logback             = "ch.qos.logback"             % "logback-core"              % Version.logback
     val logbackClassic      = "ch.qos.logback"             % "logback-classic"           % Version.logback
@@ -96,10 +108,12 @@ import sbt._
     val poi_ooxml           = "org.apache.poi"             % "poi-ooxml"                 % Version.poi_ooxml
     val json                = "com.typesafe.play"          %% "play-json"                % Version.play
     val ws                  = "com.typesafe.play"          %% "play-ahc-ws-standalone"   % Version.ws
-    val wsjson              = "com.typesafe.play"          %% "play-ws-standalone-json"  % Version.ws
+    val ws_json              = "com.typesafe.play"          %% "play-ws-standalone-json"  % Version.ws
     val config              = "com.typesafe"               %  "config"                   % Version.config
     val akka_http           = "com.typesafe.akka"          %% "akka-http"                % Version.akka_http
-    val akka_stream         ="com.typesafe.akka"           %% "akka-stream"              % Version.akka_stream
+    val akka_stream         = "com.typesafe.akka"          %% "akka-stream"              % Version.akka_stream
+    val akka_actor          = "com.typesafe.akka"          %% "akka-actor"               % Version.akka_actor
     val scalaz              = "org.scalaz"                 %% "scalaz-core"              % Version.scalaz
+    val guice               = "com.google.inject"          % "guice"                     % Version.guice
   }
 

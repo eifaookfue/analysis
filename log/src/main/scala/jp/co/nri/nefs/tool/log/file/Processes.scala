@@ -2,9 +2,11 @@ package jp.co.nri.nefs.tool.log.file
 
 import java.nio.file.{Files, Path, Paths}
 import java.util.stream.Collectors
+
+import jp.co.nri.nefs.tool.log.common.model.OMSAplInfo
 import jp.co.nri.nefs.tool.log.common.utils.FileUtils._
 import jp.co.nri.nefs.tool.log.common.utils.ZipUtils._
-import jp.co.nri.nefs.tool.log.common.utils.RegexUtils._
+
 import scala.collection.JavaConverters._
 
 class Processes(isZip: Boolean, searchPath: Path, outputPath: Path) {
@@ -18,7 +20,7 @@ class Processes(isZip: Boolean, searchPath: Path, outputPath: Path) {
       val expandedPath = unzip(zipPath)
       val paths = Files.list(expandedPath).collect(Collectors.toList()).asScala
       for (path <- paths;
-        omsAplInfo <- getOMSAplInfo(path.getFileName.toFile.toString)
+        omsAplInfo <- OMSAplInfo.valueOf(path.getFileName.toFile.toString)
       ){
         val tradeDate = omsAplInfo.tradeDate
         // 出力フォルダ[outputPath/日付]を作成
