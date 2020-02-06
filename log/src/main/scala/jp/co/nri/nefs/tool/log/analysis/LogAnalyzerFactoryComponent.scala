@@ -30,26 +30,26 @@ trait LogAnalyzerFactoryComponent {
     def analyze(line: String, lineNo: Int): Unit
   }
 
-  protected trait Naming {
+  trait Naming {
     val name: String
   }
 
-  protected trait Starting {
+  trait Starting {
     val start: LineTime
   }
 
-  protected trait Ending {
+  trait Ending {
     val end: Option[LineTime]
   }
 
-  protected case class LineTime(lineNo: Int, time: Timestamp)
+  case class LineTime(lineNo: Int, time: Timestamp)
 
   // HandlerのEndTimeは今のところ使用予定なし。また、WindowがCloseした時点でDBオブジェクトを作成して
   // しまうため、HandlerのEndまで記録できない
-  protected case class Handler(name: String, start: LineTime)
+  case class Handler(name: String, start: LineTime)
     extends Naming with Starting
 
-  protected trait StartupTiming {
+  trait StartupTiming {
     val start: LineTime
     val relatedHandler: Option[Handler]
     val relatedWindow: Option[Window]
@@ -66,7 +66,7 @@ trait LogAnalyzerFactoryComponent {
     }
   }
 
-  protected case class Window(name: String, start: LineTime, underlyingClass: String,
+  case class Window(name: String, start: LineTime, underlyingClass: String,
                               end: Option[LineTime] = None,
                               relatedHandler: Option[Handler] = None,
                               relatedButtonEvent: Option[ButtonEvent] = None,
@@ -88,16 +88,16 @@ trait LogAnalyzerFactoryComponent {
     }
   }
 
-  protected case class Action(name: String, start: LineTime, end: Option[LineTime] = None,
+  case class Action(name: String, start: LineTime, end: Option[LineTime] = None,
                               relatedHandler: Option[Handler] = None,
                               relatedButtonEvent: Option[ButtonEvent] = None,
                               relatedWindow: Option[Window] = None)
     extends Naming with Starting with Ending with StartupTiming
 
-  protected case class ButtonEvent(name: String, start: LineTime, event: String,
+  case class ButtonEvent(name: String, start: LineTime, event: String,
                                    end: Option[LineTime] = None) extends Naming with Starting with Ending
 
-  protected case class LineInfo(datetimeStr: String, service: String, logLevel: String, appName: String, message: String,
+  case class LineInfo(datetimeStr: String, service: String, logLevel: String, appName: String, message: String,
                                 thread: String, clazz: String) {
     val datetime = new Timestamp(LineInfo.format.parse(datetimeStr).getTime)
     val underlyingClass: String = getLastAndDelNo(clazz)
@@ -128,7 +128,7 @@ trait LogAnalyzerFactoryComponent {
     private def getWindowName(message: String, default: String): String = {
       message match {
         case LineInfo.windowNameRegex(n) => n
-        case _ => clazz
+        case _ => default
       }
     }
 
@@ -142,7 +142,7 @@ trait LogAnalyzerFactoryComponent {
     }
   }
 
-  protected object LineInfo {
+  object LineInfo {
     private val config: Config = ConfigFactory.load()
     private val timeExpression: String = """([0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})""" + """\s"""
     private val serviceNames: List[String] = config.getStringList("serviceNames").asScala.toList
@@ -249,8 +249,8 @@ trait LogAnalyzerFactoryComponent {
           if (values.contains(handler.name)) handlerOp else None
         }
       } catch {
-        case _: ConfigException.Missing =>
-          logger.warn(s"${ConfigKey.HANDLER_MAPPING} was not found in config file")
+        case e: ConfigException.Missing =>
+          logger.warn(s"${ConfigKey.HANDLER_MAPPING + "." + underlyingClass} was not found in config file",e)
           None
       }
     }

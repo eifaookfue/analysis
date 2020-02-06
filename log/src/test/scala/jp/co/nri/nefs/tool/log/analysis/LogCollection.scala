@@ -30,5 +30,13 @@ trait LogCollection {
     "2019-12-16 12:06:48.665 [OMS:INFO ][TradeSheet][New Split    - Parent Order]Button event ends -> (OK).[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]"
   )
 
+  lazy val completeOrderLog = List(
+    "2019-03-19 15:16:21.097 [OMS:INFO ][TradeSheet]Handler start.[main][j.c.n.n.o.t.h.CompleteOrderHandler]",
+    "2019-03-19 15:16:21.184 [OMS:INFO ][TradeSheet]CompleteOrderAction start.[main][j.c.n.n.o.r.p.a.c.CompleteOrderAction]",
+    "2019-03-19 15:16:21.215 [OMS:INFO ][TradeSheet]Opened.[main][j.c.n.n.o.r.p.d.c.QuestionDialog]",
+    "2019-03-19 15:16:23.047 [OMS:INFO ][TradeSheet]Button Pressed -> (OK).[main][j.c.n.n.o.r.p.d.c.QuestionDialog]",
+    "2019-03-19 15:16:23.047 [OMS:INFO ][TradeSheet]Closed.[main][j.c.n.n.o.r.p.d.c.QuestionDialog]"
+  )
+
 
 }
