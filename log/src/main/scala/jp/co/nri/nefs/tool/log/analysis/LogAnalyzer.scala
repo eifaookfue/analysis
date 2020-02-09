@@ -1,6 +1,7 @@
 package jp.co.nri.nefs.tool.log.analysis
 
 import akka.actor.ActorSystem
+import com.typesafe.scalalogging.LazyLogging
 
 object Keywords {
   val OBJ_EXTENSION = ".obj"
@@ -17,13 +18,20 @@ object ConfigKey {
 
 
 object LogAnalyzer extends LogSenderComponent with LogAnalyzerFactoryComponent
-  with AnalysisWriterComponent {
+  with AnalysisWriterComponent with LazyLogging{
   implicit val system: ActorSystem = ActorSystem("LogAnalyzer")
   val sender = new DefaultLogSender()
   val logAnalyzerFactory = new DefaultLogAnalyzerFactory
   val analysisWriterFactory = new DefaultAnalysisWriterFactory
 
   def main(args: Array[String]): Unit = {
-    sender.start()
+    try {
+      sender.start()
+    } catch {
+      case e: Exception => logger.warn("", e)
+    } finally {
+      system.terminate()
+    }
+
   }
 }

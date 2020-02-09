@@ -31,6 +31,7 @@ trait AnalysisWriterComponent {
   class DefaultAnalysisWriter(outputDir: Path = null, fileName: String = null) extends AnalysisWriter with LazyLogging {
     import jp.co.nri.nefs.tool.log.common.utils.RichFiles.stringToRichString
 
+    Files.createDirectories(outputDir)
     private lazy val outLogPath = outputDir.resolve(fileName.basename + "Log" + Keywords.OBJ_EXTENSION)
     private lazy val logOutputStream = new ObjectOutputStream(Files.newOutputStream(outLogPath))
     private lazy val outDetailPath = outputDir.resolve(fileName.basename + "Detail" + Keywords.OBJ_EXTENSION)

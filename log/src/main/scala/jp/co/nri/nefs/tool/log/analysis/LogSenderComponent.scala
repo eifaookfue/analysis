@@ -9,8 +9,9 @@ import jp.co.nri.nefs.tool.log.common.model.OMSAplInfo
 import jp.co.nri.nefs.tool.log.common.utils.{FileUtils, ZipUtils}
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
 
 trait LogSenderComponent {
   self: LogAnalyzerFactoryComponent =>
@@ -25,45 +26,44 @@ trait LogSenderComponent {
     private val input = Paths.get(config.getString(ConfigKey.INPUT_DIR))
 
     private def send(file: Path): Unit = {
-      Future {
-        val fileInfo = OMSAplInfo.valueOf(file.getFileName.toString) match {
-          case Some(f) => f
-          case None =>
-            logger.debug(s"$file was not valid format, so skipped log sending.")
-            return
-        }
-        val logAnalyzer = logAnalyzerFactory.create(fileInfo.fileName)
-        val actor = system.actorOf(LogAnalyzerActor.props(logAnalyzer))
-        FileUtils.autoClose(Files.lines(file)){stream =>
-          for ((line, lineNo) <- stream.iterator().asScala.zipWithIndex) {
+      OMSAplInfo.valueOf(file.getFileName.toString) match {
+        case Some(fileInfo) =>
+          logger.info(s"$file is analyzing...")
+          val logAnalyzer = logAnalyzerFactory.create(fileInfo.fileName)
+          val actor = system.actorOf(LogAnalyzerActor.props(logAnalyzer))
+          val stream = Files.lines(file)
+          for ((line, tmpNo) <- stream.iterator().asScala.zipWithIndex) {
+            val lineNo = tmpNo + 1
+            logger.info(s"send to $lineNo $line")
             actor ! (line, lineNo)
           }
-        }
+          stream.close()
+        case None =>
+          logger.debug(s"$file was not valid format, so skipped log sending.")
       }
     }
 
     def start(): Unit = {
-      val stream = Files.list(input)
-      for (file <- stream.iterator().asScala) {
+      val files = FileUtils.autoClose(Files.list(input)) { s => s.iterator().asScala.toList }
+      val aggFut = Future.traverse(files) { file =>
         if (ZipUtils.isZipFile(file)) {
           val expandedDir = ZipUtils.unzip(file)
-          val stream2 = Files.list(expandedDir)
-          for (file2 <- stream2.iterator().asScala) {
-            send(file2)
+          val files2 = FileUtils.autoClose(Files.list(expandedDir)) { s => s.iterator().asScala.toList }
+          val aggFut2 = Future.traverse(files2) { file2 =>
+            Future(send(file2))
           }
-          stream2.close()
-          FileUtils.delete(expandedDir)
-        } else {
-          send(file)
-        }
+          aggFut2.map(_ => FileUtils.delete(expandedDir))
+        } else
+          Future(send(file))
       }
+      Await.ready(aggFut, Duration.Inf)
     }
   }
 
   class LogAnalyzerActor(logAnalyzer: LogAnalyzer) extends Actor with ActorLogging{
     override def receive: Receive = {
       case (line:String, lineNo: Int) =>
-        log.info(s"received $line")
+        log.debug(s"$logAnalyzer received {$lineNo} $line")
         logAnalyzer.analyze(line, lineNo)
       case _ =>
         log.info("received unknown message.")

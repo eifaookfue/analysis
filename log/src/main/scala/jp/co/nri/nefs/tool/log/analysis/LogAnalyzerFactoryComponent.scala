@@ -99,7 +99,9 @@ trait LogAnalyzerFactoryComponent {
 
   case class LineInfo(datetimeStr: String, service: String, logLevel: String, appName: String, message: String,
                                 thread: String, clazz: String) {
-    val datetime = new Timestamp(LineInfo.format.parse(datetimeStr).getTime)
+    // SimpleDateFormatはスレッドセーフではない
+    private val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
+    val datetime = new Timestamp(format.parse(datetimeStr).getTime)
     val underlyingClass: String = getLastAndDelNo(clazz)
     val windowName: String = getWindowName(message, underlyingClass)
     val buttonEvent: Option[String] = getButtonEvent(message)
@@ -158,7 +160,6 @@ trait LogAnalyzerFactoryComponent {
       messageExpression + threadExpression + classExpression)
     private val windowNameRegex = """\[(.*)\].*""".r
     private val buttonActionRegex = """.*\((.*)\).*""".r
-    private val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
     private val lastAndDelNoRegex: Regex = """(.*)\$[0-9]""".r
 
     def valueOf(line: String): Option[LineInfo] = {
@@ -192,9 +193,9 @@ trait LogAnalyzerFactoryComponent {
       //[TradeSheet]Opened.[main][j.c.n.n.o.r.p.d.c.QuestionDialog]
       else if ((lineInfo.message contains "Dialog opened.") || (lineInfo.message contains "Opened.")) {
         // 将来的なリアルタイム分析を有効にするため、この時点でHandlerを検索してしまう。
-        val relatedHandler = findRelatedHandler(handlerBuffer.lastOption, lineInfo.underlyingClass)
+        val relatedHandler = findRelatedHandler(handlerBuffer, lineInfo.underlyingClass)
         val relatedWindow = if (relatedHandler.isDefined) None else {
-          findRelatedWindow(windowBuffer.lastOption, lineInfo.underlyingClass)
+          findRelatedWindow(windowBuffer, lineInfo.underlyingClass)
         }
         windowBuffer += Window(
           name = lineInfo.windowName,
@@ -233,38 +234,40 @@ trait LogAnalyzerFactoryComponent {
       }
     }
 
-    /** Window起動時のログに含まれるクラス名が直近のHandlerと紐づく場合、そのHandlerを返します。
+    /** Handlerのリストから直近のHandlerを抜き出し、それがクラス名と紐づく場合、そのHandlerを返します。
       * 紐づかない場合は、Noneを返します。
       * マッピングはあらかじめコンフィグファイルで定義しておく必要があります。
-      *
-      * @param  handlerOp       直近のHandler
-      * @param  underlyingClass Window起動時のログに含まれるクラス名
+      * @param  handlerBuffer   Handlerが格納されているListBuffer
+      * @param  underlyingClass クラス名
       * @return 直近のHandler。紐づかない場合はNone
       */
-    private def findRelatedHandler(handlerOp: Option[Handler], underlyingClass: String): Option[Handler] = {
+    private def findRelatedHandler(handlerBuffer: ListBuffer[Handler], underlyingClass: String): Option[Handler] = {
+      findRelatedObject[Handler](handlerBuffer, underlyingClass, _.name, ConfigKey.HANDLER_MAPPING)
+    }
+
+    /** Windowのリストから直近のWindowを抜き出し、それがクラス名と紐づく場合、そのHandlerを返します。
+      * 紐づかない場合は、Noneを返します。
+      * マッピングはあらかじめコンフィグファイルで定義しておく必要があります。
+      * @param  windowBuffer   Handlerが格納されているListBuffer
+      * @param  underlyingClass クラス名
+      * @return 直近のHandler。紐づかない場合はNone
+      */
+    private def findRelatedWindow(windowBuffer: ListBuffer[Window], underlyingClass: String): Option[Window] = {
+      findRelatedObject[Window](windowBuffer, underlyingClass, _.underlyingClass, ConfigKey.WINDOW_MAPPING)
+    }
+
+    private def findRelatedObject[T](buffer: ListBuffer[T], underlyingClass: String, f: T => String, configKeyPrefix: String): Option[T] = {
+      val config = ConfigFactory.load()
+      val configKey = configKeyPrefix + "." + underlyingClass
       try {
-        val config = ConfigFactory.load()
-        val values = config.getStringList(ConfigKey.HANDLER_MAPPING + "." + underlyingClass).asScala
-        handlerOp.flatMap { handler =>
-          if (values.contains(handler.name)) handlerOp else None
+        val values = config.getStringList(configKey).asScala
+        val lastOption = buffer.lastOption
+        lastOption.flatMap { o =>
+          if (values.contains(f(o))) lastOption else None
         }
       } catch {
         case e: ConfigException.Missing =>
-          logger.warn(s"${ConfigKey.HANDLER_MAPPING + "." + underlyingClass} was not found in config file",e)
-          None
-      }
-    }
-
-    private def findRelatedWindow(windowOp: Option[Window], underlyingClass: String): Option[Window] = {
-      try {
-        val config = ConfigFactory.load()
-        val values = config.getStringList(ConfigKey.WINDOW_MAPPING + "." + underlyingClass).asScala
-        windowOp.flatMap { window =>
-          if (values.contains(window.name)) windowOp else None
-        }
-      } catch {
-        case _: ConfigException.Missing =>
-          logger.warn(s"${ConfigKey.WINDOW_MAPPING} was not found in config file")
+          logger.warn(s"$configKey was not found in config file",e)
           None
       }
     }
@@ -317,6 +320,11 @@ trait LogAnalyzerFactoryComponent {
       }
       logger.warn(s"$fileName:$lineNo Couldn't bind Button Event with window.")
     }
+
+    override def toString: String = {
+      "DefaultLogAnalyzer(fileName)"
+    }
+
   }
 
 }

@@ -3,6 +3,13 @@
 import com.typesafe.tools.mima.plugin.MimaPlugin._
 import interplay.ScalaVersions._
 
+lazy val runLogAnalyzer = taskKey[Unit]("A task that hard codes the values to `run`")
+runLogAnalyzer := {
+  val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.LogAnalyzer").value
+  println("Done!")
+}
+
+
 lazy val runProcesses = taskKey[Unit]("A task that hard codes the values to `run`")
 runProcesses := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.file.Processes" +

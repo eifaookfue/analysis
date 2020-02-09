@@ -24,10 +24,10 @@ object WebSocketClient extends LazyLogging {
     val baseAddr = config.getString("baseAddr")
     val subscribeURL = "ws://" + baseAddr + "/subscribe-ioi"
     implicit val userPass: UserPass = UserPass(config.getString("websocketUser"), config.getString("websocketPassword"))
-    subscribe(subscribeURL)
+    //subscribe(subscribeURL)
   }
 
-  def subscribe(url: String)(implicit system: ActorSystem, materializer: Materializer, userPass: UserPass): Unit = {
+  /*def subscribe(url: String)(implicit system: ActorSystem, materializer: Materializer, userPass: UserPass): Unit = {
     import system.dispatcher
 
     val flow: Flow[Message, Message, Promise[Option[Message]]] =
@@ -58,5 +58,5 @@ object WebSocketClient extends LazyLogging {
     connected.onComplete(println)
 
     //promise.success(None)
-  }
+  }*/
 }

@@ -38,5 +38,44 @@ trait LogCollection {
     "2019-03-19 15:16:23.047 [OMS:INFO ][TradeSheet]Closed.[main][j.c.n.n.o.r.p.d.c.QuestionDialog]"
   )
 
+  lazy val selectSymbolFromViewLog = List(
+    "2019-12-16 12:08:39.044 [OMS:INFO ][TradeSheet]Start find properties. class jp.co.nri.nefs.oms.rcp.parts.selector.SymbolSelectFindComponentCreator$EDisplayProductType.[main][j.c.n.n.c.r.p.l.AbstractLifeCycleDelegate$EnumDisplayValuePropertiesProviderFinder]",
+    "2019-12-16 12:08:39.044 [OMS:INFO ][TradeSheet]End find properties. class jp.co.nri.nefs.oms.rcp.parts.selector.SymbolSelectFindComponentCreator$EDisplayProductType.[main][j.c.n.n.c.r.p.l.AbstractLifeCycleDelegate$EnumDisplayValuePropertiesProviderFinder]",
+    "2019-12-16 12:08:39.044 [OMS:INFO ][TradeSheet][Select Symbol Multi]Dialog opened.[main][j.c.n.n.o.r.p.d.SelectMultiDialog]",
+    "2019-12-16 12:08:39.044 [OMS:INFO ][TradeSheet][Select Symbol Multi]Button event starts -> (Cancel).[main][j.c.n.n.o.r.p.d.SelectMultiDialog]",
+    "2019-12-16 12:08:39.044 [OMS:INFO ][TradeSheet][Select Symbol Multi]Dialog closed.[main][j.c.n.n.o.r.p.d.SelectMultiDialog]",
+    "2019-12-16 12:08:39.044 [OMS:INFO ][TradeSheet][Select Symbol Multi]Button event ends -> (Cancel).[main][j.c.n.n.o.r.p.d.SelectMultiDialog]"
+  )
+
+  lazy val selectSymbolFromNewOrderSingleLog = List(
+    "2019-12-16 12:10:15.667 [OMS:INFO ][TradeSheet]Handler start.[main][j.c.n.n.o.t.h.t.CareBuyHandler]",
+    "2019-12-16 12:10:16.530 [OMS:INFO ][TradeSheet]Start LoadState from C:\\APL\\OMS\\DEV-G1\\USER\\356435\\TradeSheet\\20191120_1933306_734\\defaultsetting\\workspace\\AUTO\\NatTableUtil\\nattable_persistence\\DefaultFeedbackComposite.properties.[main][j.c.n.n.c.n.util.NatTableUtil]",
+    "2019-12-16 12:10:16.537 [OMS:INFO ][TradeSheet]End LoadState from C:\\APL\\OMS\\DEV-G1\\USER\\356435\\TradeSheet\\20191120_1933306_734\\defaultsetting\\workspace\\AUTO\\NatTableUtil\\nattable_persistence\\DefaultFeedbackComposite.properties.[main][j.c.n.n.c.n.util.NatTableUtil]",
+    "2019-12-16 12:10:16.740 [OMS:INFO ][TradeSheet]Handler end.[main][j.c.n.n.o.t.h.t.CareBuyHandler]",
+    "2019-12-16 12:10:16.761 [OMS:INFO ][TradeSheet][New Order Single]Dialog opened.[main][j.c.n.n.o.r.p.d.NewOrderSingleDialog$1]",
+    "2019-12-16 12:10:18.244 [OMS:INFO ][TradeSheet][Select Symbol]Dialog opened.[main][j.c.n.n.o.r.p.d.SymbolSelectionDialog]",
+    "2019-12-16 12:11:00.754 [OMS:INFO ][TradeSheet][Select Symbol]Button event starts -> (Cancel).[main][j.c.n.n.o.r.p.d.SymbolSelectionDialog]",
+    "2019-12-16 12:11:00.754 [OMS:INFO ][TradeSheet][Select Symbol]Dialog closed.[main][j.c.n.n.o.r.p.d.SymbolSelectionDialog]",
+    "2019-12-16 12:11:00.774 [OMS:INFO ][TradeSheet][Select Symbol]Button event ends -> (Cancel).[main][j.c.n.n.o.r.p.d.SymbolSelectionDialog]",
+    "2019-12-16 12:11:01.982 [OMS:INFO ][TradeSheet][Select Symbol]Dialog closed.[main][j.c.n.n.o.r.p.d.NewOrderSingleDialog$1]",
+  )
+
+  lazy val newSplitAndNewSplitLog = List(
+    "2019-12-16 12:11:03.860 [OMS:INFO ][TradeSheet]Handler start.[main][j.c.n.n.o.t.h.NewSplitHandler]",
+    "2019-12-16 12:11:04.967 [OMS:INFO ][TradeSheet]Start LoadState from C:\\APL\\OMS\\DEV-G1\\USER\\356435\\TradeSheet\\20191120_1933306_734\\defaultsetting\\workspace\\AUTO\\NatTableUtil\\nattable_persistence\\NewSplitComponentCreator__first.properties[main][j.c.n.n.c.n.util.NatTableUtil]",
+    "2019-12-16 12:11:04.972 [OMS:INFO ][TradeSheet]End LoadState from C:\\APL\\OMS\\DEV-G1\\USER\\356435\\TradeSheet\\20191120_1933306_734\\defaultsetting\\workspace\\AUTO\\NatTableUtil\\nattable_persistence\\NewSplitComponentCreator__first.properties[main][j.c.n.n.c.n.util.NatTableUtil]",
+    "2019-12-16 12:11:05.066 [OMS:INFO ][TradeSheet]Handler end.[main][j.c.n.n.o.t.h.NewSplitHandler]",
+    "2019-12-16 12:11:05.085 [OMS:INFO ][TradeSheet][New Split  - Parent Order]Dialog Opened.[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]",
+    "2019-12-16 12:11:08.745 [OMS:INFO ][TradeSheet]Handler start.[main][j.c.n.n.o.t.h.NewSplitHandler]",
+    "2019-12-16 12:11:08.943 [OMS:INFO ][TradeSheet]Handler end.[main][j.c.n.n.o.t.h.NewSplitHandler]",
+    "2019-12-16 12:11:08.972 [OMS:INFO ][TradeSheet][New Split  - Parent Order]Dialog Opened.[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]",
+    "2019-12-16 12:11:10:302 [OMS:INFO ][TradeSheet][New Split  - Parent Order]Button event starts -> (Cancel).[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]",
+    "2019-12-16 12:11:10.310 [OMS:INFO ][TradeSheet][New Split  - Parent Order]Dialog closed.[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]",
+    "2019-12-16 12:11:10:361 [OMS:INFO ][TradeSheet][New Split  - Parent Order]Button event ends -> (Cancel).[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]",
+    "2019-12-16 12:11:10:440 [OMS:INFO ][TradeSheet][New Split  - Parent Order]Button event starts -> (Cancel).[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]",
+    "2019-12-16 12:11:11.449 [OMS:INFO ][TradeSheet][New Split  - Parent Order]Dialog closed.[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]",
+    "2019-12-16 12:11:11:497 [OMS:INFO ][TradeSheet][New Split  - Parent Order]Button event ends -> (Cancel).[main][j.c.n.n.o.r.p.d.s.n.NewSplitDialog]",
+  )
+
 
 }

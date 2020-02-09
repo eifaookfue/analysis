@@ -11,6 +11,11 @@ class CaseClassSpec extends FlatSpec with TestingEnvironment with LogCollection 
     assert(lineInfo === Some(LineInfo("2019-10-10 15:54:12.452","OMS","INFO","TradeSheet","Handler start.","main","j.c.n.n.o.t.h.NewSplitHandler")))
   }
 
+  it should "be created according to regular expression even if it is more complex" in {
+    val lineInfo = LineInfo.valueOf(newSplitLog(1))
+    assert(lineInfo === Some(LineInfo("2019-10-10 15:54:12.521","OMS","INFO","TradeSheet","Start find properties. class=[class jp.co.nri.nefs.oms.rcp.parts.entity.property.definition.ESummaryUnit].","main","j.c.n.n.c.r.p.l.AbstractLifeCycleDelegate$EnumDisplayValuePropertiesProviderFinder")))
+  }
+
   it should "be created even though message contains brackets" in {
     val lineInfo = LineInfo.valueOf(newSplitLog(2))
     assert(lineInfo === Some(LineInfo("2019-10-10 15:54:12.830","OMS","INFO","TradeSheet","[New Split    - Parent Order]Dialog opened.","main","j.c.n.n.o.r.p.d.s.n.NewSplitDialog")))
