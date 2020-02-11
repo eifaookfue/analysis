@@ -7,6 +7,7 @@ import java.sql.Timestamp
 import javax.inject.{Inject, Singleton}
 import jp.co.nri.nefs.tool.log.common.model.{Log, User, WindowDetail}
 import models.{Page, Params}
+import play.api.Configuration
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -22,20 +23,20 @@ trait WindowDetailComponent {
   class WindowDetails(tag: Tag) extends Table[WindowDetail](tag, "WINDOW_DETAIL") {
     def logId = column[Long]("LOG_ID")
     def lineNo = column[Int]("LINE_NO", O.Length(20))
-    def handler = column[Option[String]]("HANDLER")
+    def activator = column[Option[String]]("ACTIVATOR")
     def windowName = column[Option[String]]("WINDOW_NAME")
     def destinationType = column[Option[String]]("DESTINATION_TYPE")
     def action = column[Option[String]]("ACTION")
     def method = column[Option[String]]("METHOD")
     def time = column[Timestamp]("TIME")
     def startupTime = column[Option[Long]]("STARTUP_TIME")
-    def * = (logId, lineNo, handler, windowName, destinationType, action, method, time, startupTime) <> (WindowDetail.tupled, WindowDetail.unapply)
+    def * = (logId, lineNo, activator, windowName, destinationType, action, method, time, startupTime) <> (WindowDetail.tupled, WindowDetail.unapply)
     def pk = primaryKey("pk_1", (logId, lineNo))
   }
 
 }
 @Singleton()
-class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext)
+class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider, config: Configuration)(implicit executionContext: ExecutionContext)
   extends WindowDetailComponent with LogComponent with UserComponent with HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
@@ -72,7 +73,7 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
         params.userName.filter(_.trim.nonEmpty).map(u.map(_.userName).getOrElse("") like "%" + _ +  "%"),
         params.tradeDate.filter(_.trim.nonEmpty).map(l.tradeDate like "%" + _ +  "%"),
         params.lineNo.map(w.lineNo === _),
-        params.handler.filter(_.trim.nonEmpty).map(w.handler.getOrElse("") like "%" + _ +  "%"),
+        params.activator.filter(_.trim.nonEmpty).map(w.activator.getOrElse("") like "%" + _ +  "%"),
         params.windowName.filter(_.trim.nonEmpty).map(w.windowName.getOrElse("") like "%" + _ +  "%"),
         params.destinationType.filter(_.trim.nonEmpty).map(w.destinationType.getOrElse("") like "%" + _ +  "%"),
         params.action.filter(_.trim.nonEmpty).map(w.action.getOrElse("") like "%" + _ +  "%"),
@@ -97,8 +98,8 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       case -5 => query1.sortBy(_._1.tradeDate.desc)
       case 6 => query1.sortBy(_._2.lineNo.asc)
       case -6 => query1.sortBy(_._2.lineNo.desc)
-      case 7 => query1.sortBy(_._2.handler.asc)
-      case -7 => query1.sortBy(_._2.handler.desc)
+      case 7 => query1.sortBy(_._2.activator.asc)
+      case -7 => query1.sortBy(_._2.activator.desc)
       case 8 => query1.sortBy(_._2.windowName.asc.nullsFirst)
       case -8 => query1.sortBy(_._2.windowName.desc.nullsLast)
       case 9 => query1.sortBy(_._2.destinationType.asc.nullsFirst)
@@ -141,7 +142,7 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   private def recreate(): Unit = {
-    for {tableQuery <- Seq(logs, windowDetails)}{
+    for {tableQuery <- Seq(logs, windowDetails, users)}{
       val schema = tableQuery.schema
       println("create statements")
       schema.create.statements.foreach(println)
@@ -154,15 +155,14 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  def load(name: String, isRecreate: Boolean): Unit = {
+  def load(isRecreate: Boolean): Unit = {
     import jp.co.nri.nefs.tool.log.analysis.Keywords._
 
     if (isRecreate) {
       recreate()
     }
 
-
-    val path = Paths.get("D:\\", name)
+    val path = Paths.get(config.underlying.getString("caseDir"))
 
     val bases = for {
       file <- Files.list(path).iterator().asScala.toList
@@ -174,6 +174,7 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
     for {
       base <- bases
       logPath = path.resolve(base + LOG_SUFFIX + OBJ_EXTENSION)
+      _ = println(logPath)
       // Logは1レコードしか存在しない
       logObj = deserializeObjects[Log](logPath).head
       detailPath = path.resolve(base + WINDOW_DETAIL_SUFFIX + OBJ_EXTENSION)

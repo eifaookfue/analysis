@@ -8,7 +8,7 @@ GET     /                           controllers.Application.index
 # Computers list (look at the default values for pagination parameters)
 GET     /windowDetails                  controllers.Application.list(params: models.Params ?= models.Params())
 
-POST     /load                  controllers.Application.load(name:String, isRecreate:Boolean ?= false)
+POST     /load                  controllers.Application.load(isRecreate:Boolean ?= false)
 
 #GET   /places               controllers.Application.listPlaces
 POST  /places               controllers.Application.savePlace

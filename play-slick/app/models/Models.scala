@@ -12,7 +12,7 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
 
 case class Params(page: Int = 0, orderBy: Option[Int]  = None, logId: Option[Long] = None,
                   appName: Option[String]  = None, computerName: Option[String]  = None, userName:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Int]  = None,
-                  handler: Option[String]  = None, windowName: Option[String]  = None, destinationType: Option[String]  = None,
+                  activator: Option[String]  = None, windowName: Option[String]  = None, destinationType: Option[String]  = None,
                   action: Option[String]  = None, method: Option[String]  = None,
                   time: Option[Timestamp]  = None, startupTime: Option[Long]  = None, logFile: Option[String]  = None)
 
@@ -51,7 +51,7 @@ object Params {
         params.logId.map(longBinder.unbind("logId",_)),
         params.appName.map(strBinder.unbind("appName",_)), params.computerName.map(strBinder.unbind("computerName",_)),
         params.userName.map(strBinder.unbind("userName",_)), params.tradeDate.map(strBinder.unbind("tradeDate",_)),
-        params.lineNo.map(longBinder.unbind("lineNo",_)), params.handler.map(strBinder.unbind("handler",_)),
+        params.lineNo.map(longBinder.unbind("lineNo",_)), params.activator.map(strBinder.unbind("activator",_)),
         params.windowName.map(strBinder.unbind("windowName",_)), params.destinationType.map(strBinder.unbind("destinationType",_)),
         params.action.map(strBinder.unbind("action",_)), params.method.map(strBinder.unbind("method",_)),
         params.time.map(t => longBinder.unbind("time",t.getTime)), params.startupTime.map(longBinder.unbind("startupTime",_)),

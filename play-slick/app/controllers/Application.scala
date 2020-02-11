@@ -43,9 +43,9 @@ class Application @Inject() (
     windowDetails.map(wd => Ok(html.list(wd, params)))
   }
 
-  def load(name: String, isRecreate: Boolean) = Action { implicit request =>
+  def load(isRecreate: Boolean) = Action { implicit request =>
     println("called")
-    windowDetailDao.load(name, isRecreate)
+    windowDetailDao.load(isRecreate)
     Ok("success")
 
   }

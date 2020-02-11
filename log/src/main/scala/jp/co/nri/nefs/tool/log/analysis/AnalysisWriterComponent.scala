@@ -32,9 +32,9 @@ trait AnalysisWriterComponent {
     import jp.co.nri.nefs.tool.log.common.utils.RichFiles.stringToRichString
 
     Files.createDirectories(outputDir)
-    private lazy val outLogPath = outputDir.resolve(fileName.basename + "Log" + Keywords.OBJ_EXTENSION)
+    private lazy val outLogPath = outputDir.resolve(fileName.basename + Keywords.LOG_SUFFIX + Keywords.OBJ_EXTENSION)
     private lazy val logOutputStream = new ObjectOutputStream(Files.newOutputStream(outLogPath))
-    private lazy val outDetailPath = outputDir.resolve(fileName.basename + "Detail" + Keywords.OBJ_EXTENSION)
+    private lazy val outDetailPath = outputDir.resolve(fileName.basename + Keywords.WINDOW_DETAIL_SUFFIX + Keywords.OBJ_EXTENSION)
     private lazy val detailOutputStream = new ObjectOutputStream(Files.newOutputStream(outDetailPath))
 
     def write(log: Log): Unit = {

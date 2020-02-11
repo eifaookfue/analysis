@@ -44,7 +44,7 @@ input.tradeDate {
 input.lineNo {
     width: 72px
 }
-input.handler {
+input.activator {
     width: 162px
 }
 input.windowName {
@@ -90,7 +90,7 @@ table.windowDetails .colLineNo {
     width: 60px
 }
 
-table.windowDetails .colHandler {
+table.windowDetails .colActivator {
     width: 150px
 }
 
