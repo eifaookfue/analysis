@@ -168,15 +168,15 @@ class WindowDetailDAO @Inject() (protected val dbConfigProvider: DatabaseConfigP
       file <- Files.list(path).iterator().asScala.toList
       name = file.getFileName.toFile.toString
       if name.contains(LOG_SUFFIX)
-      base = name.replace(LOG_SUFFIX, "").replace(OBJ_SUFFIX, "")
+      base = name.replace(LOG_SUFFIX, "").replace(OBJ_EXTENSION, "")
     } yield base
 
     for {
       base <- bases
-      logPath = path.resolve(base + LOG_SUFFIX + OBJ_SUFFIX)
+      logPath = path.resolve(base + LOG_SUFFIX + OBJ_EXTENSION)
       // Logは1レコードしか存在しない
       logObj = deserializeObjects[Log](logPath).head
-      detailPath = path.resolve(base + WINDOW_DETAIL_SUFFIX + OBJ_SUFFIX)
+      detailPath = path.resolve(base + WINDOW_DETAIL_SUFFIX + OBJ_EXTENSION)
       windowDetailObjs = deserializeObjects[WindowDetail](detailPath)
       action = (
         for {

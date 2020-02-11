@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
-import jp.co.nri.nefs.tool.log.common.model.WindowDetail
+import jp.co.nri.nefs.tool.log.common.model.{Log, OMSAplInfo, WindowDetail}
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.JavaConverters._
@@ -16,13 +16,13 @@ trait LogAnalyzerFactoryComponent {
   val logAnalyzerFactory: LogAnalyzerFactory
 
   trait LogAnalyzerFactory {
-    def create(fileName: String): LogAnalyzer
+    def create(aplInfo: OMSAplInfo): LogAnalyzer
   }
 
   class DefaultLogAnalyzerFactory extends LogAnalyzerFactory {
-    def create(fileName: String): LogAnalyzer = {
-      val analysisWriter = analysisWriterFactory.create(fileName)
-      new DefaultLogAnalyzer(fileName, analysisWriter)
+    def create(aplInfo: OMSAplInfo): LogAnalyzer = {
+      val analysisWriter = analysisWriterFactory.create(aplInfo.fileName)
+      new DefaultLogAnalyzer(aplInfo, analysisWriter)
     }
   }
 
@@ -172,11 +172,12 @@ trait LogAnalyzerFactoryComponent {
   }
 
 
-  class DefaultLogAnalyzer(fileName: String, analysisWriter: AnalysisWriter) extends LogAnalyzer with LazyLogging {
+  class DefaultLogAnalyzer(aplInfo: OMSAplInfo, analysisWriter: AnalysisWriter) extends LogAnalyzer with LazyLogging {
 
     protected val handlerBuffer: ListBuffer[Handler] = ListBuffer[Handler]()
     protected val windowBuffer: ListBuffer[Window] = ListBuffer[Window]()
     protected val buttonEventBuffer: ListBuffer[ButtonEvent] = ListBuffer[ButtonEvent]()
+    private var isLogWrite = false
 
     def analyze(line: String, lineNo: Int): Unit = {
       val lineInfo = LineInfo.valueOf(line) match {
@@ -207,13 +208,19 @@ trait LogAnalyzerFactoryComponent {
       }
       else if ((lineInfo.message contains "Dialog closed.") || (lineInfo.message contains "Closed.")) {
         val windowName = lineInfo.windowName
-        updateWithEnd(windowName, windowBuffer, fileName, lineNo) {
+        updateWithEnd(windowName, windowBuffer, aplInfo.fileName, lineNo) {
           window => window.copy(end = Some(LineTime(lineNo, lineInfo.datetime)))
         }
-        bindWithButtonEvent(fileName, lineNo, windowBuffer, buttonEventBuffer.lastOption)
+        bindWithButtonEvent(aplInfo.fileName, lineNo, windowBuffer, buttonEventBuffer.lastOption)
         windowBuffer.reverseIterator.find { w => w.name == windowName } match {
-          case Some(window) => analysisWriter.write(window.toWindowDetail)
-          case None => logger.warn(s"$fileName:$lineNo Couldn't find window.")
+          case Some(window) =>
+            if (!isLogWrite) {
+              analysisWriter.write(Log(0L, aplInfo.appName, aplInfo.computer,
+                aplInfo.userId, aplInfo.tradeDate, aplInfo.time))
+              isLogWrite = true
+            }
+            analysisWriter.write(window.toWindowDetail)
+          case None => logger.warn(s"$aplInfo.fileName:$lineNo Couldn't find window.")
         }
       }
       else if ((lineInfo.message contains "Button event starts") || (lineInfo.message contains "Button Pressed")) {
@@ -224,7 +231,7 @@ trait LogAnalyzerFactoryComponent {
               start = LineTime(lineNo, lineInfo.datetime),
               event = event
             )
-          case None => logger.warn(s"$fileName:$lineNo Couldn't find action from message.")
+          case None => logger.warn(s"$aplInfo.fileName:$lineNo Couldn't find action from message.")
         }
       }
       else if (lineInfo.message contains "Button event ends") {
@@ -322,7 +329,7 @@ trait LogAnalyzerFactoryComponent {
     }
 
     override def toString: String = {
-      "DefaultLogAnalyzer(fileName)"
+      s"DefaultLogAnalyzer($aplInfo.fileName)"
     }
 
   }

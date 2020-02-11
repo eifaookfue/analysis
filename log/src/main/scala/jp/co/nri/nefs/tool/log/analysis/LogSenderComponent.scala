@@ -3,6 +3,7 @@ package jp.co.nri.nefs.tool.log.analysis
 import java.nio.file.{Files, Path, Paths}
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+import akka.pattern.gracefulStop
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.log.common.model.OMSAplInfo
@@ -11,7 +12,7 @@ import jp.co.nri.nefs.tool.log.common.utils.{FileUtils, ZipUtils}
 import scala.collection.JavaConverters._
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 
 trait LogSenderComponent {
   self: LogAnalyzerFactoryComponent =>
@@ -27,15 +28,23 @@ trait LogSenderComponent {
 
     private def send(file: Path): Unit = {
       OMSAplInfo.valueOf(file.getFileName.toString) match {
-        case Some(fileInfo) =>
+        case Some(aplInfo) =>
           logger.info(s"$file is analyzing...")
-          val logAnalyzer = logAnalyzerFactory.create(fileInfo.fileName)
+          val logAnalyzer = logAnalyzerFactory.create(aplInfo)
           val actor = system.actorOf(LogAnalyzerActor.props(logAnalyzer))
           val stream = Files.lines(file)
           for ((line, tmpNo) <- stream.iterator().asScala.zipWithIndex) {
             val lineNo = tmpNo + 1
-            logger.info(s"send to $lineNo $line")
+            logger.info(s"send #$lineNo to $actor")
             actor ! (line, lineNo)
+          }
+          //actor ! PoisonPill
+          try {
+            val stopped = gracefulStop(actor, 5.seconds)
+            Await.result(stopped, 6.seconds)
+          } catch {
+            case e: akka.pattern.AskTimeoutException =>
+              logger.warn("", e)
           }
           stream.close()
         case None =>
@@ -45,6 +54,7 @@ trait LogSenderComponent {
 
     def start(): Unit = {
       val files = FileUtils.autoClose(Files.list(input)) { s => s.iterator().asScala.toList }
+      files.foreach(p => logger.info(p.toString))
       val aggFut = Future.traverse(files) { file =>
         if (ZipUtils.isZipFile(file)) {
           val expandedDir = ZipUtils.unzip(file)
@@ -57,13 +67,14 @@ trait LogSenderComponent {
           Future(send(file))
       }
       Await.ready(aggFut, Duration.Inf)
+      //Thread.sleep(2000)
     }
   }
 
   class LogAnalyzerActor(logAnalyzer: LogAnalyzer) extends Actor with ActorLogging{
     override def receive: Receive = {
       case (line:String, lineNo: Int) =>
-        log.debug(s"$logAnalyzer received {$lineNo} $line")
+        log.info(s"$logAnalyzer received #$lineNo")
         logAnalyzer.analyze(line, lineNo)
       case _ =>
         log.info("received unknown message.")
