@@ -5,7 +5,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.typesafe.scalalogging.LazyLogging
-import jp.co.nri.nefs.tool.log.common.utils.FileUtils
 
 import scala.collection.JavaConverters._
 

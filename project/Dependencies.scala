@@ -2,9 +2,24 @@ import sbt._
 
   object Dependencies {
 
+    val analytics: Seq[ModuleID] = Seq(
+      Library.scalaLogging,
+      Library.logbackClassic,
+      Library.config
+    )
+
+    val store: Seq[ModuleID] = Seq(
+      Library.scalaLogging,
+      Library.logbackClassic,
+      Library.config,
+      Library.akka_actor
+    )
+
     val util: Seq[ModuleID] = Seq(
       Library.scalaLogging,
-      Library.logbackClassic
+      Library.logbackClassic,
+      Library.poi,
+      Library.poi_ooxml
     )
 
     val websocket: Seq[ModuleID] = Seq(

@@ -12,6 +12,7 @@
       <w>logdir</w>
       <w>materializer</w>
       <w>nefs</w>
+      <w>nozip</w>
       <w>objs</w>
       <w>ooxml</w>
       <w>ostream</w>

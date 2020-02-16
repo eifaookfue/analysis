@@ -3,79 +3,81 @@
 import com.typesafe.tools.mima.plugin.MimaPlugin._
 import interplay.ScalaVersions._
 
+/*
 lazy val runLogAnalyzer = taskKey[Unit]("A task that hard codes the values to `run`")
 runLogAnalyzer := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.LogAnalyzer").value
   println("Done!")
 }
+*/
 
 
-lazy val runProcesses = taskKey[Unit]("A task that hard codes the values to `run`")
+/*lazy val runProcesses = taskKey[Unit]("A task that hard codes the values to `run`")
 runProcesses := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.file.Processes" +
   " --searchdir D:\\tmp3 --outputdir D:\\tmp4").value
   println("Done!")
-}
-lazy val runRecreate = taskKey[Unit]("A task that hard codes the values to `run`")
+}*/
+/*lazy val runRecreate = taskKey[Unit]("A task that hard codes the values to `run`")
 runRecreate := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Case2Table " +
     "--recreate").value
   println("Done!")
-}
+}*/
 
-lazy val runLog2Case = taskKey[Unit]("A task that hard codes the values to `run`")
+/*lazy val runLog2Case = taskKey[Unit]("A task that hard codes the values to `run`")
 runLog2Case := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Log2Case --searchdir D:\\tmp4 --outputdir D:\\tmp5").value
   println("Done!")
-}
+}*/
 
-lazy val runExcel2Case = taskKey[Unit]("A task that hard codes the values to `run`")
+/*lazy val runExcel2Case = taskKey[Unit]("A task that hard codes the values to `run`")
 runExcel2Case := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Log2Case --excelFile" +
     " D:\\data\\WindowDetail.xlsx --outputdir D:\\case").value
   println("Done!")
-}
+}*/
 
 
-lazy val runCase2Table = taskKey[Unit]("A task that hard codes the values to `run`")
+/*lazy val runCase2Table = taskKey[Unit]("A task that hard codes the values to `run`")
 runCase2Table := {
   val _ = (log/runMain in Compile).toTask(" jp.co.nri.nefs.tool.log.analysis.Case2Table --inputdir D:\\tmp5").value
   println("Done!")
-}
+}*/
 
-lazy val runIvyCacheManagement = taskKey[Unit]("A task that hard codes the values to `run`")
+/*lazy val runIvyCacheManagement = taskKey[Unit]("A task that hard codes the values to `run`")
 runIvyCacheManagement := {
   val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.IvyCacheManagement --inputdir D:\\Apl\\.ivy2\\cache").value
   println("Done!")
-}
+}*/
 
-lazy val runBringin = taskKey[Unit]("A task that hard codes the values to `run`")
+/*lazy val runBringin = taskKey[Unit]("A task that hard codes the values to `run`")
 runBringin := {
   val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Bringin " +
     "--cachedir D:\\Apl\\.ivy2\\local --afterdate " + """ "2019/09/20 00:00:00" """ + " --outputdir D:\\20191113_持ち込み").value
   println("Done!")
-}
+}*/
 
-lazy val runCache2Local = taskKey[Unit]("A task that hard codes the values to `run`")
+/*lazy val runCache2Local = taskKey[Unit]("A task that hard codes the values to `run`")
 runCache2Local := {
   val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Cache2Local " +
     "--cachedir D:\\Apl\\.ivy2\\cache --outputdir D:\\cache2Local").value
   println("Done!")
-}
+}*/
 
-lazy val runAntExecute = taskKey[Unit]("A task that hard codes the values to `run`")
+/*lazy val runAntExecute = taskKey[Unit]("A task that hard codes the values to `run`")
 runAntExecute := {
   val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Cache2Local " +
     "--execdir D:\\cache2Local").value
   println("Done!")
-}
+}*/
 
-lazy val runAntExecuteTest = taskKey[Unit]("A task that hard codes the values to `run`")
+/*lazy val runAntExecuteTest = taskKey[Unit]("A task that hard codes the values to `run`")
 runAntExecuteTest := {
   val _ = (transport/runMain in Compile).toTask(" jp.co.nri.nefs.tool.transport.Cache2Local " +
     "--execfile D:\\cache2Local\\org.xerial.sbt_sbt-sonatype_2.0_1.0_2.12.xml").value
   println("Done!")
-}
+}*/
 
 lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
@@ -93,7 +95,36 @@ version := "0.1"
 
 //fork := true
 
-lazy val util = (project in file("jp-co-nri-nefs-tool-util"))
+lazy val `play-analytics` = (project in file("jp.co.nri.nefs.tool.analytics"))
+  .enablePlugins(PlayScala)
+  .disablePlugins(PlayFilters)
+  .settings(
+    libraryDependencies ++= Seq(
+      Library.playSpecs2 % "test",
+      // This could be removed after releasing https://github.com/playframework/playframework/pull/7266
+      "org.fluentlenium" % "fluentlenium-core" % "3.2.0"
+    ),
+    concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
+  ).settings(libraryDependencies += Library.h2)
+  .settings(javaOptions in Test += "-Dslick.dbs.default.connectionTimeout=30 seconds")
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.analytics)
+  .dependsOn(`play-slick`, model, util, store)
+
+lazy val collect = (project in file("jp.co.nri.nefs.tool.analytics.collect"))
+  .settings(commonSettings: _*)
+  .dependsOn(model, util)
+
+lazy val model = (project in file("jp.co.nri.nefs.tool.analytics.model"))
+  .settings(commonSettings: _*)
+
+lazy val store = (project in file("jp.co.nri.nefs.tool.analytics.store"))
+  .settings(commonSettings: _*)
+  .dependsOn(`play-slick`, model, util)
+
+
+lazy val util = (project in file("jp.co.nri.nefs.tool.util"))
+  .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.util)
 
 
@@ -107,7 +138,7 @@ lazy val elp = (project in file("elp"))
     libraryDependencies ++= Dependencies.elp
   )
 
-lazy val transfer = (project in file("transfer"))
+lazy val transfer = (project in file("jp.co.nri.nefs.tool.analytics.transfer"))
   .settings(
     version := "1.0.0",
     organization := "jp.co.nri.nefs.tool",
@@ -122,14 +153,14 @@ lazy val transfer = (project in file("transfer"))
     }
   )
   .settings(libraryDependencies ++= Dependencies.transfer)
-  .dependsOn(log)
+  .dependsOn(util)
 
 lazy val json = (project in file("json"))
   .settings(libraryDependencies ++= Dependencies.json)
 
 
 // バッククォートでくくると-も使用できる？
-lazy val `play-slick` = (project in file("play-slick") )
+/*lazy val `play-slick` = (project in file("play-slick") )
   .enablePlugins(PlayScala)
   .disablePlugins(PlayFilters)
   .settings(
@@ -143,9 +174,23 @@ lazy val `play-slick` = (project in file("play-slick") )
   .settings(javaOptions in Test += "-Dslick.dbs.default.connectionTimeout=30 seconds")
   .settings(commonSettings: _*)
   .dependsOn(core)
-  .dependsOn(log)
+  .dependsOn(log)*//*lazy val `play-slick` = (project in file("play-slick") )
+  .enablePlugins(PlayScala)
+  .disablePlugins(PlayFilters)
+  .settings(
+    libraryDependencies ++= Seq(
+      Library.playSpecs2 % "test",
+      // This could be removed after releasing https://github.com/playframework/playframework/pull/7266
+      "org.fluentlenium" % "fluentlenium-core" % "3.2.0"
+    ),
+    concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
+  ).settings(libraryDependencies += Library.h2)
+  .settings(javaOptions in Test += "-Dslick.dbs.default.connectionTimeout=30 seconds")
+  .settings(commonSettings: _*)
+  .dependsOn(core)
+  .dependsOn(log)*/
 
-lazy val core =(project in file("core"))
+lazy val `play-slick` =(project in file("play.api.db.slick"))
   //.enablePlugins(PlayLibrary, Playdoc)
   .enablePlugins(PlayLibrary)
   .settings(libraryDependencies ++= Dependencies.core)
@@ -153,17 +198,19 @@ lazy val core =(project in file("core"))
   //.settings(mimaSettings)
   .settings(commonSettings: _*)
 
+/*
 lazy val log = (project in file ("log"))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.log)
+*/
 
+/*
 lazy val transport = (project in file ("transport"))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.transport)
   .settings(resolvers += "Sonatype OSS Snapshots" at "file:///C:/pleiades/workspace/M2/repository")
   .dependsOn(log)
-
-lazy val imptest = (project in file ("imptest"))
+*/
 
 playBuildRepoName in ThisBuild := "analysis"
 

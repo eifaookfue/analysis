@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="sbt 1" modules="play-slick">
+    <profile name="sbt 1" modules="analytics,jp.co.nri.nefs.tool.analytics-play-slick,play-analytics">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
@@ -12,7 +12,7 @@
         <parameter value="utf8" />
       </parameters>
     </profile>
-    <profile name="sbt 2" modules="analysis,apllog,arrange,co-jp-nri-nefs-tool-websocket,core,elp,imptest,json,log,log2Case,scalalang,transfer,transport,util,websocket">
+    <profile name="sbt 2" modules="analysis,apllog,arrange,co-jp-nri-nefs-tool-websocket,collect,core,elp,imptest,json,log,log2Case,model,play-slick,scalalang,store,transfer,transport,util,websocket">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
