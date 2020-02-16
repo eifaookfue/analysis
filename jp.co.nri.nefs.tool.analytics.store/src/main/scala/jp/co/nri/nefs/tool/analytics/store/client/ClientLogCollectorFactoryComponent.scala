@@ -172,12 +172,12 @@ trait ClientLogCollectorFactoryComponent {
   }
 
 
-  class DefaultClientLogCollector(aplInfo: OMSAplInfo, analysisWriter: ClientLogStore) extends ClientLogCollector with LazyLogging {
+  class DefaultClientLogCollector(aplInfo: OMSAplInfo, clientLogStore: ClientLogStore) extends ClientLogCollector with LazyLogging {
 
     protected val handlerBuffer: ListBuffer[Handler] = ListBuffer[Handler]()
     protected val windowBuffer: ListBuffer[Window] = ListBuffer[Window]()
     protected val buttonEventBuffer: ListBuffer[ButtonEvent] = ListBuffer[ButtonEvent]()
-    private var isLogWrite = false
+    private var logId: Option[Long] = None
 
     def collect(line: String, lineNo: Int): Unit = {
       val lineInfo = LineInfo.valueOf(line) match {
@@ -214,12 +214,14 @@ trait ClientLogCollectorFactoryComponent {
         bindWithButtonEvent(aplInfo.fileName, lineNo, windowBuffer, buttonEventBuffer.lastOption)
         windowBuffer.reverseIterator.find { w => w.name == windowName } match {
           case Some(window) =>
-            if (!isLogWrite) {
-              analysisWriter.write(Log(0L, aplInfo.appName, aplInfo.computer,
+            if (logId.isEmpty) {
+              logId = clientLogStore.write(Log(0L, aplInfo.appName, aplInfo.computer,
                 aplInfo.userId, aplInfo.tradeDate, aplInfo.time))
-              isLogWrite = true
             }
-            analysisWriter.write(window.toWindowDetail)
+            if (logId.nonEmpty){
+              clientLogStore.write(logId.get, window.toWindowDetail)
+            }
+
           case None => logger.warn(s"$aplInfo.fileName:$lineNo Couldn't find window.")
         }
       }

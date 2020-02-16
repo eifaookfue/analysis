@@ -120,6 +120,11 @@ lazy val model = (project in file("jp.co.nri.nefs.tool.analytics.model"))
 
 lazy val store = (project in file("jp.co.nri.nefs.tool.analytics.store"))
   .settings(commonSettings: _*)
+  .settings(
+    version := "1.0.0",
+    organization := "jp.co.nri.nefs.tool",
+    assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
+  )
   .dependsOn(`play-slick`, model, util)
 
 

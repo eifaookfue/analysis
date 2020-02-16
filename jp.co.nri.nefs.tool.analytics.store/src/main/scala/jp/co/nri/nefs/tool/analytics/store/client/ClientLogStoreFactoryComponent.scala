@@ -1,12 +1,15 @@
 package jp.co.nri.nefs.tool.analytics.store.client
 
-import java.io.ObjectOutputStream
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Path, Paths}
 
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import jp.co.nri.nefs.tool.analytics.store.client.model.{Log, WindowDetail}
-import jp.co.nri.nefs.tool.util.FileUtils
+import jp.co.nri.nefs.tool.analytics.store.client.model.{Log, LogComponent, WindowDetail, WindowDetailComponent}
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
+import slick.basic.{BasicProfile, DatabaseConfig}
+import slick.jdbc.JdbcProfile
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 trait ClientLogStoreFactoryComponent {
   val clientLogStoreFactory: ClientLogStoreFactory
@@ -24,33 +27,37 @@ trait ClientLogStoreFactoryComponent {
   }
 
   trait ClientLogStore {
-    def write(log: Log): Unit
-    def write(detail: WindowDetail): Unit
+    def write(log: Log): Option[Long]
+    def write(logId: Long, detail: WindowDetail): Unit
   }
 
-  class DefaultClientLogStore(outputDir: Path = null, fileName: String = null) extends ClientLogStore with LazyLogging {
-    import jp.co.nri.nefs.tool.util.RichFiles._
-    Files.createDirectories(outputDir)
-    private lazy val outLogPath = outputDir.resolve(fileName.basename + Keywords.LOG_SUFFIX + Keywords.OBJ_EXTENSION)
-    private lazy val logOutputStream = new ObjectOutputStream(Files.newOutputStream(outLogPath))
-    private lazy val outDetailPath = outputDir.resolve(fileName.basename + Keywords.WINDOW_DETAIL_SUFFIX + Keywords.OBJ_EXTENSION)
-    private lazy val detailOutputStream = new ObjectOutputStream(Files.newOutputStream(outDetailPath))
+  class DefaultClientLogStore(outputDir: Path = null, fileName: String = null,
+    protected val dbConfigProvider: DatabaseConfigProvider = new DatabaseConfigProvider {
+      def get[P <: BasicProfile]: DatabaseConfig[P] = DatabaseConfig.forConfig[BasicProfile]("mydb").asInstanceOf[DatabaseConfig[P]]
+    }) extends ClientLogStore with LogComponent with WindowDetailComponent with LazyLogging
+    with HasDatabaseConfigProvider[JdbcProfile]{
 
-    def write(log: Log): Unit = {
-      doWrite(log, logOutputStream)
-    }
+    import profile.api._
 
-    def write(detail: WindowDetail): Unit = {
-      doWrite(detail, detailOutputStream)
-    }
+    val logs = TableQuery[Logs]
+    val windowDetails = TableQuery[WindowDetails]
 
-    private def doWrite[T](obj: T, stream: ObjectOutputStream): Unit = {
-      FileUtils.autoClose(stream){ s =>
-        try {
-          logger.info(obj.toString)
-          s.writeObject(obj)
-        } catch { case _: Exception => }
+    def write(log: Log): Option[Long] = {
+      val action = (logs returning logs.map(_.logId)) += log
+      try {
+        val f = db.run(action)
+        Some(Await.result(f, Duration.Inf))
+      } catch {
+        case e: Exception =>
+          logger.info("", e)
+          None
       }
+    }
+
+    def write(logId: Long, detail: WindowDetail): Unit = {
+      val action = windowDetails += detail.copy(logId)
+      val f = db.run(action)
+      Await.result(f, Duration.Inf)
     }
 
   }

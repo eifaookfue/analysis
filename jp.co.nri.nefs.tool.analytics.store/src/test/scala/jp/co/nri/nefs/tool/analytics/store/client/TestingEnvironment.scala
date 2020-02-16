@@ -20,9 +20,9 @@ trait TestingEnvironment extends ClientLogCollectorFactoryComponent with ClientL
   }
 
   class MockWriter extends ClientLogStore {
-    def write(log: Log): Unit = {}
+    def write(log: Log): Option[Long] = {Some(0L)}
 
-    def write(detail: WindowDetail): Unit = {
+    def write(logId: Long, detail: WindowDetail): Unit = {
       output += detail
     }
   }
