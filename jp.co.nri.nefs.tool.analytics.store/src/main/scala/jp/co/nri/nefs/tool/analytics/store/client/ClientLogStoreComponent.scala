@@ -1,7 +1,6 @@
 package jp.co.nri.nefs.tool.analytics.store.client
 
 import com.typesafe.scalalogging.LazyLogging
-import javax.inject.{Inject, Provider}
 import jp.co.nri.nefs.tool.analytics.store.client.model.{Log, LogComponent, WindowDetail, WindowDetailComponent}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.basic.{BasicProfile, DatabaseConfig}
@@ -10,35 +9,19 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-trait ClientLogStoreFactoryComponent {
-  val clientLogStoreFactory: ClientLogStoreFactory
-  @Inject
-  val DefaultClientLogStoreProvider: Provider[DefaultClientLogStore]
-
-
-  trait ClientLogStoreFactory {
-    def create: ClientLogStore
-  }
-
-  class DefaultClientLogStoreFactory extends ClientLogStoreFactory {
-    def create: DefaultClientLogStore = {
-
-    }
-  }
+trait ClientLogStoreComponent {
+  val clientLogStore: ClientLogStore
 
   trait ClientLogStore {
+    def recreate(): Unit
     def write(log: Log): Option[Long]
     def write(logId: Long, detail: WindowDetail): Unit
   }
 
-
-  class DefaultDatabaseConfigProvider extends DatabaseConfigProvider {
-    override def get[P <: BasicProfile]: DatabaseConfig[P] =
-      DatabaseConfig.forConfig[BasicProfile]("mydb")
-      .asInstanceOf[DatabaseConfig[P]]
-  }
-
-  class DefaultClientLogStore @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
+  class DefaultClientLogStore (
+                                protected val dbConfigProvider: DatabaseConfigProvider = new DatabaseConfigProvider {
+                                  override def get[P <: BasicProfile]: DatabaseConfig[P] = DatabaseConfig.forConfig[BasicProfile]("mydb").asInstanceOf[DatabaseConfig[P]]
+                                })
     extends ClientLogStore with LogComponent with WindowDetailComponent with LazyLogging
     with HasDatabaseConfigProvider[JdbcProfile]{
 
@@ -46,6 +29,20 @@ trait ClientLogStoreFactoryComponent {
 
     val logs = TableQuery[Logs]
     val windowDetails = TableQuery[WindowDetails]
+
+    def recreate(): Unit = {
+      for {tableQuery <- Seq(logs, windowDetails)}{
+        val schema = tableQuery.schema
+        println("create statements")
+        schema.create.statements.foreach(println)
+        val setup = DBIO.seq(
+          //schema.dropIfExists,
+          schema.createIfNotExists
+        )
+        val setupFuture = db.run(setup)
+        Await.result(setupFuture, Duration.Inf)
+      }
+    }
 
     def write(log: Log): Option[Long] = {
       val action = (logs returning logs.map(_.logId)) += log

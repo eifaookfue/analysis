@@ -12,7 +12,7 @@ import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 
 trait ClientLogCollectorFactoryComponent {
-  self: ClientLogStoreFactoryComponent =>
+  self: ClientLogStoreComponent =>
   val clientLogCollectorFactory: ClientLogCollectorFactory
 
   trait ClientLogCollectorFactory {
@@ -21,8 +21,7 @@ trait ClientLogCollectorFactoryComponent {
 
   class DefaultClientLogCollectorFactory extends ClientLogCollectorFactory {
     def create(aplInfo: OMSAplInfo): ClientLogCollector = {
-      val analysisWriter = clientLogStoreFactory.create(aplInfo.fileName)
-      new DefaultClientLogCollector(aplInfo, analysisWriter)
+      new DefaultClientLogCollector(aplInfo, clientLogStore)
     }
   }
 

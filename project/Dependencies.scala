@@ -12,7 +12,8 @@ import sbt._
       Library.scalaLogging,
       Library.logbackClassic,
       Library.config,
-      Library.akka_actor
+      Library.akka_actor,
+      Library.h2 % "test"
     )
 
     val util: Seq[ModuleID] = Seq(
@@ -48,7 +49,7 @@ import sbt._
       Library.config
     )
 
-    val core: Seq[ModuleID] = Seq(
+    val play_slick: Seq[ModuleID] = Seq(
       Library.slick,
       Library.slickHikariCP,
       Library.playJdbcApi,

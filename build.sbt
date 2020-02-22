@@ -121,6 +121,7 @@ lazy val model = (project in file("jp.co.nri.nefs.tool.analytics.model"))
 
 lazy val store = (project in file("jp.co.nri.nefs.tool.analytics.store"))
   .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.store)
   .settings(
     version := "1.0.0",
     organization := "jp.co.nri.nefs.tool",
@@ -199,7 +200,7 @@ lazy val json = (project in file("json"))
 lazy val `play-slick` =(project in file("play.api.db.slick"))
   //.enablePlugins(PlayLibrary, Playdoc)
   .enablePlugins(PlayLibrary)
-  .settings(libraryDependencies ++= Dependencies.core)
+  .settings(libraryDependencies ++= Dependencies.play_slick)
   //2019/06/02 会社の環境で動かなかったため一時的に解除してみる
   //.settings(mimaSettings)
   .settings(commonSettings: _*)

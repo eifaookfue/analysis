@@ -11,6 +11,7 @@
       <w>jdbc</w>
       <w>logdir</w>
       <w>materializer</w>
+      <w>mydb</w>
       <w>nefs</w>
       <w>nozip</w>
       <w>objs</w>
