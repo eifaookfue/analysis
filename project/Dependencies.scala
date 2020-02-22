@@ -32,6 +32,10 @@ import sbt._
       Library.logbackClassic,
       Library.config
     )
+
+    val collect: Seq[ModuleID] = Seq(
+      Library.config
+    )
     
     val elp: Seq[ModuleID] = Seq(
       Library.json,
@@ -49,6 +53,7 @@ import sbt._
       Library.slickHikariCP,
       Library.playJdbcApi,
       Library.mysql,
+      Library.guice,
       Library.playLogback % "test",
       Library.playSpecs2 % "test",
       Library.h2 % "test"

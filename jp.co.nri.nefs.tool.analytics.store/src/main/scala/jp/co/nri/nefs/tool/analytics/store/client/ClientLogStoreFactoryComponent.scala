@@ -1,28 +1,28 @@
 package jp.co.nri.nefs.tool.analytics.store.client
 
-import java.nio.file.{Path, Paths}
-
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
+import javax.inject.{Inject, Provider}
 import jp.co.nri.nefs.tool.analytics.store.client.model.{Log, LogComponent, WindowDetail, WindowDetailComponent}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.basic.{BasicProfile, DatabaseConfig}
 import slick.jdbc.JdbcProfile
+
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 trait ClientLogStoreFactoryComponent {
   val clientLogStoreFactory: ClientLogStoreFactory
+  @Inject
+  val DefaultClientLogStoreProvider: Provider[DefaultClientLogStore]
+
 
   trait ClientLogStoreFactory {
-    def create(fileName: String): ClientLogStore
+    def create: ClientLogStore
   }
 
   class DefaultClientLogStoreFactory extends ClientLogStoreFactory {
-    private val config = ConfigFactory.load()
-    private val outputDir: Path = Paths.get(config.getString(ConfigKey.OUT_DIR))
-    def create(fileName: String): DefaultClientLogStore = {
-      new DefaultClientLogStore(outputDir, fileName)
+    def create: DefaultClientLogStore = {
+
     }
   }
 
@@ -31,10 +31,15 @@ trait ClientLogStoreFactoryComponent {
     def write(logId: Long, detail: WindowDetail): Unit
   }
 
-  class DefaultClientLogStore(outputDir: Path = null, fileName: String = null,
-    protected val dbConfigProvider: DatabaseConfigProvider = new DatabaseConfigProvider {
-      def get[P <: BasicProfile]: DatabaseConfig[P] = DatabaseConfig.forConfig[BasicProfile]("mydb").asInstanceOf[DatabaseConfig[P]]
-    }) extends ClientLogStore with LogComponent with WindowDetailComponent with LazyLogging
+
+  class DefaultDatabaseConfigProvider extends DatabaseConfigProvider {
+    override def get[P <: BasicProfile]: DatabaseConfig[P] =
+      DatabaseConfig.forConfig[BasicProfile]("mydb")
+      .asInstanceOf[DatabaseConfig[P]]
+  }
+
+  class DefaultClientLogStore @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
+    extends ClientLogStore with LogComponent with WindowDetailComponent with LazyLogging
     with HasDatabaseConfigProvider[JdbcProfile]{
 
     import profile.api._

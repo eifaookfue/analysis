@@ -113,6 +113,7 @@ lazy val `play-analytics` = (project in file("jp.co.nri.nefs.tool.analytics"))
 
 lazy val collect = (project in file("jp.co.nri.nefs.tool.analytics.collect"))
   .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.collect)
   .dependsOn(model, util)
 
 lazy val model = (project in file("jp.co.nri.nefs.tool.analytics.model"))

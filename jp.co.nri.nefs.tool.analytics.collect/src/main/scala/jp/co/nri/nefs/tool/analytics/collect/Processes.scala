@@ -1,23 +1,53 @@
 package jp.co.nri.nefs.tool.analytics.collect
 
 import java.nio.file.{Files, Path, Paths}
-import java.util.stream.Collectors
-
+import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.scalalogging.{LazyLogging, Logger}
 import jp.co.nri.nefs.tool.analytics.model.OMSAplInfo
-import jp.co.nri.nefs.tool.util.{FileUtils, ZipUtils}
-
+import jp.co.nri.nefs.tool.util.{FileUtils, ZipCommand, ZipUtils}
+import scala.language.implicitConversions
 import scala.collection.JavaConverters._
 
-class Processes(isZip: Boolean, searchPath: Path, outputPath: Path) {
+object RichConfig {
+  implicit def configToRichConfig(config: Config): RichConfig = new RichConfig(config)
+}
+
+class RichConfig(config: Config) {
+  def getString(s: String, logger: Logger): String = {
+    val str = config.getString(s)
+    logging(s, str, logger)
+    str
+  }
+  private def logging(s: String, o: Any, logger: Logger): Unit = {
+    logger.info(s"loaded $s = $o")
+  }
+}
+
+class Processes(isZip: Boolean, searchPath: Path, outputPath: Path) extends LazyLogging{
   private def arrange(): Unit = {
     import jp.co.nri.nefs.tool.util.RichFiles._
-    val zipPaths = Files.list(searchPath).collect(Collectors.toList()).asScala
+    import RichConfig.configToRichConfig
+
+    val config = ConfigFactory.load()
+    implicit val zipCmd: ZipCommand = new ZipCommand(config.getString("zipCmd", logger))
+
+    val zipPaths = FileUtils.autoClose(Files.list(searchPath)) {
+      stream => stream.iterator().asScala.toList
+    }
     for (zipPath <- zipPaths
          if ZipUtils.isZipFile(zipPath)
     ){
       // 解凍。フォルダが作成される
       val expandedPath = ZipUtils.unzip(zipPath)
-      val paths = Files.list(expandedPath).collect(Collectors.toList()).asScala
+     /*
+         zipファイルがファイル名のディレクトリを含んでいるものと含んでいないもの両方ある
+         ディレクトリを含んでいるとき、同じディレクトリが二重で作成され、
+         Files.listだと直下のディレクトリしかリストアップされない。
+         そのため、Files.walkを利用。
+      */
+      val paths = FileUtils.autoClose(Files.walk(expandedPath)) {
+        stream => stream.iterator().asScala.toList
+      }
       for (path <- paths;
         omsAplInfo <- OMSAplInfo.valueOf(path.getFileName.toFile.toString)
       ){
@@ -57,54 +87,6 @@ class Processes(isZip: Boolean, searchPath: Path, outputPath: Path) {
       // 解凍先のフォルダを丸ごと削除
       FileUtils.delete(expandedPath)
     }
-    /*Files.list(searchPath).forEach(file => {
-      if (file.toFile.isFile && file.getFileName.toString.endsWith(".zip")){
-        val tmpDirName = "%tY%<tm%<td%<tH%<tM%<tS" format new Date()
-        //val tmpDir = outputPath.resolve(tmpDirName)
-        //Files.createDirectories(tmpDir)
-        val tmpDir = Files.createTempDirectory(outputPath,"tmp")
-        val tmpZip = tmpDir.resolve(file.getFileName)
-        Files.copy(file, tmpZip)
-        ZipUtils.unzip(tmpZip)
-        Files.delete(tmpZip)
-        Files.list(tmpDir).forEach { expanded =>
-          val regex(env, computer, userName, startTime) = expanded.getFileName.toString
-          val tradeDate = startTime.take(8)
-          val targetDir = outputPath.resolve(tradeDate)
-          Files.createDirectories(targetDir)
-          val targetFile = targetDir.resolve(expanded.getFileName)
-          val targetZip = getZipFile(targetFile)
-          if (Files.exists(targetZip)){
-            print(s"$targetZip has found, so unzipping...")
-            ZipUtils.unzip(targetZip)
-            println("done.")
-          }
-          if (Files.exists(targetFile)) {
-            if (expanded.toFile.length > targetFile.toFile.length) {
-              println(s"override from $expanded to $targetFile")
-              Files.copy(expanded, targetFile)
-            } else {
-              println(s"skipped copy from $expanded to $targetFile because file already exists")
-            }
-          } else {
-            println(s"copied from $expanded to $targetFile")
-            Files.copy(expanded, targetFile)
-          }
-          Files.delete(expanded)
-          if (isZip){
-            print(s"zipping $targetFile...")
-            ZipUtils.zip(targetFile)
-            println("done.")
-            Files.delete(targetFile)
-          }
-
-        }
-        Files.delete(tmpDir)
-      } else {
-        println(s"$file was skipped because of non zip file.")
-      }
-    })*/
-
   }
 
 }
