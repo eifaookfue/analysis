@@ -1,56 +1,67 @@
 package jp.co.nri.nefs.tool.analytics.store.client
 
-import akka.actor.ActorSystem
+import com.google.inject.ImplementedBy
 import com.typesafe.scalalogging.LazyLogging
-import jp.co.nri.nefs.tool.analytics.store.client.sender.ClientLogSenderComponent
+import javax.inject.Inject
+import jp.co.nri.nefs.tool.analytics.store.client.model.{Log, LogComponent, WindowDetail, WindowDetailComponent}
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
+import slick.basic.{BasicProfile, DatabaseConfig}
+import slick.jdbc.JdbcProfile
 
-object Keywords {
-  val OBJ_EXTENSION = ".obj"
-  val LOG_SUFFIX = "_Log"
-  val WINDOW_DETAIL_SUFFIX = "_WindowDetail"
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
+@ImplementedBy(classOf[DefaultClientLogStore])
+trait ClientLogStore {
+  def recreate(): Unit
+  def write(log: Log): Option[Long]
+  def write(logId: Long, detail: WindowDetail): Unit
 }
 
-object ConfigKey {
-  final val HANDLER_MAPPING = "HandlerMapping"
-  final val WINDOW_MAPPING = "WindowMapping"
-  final val INPUT_DIR = "inputDir"
-  final val OUT_DIR = "outDir"
+class DefaultDatabaseConfigProvider extends DatabaseConfigProvider {
+  override def get[P <: BasicProfile]: DatabaseConfig[P] =
+    DatabaseConfig.forConfig[BasicProfile]("mydb").asInstanceOf[DatabaseConfig[P]]
 }
 
+class DefaultClientLogStore @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
+  extends ClientLogStore with LogComponent with WindowDetailComponent with LazyLogging
+  with HasDatabaseConfigProvider[JdbcProfile]{
 
-object ClientLogStore extends ClientLogSenderComponent with ClientLogCollectorFactoryComponent
-  with ClientLogStoreComponent with LazyLogging{
-  implicit val system: ActorSystem = ActorSystem("ClientLogCollector")
-  val sender = new DefaultClientLogSender()
-  val clientLogCollectorFactory = new DefaultClientLogCollectorFactory
-  val clientLogStore = new DefaultClientLogStore
+  import profile.api._
 
-  def main(args: Array[String]): Unit = {
+  val logs = TableQuery[Logs]
+  val windowDetails = TableQuery[WindowDetails]
 
-    val RECREATE_OPTION = "-recreate"
-    val usage = s"Usage: jp.co.nri.nefs.tool.analytics.store.client [$RECREATE_OPTION]"
-
-    if (args.length > 1){
-      println(usage)
-      sys.exit(1)
+  def recreate(): Unit = {
+    for {tableQuery <- Seq(logs, windowDetails)}{
+      val schema = tableQuery.schema
+      println("create statements")
+      schema.create.statements.foreach(println)
+      val setup = DBIO.seq(
+        schema.dropIfExists,
+        schema.createIfNotExists
+      )
+      val setupFuture = db.run(setup)
+      Await.result(setupFuture, Duration.Inf)
     }
-
-    if (args.length == 1) {
-      if (RECREATE_OPTION.equals(args(1))) {
-        clientLogStore.recreate
-      } else {
-        println(usage)
-        sys.exit(1)
-      }
-    }
-
-    try {
-      sender.start()
-    } catch {
-      case e: Exception => logger.warn("", e)
-    } finally {
-      system.terminate()
-    }
-
   }
+
+  def write(log: Log): Option[Long] = {
+    val action = (logs returning logs.map(_.logId)) += log
+    try {
+      val f = db.run(action)
+      Some(Await.result(f, Duration.Inf))
+    } catch {
+      case e: Exception =>
+        logger.info("", e)
+        None
+    }
+  }
+
+  def write(logId: Long, detail: WindowDetail): Unit = {
+    val action = windowDetails += detail.copy(logId)
+    val f = db.run(action)
+    Await.result(f, Duration.Inf)
+  }
+
 }

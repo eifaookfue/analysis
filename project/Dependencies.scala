@@ -13,6 +13,7 @@ import sbt._
       Library.logbackClassic,
       Library.config,
       Library.akka_actor,
+      Library.guice,
       Library.h2 % "test"
     )
 

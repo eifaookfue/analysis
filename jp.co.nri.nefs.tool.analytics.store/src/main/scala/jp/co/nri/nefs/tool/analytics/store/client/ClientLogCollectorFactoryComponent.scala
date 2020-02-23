@@ -12,15 +12,15 @@ import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 
 trait ClientLogCollectorFactoryComponent {
-  self: ClientLogStoreComponent =>
   val clientLogCollectorFactory: ClientLogCollectorFactory
 
   trait ClientLogCollectorFactory {
     def create(aplInfo: OMSAplInfo): ClientLogCollector
   }
 
-  class DefaultClientLogCollectorFactory extends ClientLogCollectorFactory {
+  class DefaultClientLogCollectorFactory(clientLogStore: ClientLogStore) extends ClientLogCollectorFactory {
     def create(aplInfo: OMSAplInfo): ClientLogCollector = {
+
       new DefaultClientLogCollector(aplInfo, clientLogStore)
     }
   }

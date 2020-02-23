@@ -5,7 +5,7 @@ import org.scalatest.FlatSpec
 class H2LogStoreSpec extends FlatSpec with H2Environment {
 
   "A" should "be" in {
-    clientLogStore.recreate
+    clientLogStore.recreate()
 
   }
 
