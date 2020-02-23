@@ -82,7 +82,8 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
                 @logDetails.map {
                     case (loginfo, windowDetail, user) => {
                         <tr>
-                            <td>@loginfo.logId</td>
+                            <!--<td>@loginfo.logId</td>-->
+                            <td><a href="@routes.Application.fileDownload(loginfo.logId)">@loginfo.logId</a></td>
                             <td>@loginfo.appName</td>
                             <td>@loginfo.computerName</td>
                             <td>@user.map(_.userName)</td>

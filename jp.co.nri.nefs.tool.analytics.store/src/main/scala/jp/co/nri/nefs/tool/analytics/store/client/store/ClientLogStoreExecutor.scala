@@ -1,8 +1,9 @@
-package jp.co.nri.nefs.tool.analytics.store.client
+package jp.co.nri.nefs.tool.analytics.store.client.store
 
 import akka.actor.ActorSystem
 import com.google.inject.{AbstractModule, Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
+import jp.co.nri.nefs.tool.analytics.store.client.collector.ClientLogCollectorFactoryComponent
 import jp.co.nri.nefs.tool.analytics.store.client.sender.ClientLogSenderComponent
 import play.api.db.slick.DatabaseConfigProvider
 

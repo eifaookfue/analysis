@@ -17,7 +17,8 @@ trait LogComponent {
     def userId: Rep[String] = column[String]("USER_ID", O.Length(20))
     def tradeDate: Rep[String] = column[String]("TRADE_DATE", O.Length(8))
     def time: Rep[Timestamp] = column[Timestamp]("TIME")
-    def * = (logId, appName, computerName, userId, tradeDate, time) <> (Log.tupled, Log.unapply)
-    def idx_1 = index("idx_1", (appName, computerName, userId, tradeDate, time), unique = true)
+    def fileName: Rep[String] = column[String]("FILE_NAME", O.Length(60))
+    def * = (logId, appName, computerName, userId, tradeDate, time, fileName) <> (Log.tupled, Log.unapply)
+    def idx_1 = index("idx_1", fileName, unique = true)
   }
 }

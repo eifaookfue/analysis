@@ -7,8 +7,10 @@ import akka.pattern.gracefulStop
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.analytics.model.OMSAplInfo
-import jp.co.nri.nefs.tool.analytics.store.client.{ClientLogCollectorFactoryComponent, ConfigKey}
+import jp.co.nri.nefs.tool.analytics.store.client.collector.ClientLogCollectorFactoryComponent
+import jp.co.nri.nefs.tool.analytics.store.client.store.ConfigKey
 import jp.co.nri.nefs.tool.util.{FileUtils, ZipUtils}
+
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global

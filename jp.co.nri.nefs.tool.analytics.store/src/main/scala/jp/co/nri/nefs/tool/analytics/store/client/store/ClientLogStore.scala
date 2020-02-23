@@ -1,4 +1,4 @@
-package jp.co.nri.nefs.tool.analytics.store.client
+package jp.co.nri.nefs.tool.analytics.store.client.store
 
 import com.google.inject.ImplementedBy
 import com.typesafe.scalalogging.LazyLogging

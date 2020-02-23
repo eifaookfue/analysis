@@ -10,9 +10,7 @@ GET     /windowDetails                  controllers.Application.list(params: mod
 
 POST     /load                  controllers.Application.load(isRecreate:Boolean ?= false)
 
-#GET   /places               controllers.Application.listPlaces
-POST  /places               controllers.Application.savePlace
-POST  /new-ioi               controllers.Application.newIOI
+GET  /fileDownload               controllers.Application.fileDownload(logId: Long)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

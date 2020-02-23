@@ -2,7 +2,10 @@ package jp.co.nri.nefs.tool.analytics.store.client
 
 import com.google.inject.{AbstractModule, Guice, Injector}
 import jp.co.nri.nefs.tool.analytics.model.OMSAplInfo
+import jp.co.nri.nefs.tool.analytics.store.client.collector.ClientLogCollectorFactoryComponent
 import jp.co.nri.nefs.tool.analytics.store.client.model.{Log, WindowDetail}
+import jp.co.nri.nefs.tool.analytics.store.client.store.ClientLogStore
+
 import scala.collection.mutable.ListBuffer
 
 trait TestingEnvironment extends ClientLogCollectorFactoryComponent {

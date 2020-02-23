@@ -135,8 +135,14 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
+  def fileName(logId: Long): Future[String] = {
+    val query = logs.filter(_.logId === logId).map(_.fileName)
+    val action = query.result.head
+    db.run(action)
+  }
+
   def load(isRecreate: Boolean): Unit = {
-    import jp.co.nri.nefs.tool.analytics.store.client.Keywords._
+    import jp.co.nri.nefs.tool.analytics.store.client.store.Keywords._
     if (isRecreate) {
       recreate()
     }

@@ -1,4 +1,4 @@
-package jp.co.nri.nefs.tool.analytics.store.client
+package jp.co.nri.nefs.tool.analytics.store.client.collector
 
 import java.sql.Timestamp
 
@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.analytics.model.OMSAplInfo
 import jp.co.nri.nefs.tool.analytics.store.client.model.{Log, WindowDetail}
-
+import jp.co.nri.nefs.tool.analytics.store.client.store.{ClientLogStore, ConfigKey}
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
@@ -215,7 +215,7 @@ trait ClientLogCollectorFactoryComponent {
           case Some(window) =>
             if (logId.isEmpty) {
               logId = clientLogStore.write(Log(0L, aplInfo.appName, aplInfo.computer,
-                aplInfo.userId, aplInfo.tradeDate, aplInfo.time))
+                aplInfo.userId, aplInfo.tradeDate, aplInfo.time, aplInfo.fileName))
             }
             if (logId.nonEmpty){
               clientLogStore.write(logId.get, window.toWindowDetail)

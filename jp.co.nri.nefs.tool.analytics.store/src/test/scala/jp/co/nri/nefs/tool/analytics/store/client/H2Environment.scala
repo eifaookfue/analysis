@@ -2,6 +2,8 @@ package jp.co.nri.nefs.tool.analytics.store.client
 
 import com.google.inject.{AbstractModule, Guice, Injector}
 import jp.co.nri.nefs.tool.analytics.model.OMSAplInfo
+import jp.co.nri.nefs.tool.analytics.store.client.collector.ClientLogCollectorFactoryComponent
+import jp.co.nri.nefs.tool.analytics.store.client.store.ClientLogStore
 import play.api.db.slick.DatabaseConfigProvider
 import slick.basic.{BasicProfile, DatabaseConfig}
 
