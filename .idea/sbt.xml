@@ -11,9 +11,12 @@
             <option value="$PROJECT_DIR$/co-jp-nri-nefs-tool-websocket" />
             <option value="$PROJECT_DIR$/elp" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics" />
-            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.collect" />
-            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.model" />
-            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.store" />
+            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.collect.client" />
+            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.model.client" />
+            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.model.common" />
+            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.sender.client" />
+            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.store.client" />
+            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.store.common" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.transfer" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.util" />
             <option value="$PROJECT_DIR$/json" />

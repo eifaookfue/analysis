@@ -42,13 +42,6 @@ class Application @Inject() (
     windowDetails.map(wd => Ok(html.list(wd, params)))
   }
 
-  def load(isRecreate: Boolean) = Action { implicit request =>
-    println("called")
-    windowDetailDao.load(isRecreate)
-    Ok("success")
-
-  }
-
   def fileDownload(logId: Long) = Action {
     val fileName = Await.result(windowDetailDao.fileName(logId), 10.seconds)
     val fileDir = config.underlying.getString("logDir")

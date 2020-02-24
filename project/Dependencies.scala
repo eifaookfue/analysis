@@ -7,14 +7,22 @@ import sbt._
       Library.logbackClassic,
       Library.config
     )
+    
+    val sender_client: Seq[ModuleID] = Seq(
+      Library.akka_actor,
+    )
 
-    val store: Seq[ModuleID] = Seq(
+    val store_client: Seq[ModuleID] = Seq(
       Library.scalaLogging,
       Library.logbackClassic,
       Library.config,
-      Library.akka_actor,
       Library.guice,
       Library.h2 % "test"
+    )
+    
+    val store_common: Seq[ModuleID] = Seq(
+      Library.guice,
+      Library.config
     )
 
     val util: Seq[ModuleID] = Seq(
@@ -35,7 +43,7 @@ import sbt._
       Library.config
     )
 
-    val collect: Seq[ModuleID] = Seq(
+    val collect_client: Seq[ModuleID] = Seq(
       Library.config
     )
     

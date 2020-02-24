@@ -1,19 +1,13 @@
 package dao
 
-import java.io.{EOFException, ObjectInputStream}
-import java.nio.file.{Files, Path, Paths}
-
 import javax.inject.{Inject, Singleton}
-import jp.co.nri.nefs.tool.analytics.store.client.model._
-import jp.co.nri.nefs.tool.analytics.store.common.model.User
+import jp.co.nri.nefs.tool.analytics.model.client.{Log, LogComponent, WindowDetail, WindowDetailComponent}
+import jp.co.nri.nefs.tool.analytics.model.common.{User, UserComponent}
 import models.{Page, Params}
 import play.api.Configuration
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
-
-import scala.collection.JavaConverters._
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
 class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider, config: Configuration)(implicit executionContext: ExecutionContext)
@@ -104,79 +98,10 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
     } yield Page(result, page, offset, totalRows)
   }
 
-  private def using[A <: java.io.Closeable, B](s: A)(f: A => B): B = {
-    try { f(s) } finally { s.close() }
-  }
-
-  private def deserializeObject[T >: Null](inputstream: ObjectInputStream): T = {
-    try {
-      inputstream.readObject().asInstanceOf[T]
-    } catch { case _ : EOFException => null }
-  }
-
-  private def deserializeObjects[T >: Null](path: Path): List[T] = {
-    val istream = new ObjectInputStream(Files.newInputStream(path))
-    using(istream) { is =>
-      Iterator.continually(deserializeObject[T](is)).takeWhile(_ != null).toList
-    }
-  }
-
-  private def recreate(): Unit = {
-    for {tableQuery <- Seq(logs, windowDetails, users)}{
-      val schema = tableQuery.schema
-      println("create statements")
-      schema.create.statements.foreach(println)
-      val setup = DBIO.seq(
-        schema.dropIfExists,
-        schema.createIfNotExists
-      )
-      val setupFuture = db.run(setup)
-      Await.result(setupFuture, Duration.Inf)
-    }
-  }
-
   def fileName(logId: Long): Future[String] = {
     val query = logs.filter(_.logId === logId).map(_.fileName)
     val action = query.result.head
     db.run(action)
-  }
-
-  def load(isRecreate: Boolean): Unit = {
-    import jp.co.nri.nefs.tool.analytics.store.client.store.Keywords._
-    if (isRecreate) {
-      recreate()
-    }
-
-    val path = Paths.get(config.underlying.getString("caseDir"))
-
-    val bases = for {
-      file <- Files.list(path).iterator().asScala.toList
-      name = file.getFileName.toFile.toString
-      if name.contains(LOG_SUFFIX)
-      base = name.replace(LOG_SUFFIX, "").replace(OBJ_EXTENSION, "")
-    } yield base
-
-    for {
-      base <- bases
-      logPath = path.resolve(base + LOG_SUFFIX + OBJ_EXTENSION)
-      _ = println(logPath)
-      // Logは1レコードしか存在しない
-      logObj = deserializeObjects[Log](logPath).head
-      detailPath = path.resolve(base + WINDOW_DETAIL_SUFFIX + OBJ_EXTENSION)
-      windowDetailObjs = deserializeObjects[WindowDetail](detailPath)
-      action = (
-        for {
-          logId <- (logs returning logs.map(_.logId)) += logObj
-          _ <- windowDetails ++= windowDetailObjs.map(w => w.copy(logId = logId))
-        } yield ()).transactionally
-    } {
-      try {
-        val f = db.run(action)
-        Await.result(f, Duration.Inf)
-      } catch {
-        case e: Exception => println(e)
-      }
-    }
   }
 
 }

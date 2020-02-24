@@ -109,25 +109,40 @@ lazy val `play-analytics` = (project in file("jp.co.nri.nefs.tool.analytics"))
   .settings(javaOptions in Test += "-Dslick.dbs.default.connectionTimeout=30 seconds")
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.analytics)
-  .dependsOn(`play-slick`, model, util, store)
+  .dependsOn(`play-slick`, `model-client`, util, `store-client`)
 
-lazy val collect = (project in file("jp.co.nri.nefs.tool.analytics.collect"))
+lazy val `collect-client` = (project in file("jp.co.nri.nefs.tool.analytics.collect.client"))
   .settings(commonSettings: _*)
-  .settings(libraryDependencies ++= Dependencies.collect)
-  .dependsOn(model, util)
+  .settings(libraryDependencies ++= Dependencies.collect_client)
+  .dependsOn(`model-client`, util)
 
-lazy val model = (project in file("jp.co.nri.nefs.tool.analytics.model"))
+lazy val `model-common` = (project in file("jp.co.nri.nefs.tool.analytics.model.common"))
   .settings(commonSettings: _*)
+  .dependsOn(`play-slick`)
 
-lazy val store = (project in file("jp.co.nri.nefs.tool.analytics.store"))
+lazy val `model-client` = (project in file("jp.co.nri.nefs.tool.analytics.model.client"))
   .settings(commonSettings: _*)
-  .settings(libraryDependencies ++= Dependencies.store)
+  .dependsOn(`play-slick`)
+
+lazy val `sender-client` = (project in file("jp.co.nri.nefs.tool.analytics.sender.client"))
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.sender_client)
+  .dependsOn(`store-client`)
+
+lazy val `store-common` = (project in file("jp.co.nri.nefs.tool.analytics.store.common"))
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.store_common)
+  .dependsOn(`play-slick`, `model-common`)
+
+lazy val `store-client` = (project in file("jp.co.nri.nefs.tool.analytics.store.client"))
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.store_client)
   .settings(
     version := "1.0.0",
     organization := "jp.co.nri.nefs.tool",
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
   )
-  .dependsOn(`play-slick`, model, util)
+  .dependsOn(`play-slick`, `store-common`, `model-client`, util)
 
 
 lazy val util = (project in file("jp.co.nri.nefs.tool.util"))
