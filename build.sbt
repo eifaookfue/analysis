@@ -109,7 +109,9 @@ lazy val `play-analytics` = (project in file("jp.co.nri.nefs.tool.analytics"))
   .settings(javaOptions in Test += "-Dslick.dbs.default.connectionTimeout=30 seconds")
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.analytics)
-  .dependsOn(`play-slick`, `model-client`, util, `store-client`)
+  .dependsOn(`play-slick`, `model-client`, util, `store-client`, config)
+
+lazy val config = project in file("jp.co.nri.nefs.tool.analytics.config")
 
 lazy val `collect-client` = (project in file("jp.co.nri.nefs.tool.analytics.collect.client"))
   .settings(commonSettings: _*)
@@ -132,7 +134,7 @@ lazy val `sender-client` = (project in file("jp.co.nri.nefs.tool.analytics.sende
 lazy val `store-common` = (project in file("jp.co.nri.nefs.tool.analytics.store.common"))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.store_common)
-  .dependsOn(`play-slick`, `model-common`)
+  .dependsOn(`play-slick`, `model-common`, config)
 
 lazy val `store-client` = (project in file("jp.co.nri.nefs.tool.analytics.store.client"))
   .settings(commonSettings: _*)
@@ -142,7 +144,7 @@ lazy val `store-client` = (project in file("jp.co.nri.nefs.tool.analytics.store.
     organization := "jp.co.nri.nefs.tool",
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
   )
-  .dependsOn(`play-slick`, `store-common`, `model-client`, util)
+  .dependsOn(`play-slick`, `store-common`, `model-client`, util, config)
 
 
 lazy val util = (project in file("jp.co.nri.nefs.tool.util"))
