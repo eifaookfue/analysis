@@ -2,6 +2,8 @@
   <dictionary name="user">
     <words>
       <w>addr</w>
+      <w>algo</w>
+      <w>charsetname</w>
       <w>excelfile</w>
       <w>guice</w>
       <w>hikari</w>
@@ -22,6 +24,7 @@
       <w>rownum</w>
       <w>scalaz</w>
       <w>searchdir</w>
+      <w>tost</w>
       <w>typesafe</w>
       <w>websocket</w>
     </words>

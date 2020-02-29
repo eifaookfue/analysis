@@ -14,7 +14,7 @@ trait H2Environment extends ClientLogClassifierFactoryComponent {
   val clientLogStore: ClientLogRecorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
   val clientLogClassifierFactory = new DefaultClientLogClassifyFactory(clientLogStore)
   val omsAplInfo = OMSAplInfo("","","","","","20200216152000000")
-  val clientLogCollector: DefaultClientLogCollector  = clientLogClassifierFactory.create(omsAplInfo).asInstanceOf[DefaultClientLogCollector]
+  val clientLogCollector: DefaultClientLogClassifier  = clientLogClassifierFactory.create(omsAplInfo).asInstanceOf[DefaultClientLogClassifier]
 
 }
 

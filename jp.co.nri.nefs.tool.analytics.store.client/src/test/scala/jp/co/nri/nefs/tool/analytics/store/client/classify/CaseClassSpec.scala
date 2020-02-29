@@ -34,7 +34,7 @@ class CaseClassSpec extends FlatSpec with TestingEnvironment with LogCollection 
 
   "Handler" should "be " in {
     for ((s, index) <- newSplitLog.zipWithIndex) {
-      clientLogCollector.classify(s, index)
+      clientLogClassifier.classify(s, index)
     }
     output.foreach(println)
 

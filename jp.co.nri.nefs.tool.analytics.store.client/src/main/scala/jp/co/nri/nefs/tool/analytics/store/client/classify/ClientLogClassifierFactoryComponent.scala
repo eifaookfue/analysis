@@ -20,7 +20,7 @@ trait ClientLogClassifierFactoryComponent {
 
   class DefaultClientLogClassifyFactory(clientLogStore: ClientLogRecorder) extends ClientLogClassifierFactory {
     def create(aplInfo: OMSAplInfo): ClientLogClassifier = {
-      new DefaultClientLogCollector(aplInfo, clientLogStore)
+      new DefaultClientLogClassifier(aplInfo, clientLogStore)
     }
   }
 
@@ -86,23 +86,55 @@ trait ClientLogClassifierFactoryComponent {
     }
   }
 
-  case class Action(name: String, start: LineTime, end: Option[LineTime] = None,
-                              relatedHandler: Option[Handler] = None,
-                              relatedButtonEvent: Option[ButtonEvent] = None,
-                              relatedWindow: Option[Window] = None)
-    extends Naming with Starting with Ending with StartupTiming
-
   case class ButtonEvent(name: String, start: LineTime, event: String,
-                                   end: Option[LineTime] = None) extends Naming with Starting with Ending
+                         end: Option[LineTime] = None,
+                         requestProperty: Option[String] = None,
+                         requestParameter: Option[Map[String, String]] = None)
+    extends Naming with Starting with Ending {
+    lazy val destinationType: Option[String] = getDestinationType(requestProperty, requestParameter)
+    private def getDestinationType(requestProperty: Option[String],
+                                   requestParameter: Option[Map[String, String]]): Option[String] = {
+      requestProperty match {
+        case Some("ENewChildOrderProperty") => Some("Child")
+        case Some("ENewChildOrderAndAlgoProperty") => Some("Algo")
+        case Some("ENewSliceProperty") | Some("ENewReservedSliceProperty") =>
+          val op = for {
+            params <- requestParameter
+            market <- params.get("MARKET")
+            crossCapacity <- params.get("CROSS_CAPACITY")
+            crossType <- params.get("CROSS_TYPE")
+            destinationType =
+              if ((market == "TYO_TOST") && (crossCapacity == "PRINCIPAL"))
+                "TOST_PRINCIPAL"
+              else if ((market == "TYO_TOST") && (crossCapacity == "AGENCY"))
+                "TOST_AGENCY"
+              else if ((market == "OTC_MAIN") && (crossCapacity == "PRINCIPAL"))
+                "OTC_PRINCIPAL"
+              else if ((market == "OTC_MAIN") && (crossCapacity == "AGENCY"))
+                "OTC_AGENCY"
+              else if ((market == "TYO_TOST") && (crossType == "FIXED_PRICE"))
+                "TOST2"
+              else if (crossType == "FIXED_PRICE")
+                "OFF_AUCTION"
+              else
+                "OTHER"
+            } yield destinationType
+          op.flatMap(o => if (o == "OTHER") None else Some(o))
+      }
+
+    }
+  }
 
   case class LineInfo(datetimeStr: String, service: String, logLevel: String, appName: String, message: String,
                                 thread: String, clazz: String) {
     // SimpleDateFormatはスレッドセーフではない
     private val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
     val datetime = new Timestamp(format.parse(datetimeStr).getTime)
-    val underlyingClass: String = getLastAndDelNo(clazz)
-    val windowName: String = getWindowName(message, underlyingClass)
-    val buttonEvent: Option[String] = getButtonEvent(message)
+    lazy val underlyingClass: String = getLastAndDelNo(clazz)
+    lazy val windowName: String = getWindowName(message, underlyingClass)
+    lazy val buttonEvent: Option[String] = getButtonEvent(message)
+    lazy val requestProperty: Option[String] = getRequestProperty(message)
+    lazy val requestParameter: Option[Map[String, String]] = getRequestParameter(message)
 
     /** "."で区切られた最後の文字列から$数字を取り除いた文字列を返します。
       *
@@ -140,6 +172,27 @@ trait ClientLogClassifierFactoryComponent {
         case _ => None
       }
     }
+
+    /** メッセージに含まれる鍵括弧内の文字列を抜き出します。
+     */
+    private def getRequestProperty(message: String): Option[String] = {
+      message match {
+        case LineInfo.requestRegex(r) => Some(r)
+        case _ => None
+      }
+    }
+
+    /** メッセージに含まれる波括弧内の文字列を抜き出し、key=value形式に分割し、Mapに変換します。
+      */
+    private def getRequestParameter(message: String): Option[Map[String, String]] = {
+      message match {
+        case LineInfo.parameterRegex(p) =>
+          Some(p.split(",").collect{
+            case LineInfo.keyValueRegex(key, value) => (key.trim, value.trim)
+          }.toMap)
+        case _ => None
+      }
+    }
   }
 
   object LineInfo {
@@ -158,7 +211,10 @@ trait ClientLogClassifierFactoryComponent {
       messageExpression + threadExpression + classExpression)
     private val windowNameRegex = """\[(.*)\].*""".r
     private val buttonActionRegex = """.*\((.*)\).*""".r
-    private val lastAndDelNoRegex: Regex = """(.*)\$[0-9]""".r
+    private val lastAndDelNoRegex = """(.*)\$[0-9]""".r
+    private val requestRegex = """REQUEST\[(.*)\]""".r
+    private val parameterRegex = """PARAMETER=DefaultEntity:\{(.*)\}""".r
+    private val keyValueRegex = """(.*)=(.*)""".r
 
     def valueOf(line: String): Option[LineInfo] = {
       line match {
@@ -169,8 +225,13 @@ trait ClientLogClassifierFactoryComponent {
     }
   }
 
+  object KEY_MESSAGE {
+    final val HANDLER_START = "Handler start."
+    final val HANDLER_END = "Handler end."
+  }
 
-  class DefaultClientLogCollector(aplInfo: OMSAplInfo, clientLogStore: ClientLogRecorder) extends ClientLogClassifier with LazyLogging {
+
+  class DefaultClientLogClassifier(aplInfo: OMSAplInfo, clientLogStore: ClientLogRecorder) extends ClientLogClassifier with LazyLogging {
 
     final val HANDLER_MAPPING = "HandlerMapping"
     final val WINDOW_MAPPING = "WindowMapping"
@@ -187,9 +248,9 @@ trait ClientLogClassifierFactoryComponent {
         case None => return
       }
 
-      if (lineInfo.message contains "Handler start.") {
+      if (lineInfo.message contains KEY_MESSAGE.HANDLER_START) {
         handlerBuffer += Handler(lineInfo.underlyingClass, LineTime(lineNo, lineInfo.datetime))
-      } else if (lineInfo.message contains "Handler end.") {
+      } else if (lineInfo.message contains KEY_MESSAGE.HANDLER_END) {
         // Handler endは使用予定なし
       }
       //[New Basket]Dialog opened.[main][j.c.n.n.o.r.p.d.b.NewBasketDialog$1]
@@ -242,6 +303,14 @@ trait ClientLogClassifierFactoryComponent {
         updateWithEnd(lineInfo.windowName, buttonEventBuffer) {
           event => event.copy(end = Some(LineTime(lineNo, lineInfo.datetime)))
         }
+      }
+      for (property <- lineInfo.requestProperty; buttonEvent <- buttonEventBuffer.lastOption) {
+        buttonEventBuffer.update(buttonEventBuffer.length - 1,
+          buttonEvent.copy(requestProperty = Some(property)))
+      }
+      for (parameter <- lineInfo.requestParameter; buttonEvent <- buttonEventBuffer.lastOption) {
+        buttonEventBuffer.update(buttonEventBuffer.length - 1,
+          buttonEvent.copy(requestParameter = Some(parameter)))
       }
     }
 
@@ -333,7 +402,7 @@ trait ClientLogClassifierFactoryComponent {
     }
 
     override def toString: String = {
-      s"DefaultLogAnalyzer($aplInfo.fileName)"
+      s"${getClass.getSimpleName}($aplInfo.fileName)"
     }
 
   }

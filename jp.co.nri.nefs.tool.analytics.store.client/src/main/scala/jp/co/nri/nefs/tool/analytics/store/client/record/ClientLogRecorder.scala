@@ -32,7 +32,7 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
       println("create statements")
       schema.create.statements.foreach(println)
       val setup = DBIO.seq(
-        //schema.dropIfExists,
+        schema.dropIfExists,
         schema.createIfNotExists
       )
       val setupFuture = db.run(setup)

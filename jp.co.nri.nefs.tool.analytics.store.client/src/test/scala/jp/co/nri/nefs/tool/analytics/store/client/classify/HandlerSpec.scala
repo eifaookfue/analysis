@@ -19,7 +19,7 @@ class HandlerSpec extends FlatSpec with PrivateMethodTester with TestingEnvironm
     val handler = Handler(lineInfo1.underlyingClass, LineTime(0, lineInfo1.datetime))
     val handlerBuffer = ListBuffer(handler)
     val lineInfo2 = LineInfo.valueOf(newSplitLog(2)).get
-    val result = clientLogCollector invokePrivate findRelatedHandler(handlerBuffer, lineInfo2.underlyingClass)
+    val result = clientLogClassifier invokePrivate findRelatedHandler(handlerBuffer, lineInfo2.underlyingClass)
     assert(result === Option(handler))
   }
 
@@ -28,7 +28,7 @@ class HandlerSpec extends FlatSpec with PrivateMethodTester with TestingEnvironm
     val handler = Handler(lineInfo1.underlyingClass, LineTime(0, lineInfo1.datetime))
     val handlerBuffer = ListBuffer(handler)
     val lineInfo2 = LineInfo.valueOf(newSplitFromSmartLog(5)).get
-    val result = clientLogCollector invokePrivate findRelatedHandler(handlerBuffer, lineInfo2.underlyingClass)
+    val result = clientLogClassifier invokePrivate findRelatedHandler(handlerBuffer, lineInfo2.underlyingClass)
     assert(result === None)
   }
 
@@ -43,7 +43,7 @@ class HandlerSpec extends FlatSpec with PrivateMethodTester with TestingEnvironm
     val handler = Handler(lineInfo1.underlyingClass, LineTime(0, lineInfo1.datetime))
     val handlerBuffer = ListBuffer(handler)
     val lineInfo2 = LineInfo.valueOf(newSplitFromSmartLog(2)).get
-    val result = clientLogCollector invokePrivate findRelatedHandler(handlerBuffer, lineInfo2.underlyingClass)
+    val result = clientLogClassifier invokePrivate findRelatedHandler(handlerBuffer, lineInfo2.underlyingClass)
     assert(result === Option(handler))
   }
 
@@ -52,7 +52,7 @@ class HandlerSpec extends FlatSpec with PrivateMethodTester with TestingEnvironm
     val handler = Handler(lineInfo1.underlyingClass, LineTime(0, lineInfo1.datetime))
     val handlerBuffer = ListBuffer(handler)
     val lineInfo2 = LineInfo.valueOf(completeOrderLog(2)).get
-    val result = clientLogCollector invokePrivate findRelatedHandler(handlerBuffer, lineInfo2.underlyingClass)
+    val result = clientLogClassifier invokePrivate findRelatedHandler(handlerBuffer, lineInfo2.underlyingClass)
     assert(result === Option(handler))
   }
 

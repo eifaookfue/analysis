@@ -1,5 +1,6 @@
 package jp.co.nri.nefs.tool.analytics.sender.client
 
+import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
@@ -29,14 +30,15 @@ trait ClientLogSenderComponent {
     final val OUT_DIR = "outDir"
     private val config = ConfigFactory.load()
     private val input = Paths.get(config.getString(INPUT_DIR))
+    val CHARSETNAME: Charset = Charset.forName("MS932")
 
     private def send(file: Path): Unit = {
       OMSAplInfo.valueOf(file.getFileName.toString) match {
         case Some(aplInfo) =>
           logger.info(s"$file is analyzing...")
-          val clientLogCollector = clientLogClassifierFactory.create(aplInfo)
-          val actor = system.actorOf(ClientLogCollectorActor.props(clientLogCollector))
-          val stream = Files.lines(file)
+          val clientLogClassifier = clientLogClassifierFactory.create(aplInfo)
+          val actor = system.actorOf(ClientLogClassifierActor.props(clientLogClassifier))
+          val stream = Files.lines(file, CHARSETNAME)
           for ((line, tmpNo) <- stream.iterator().asScala.zipWithIndex) {
             val lineNo = tmpNo + 1
             logger.info(s"send #$lineNo to $actor")
@@ -75,19 +77,19 @@ trait ClientLogSenderComponent {
     }
   }
 
-  class ClientLogCollectorActor(clientLogCollector: ClientLogClassifier) extends Actor with ActorLogging{
+  class ClientLogClassifierActor(clientLogClassifier: ClientLogClassifier) extends Actor with ActorLogging{
     override def receive: Receive = {
       case (line:String, lineNo: Int) =>
-        log.info(s"$clientLogCollector received #$lineNo")
-        clientLogCollector.classify(line, lineNo)
+        log.info(s"$clientLogClassifier received #$lineNo")
+        clientLogClassifier.classify(line, lineNo)
       case _ =>
         log.info("received unknown message.")
     }
   }
 
-  object ClientLogCollectorActor {
+  object ClientLogClassifierActor {
     def props(clientLogCollector: ClientLogClassifier): Props = {
-      Props(new ClientLogCollectorActor(clientLogCollector))
+      Props(new ClientLogClassifierActor(clientLogCollector))
     }
   }
 

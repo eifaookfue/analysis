@@ -17,7 +17,7 @@ class WindowSpec extends FlatSpec with PrivateMethodTester with TestingEnvironme
 
     // NewSplitDialogを検知
     val lineInfo2 = LineInfo.valueOf(newSplitFromSmartLog(5)).get
-    val result = clientLogCollector invokePrivate findRelatedWindow(windowBuffer, lineInfo2.underlyingClass)
+    val result = clientLogClassifier invokePrivate findRelatedWindow(windowBuffer, lineInfo2.underlyingClass)
     assert(result === Option(window))
 
   }
@@ -26,7 +26,7 @@ class WindowSpec extends FlatSpec with PrivateMethodTester with TestingEnvironme
     val windowBuffer = ListBuffer()
     // SelectMultiDialogを検知
     val lineInfo1 = LineInfo.valueOf(selectSymbolFromViewLog(2)).get
-    val result = clientLogCollector invokePrivate findRelatedWindow(windowBuffer, lineInfo1.underlyingClass)
+    val result = clientLogClassifier invokePrivate findRelatedWindow(windowBuffer, lineInfo1.underlyingClass)
     assert(result === None)
   }
 
@@ -42,7 +42,7 @@ class WindowSpec extends FlatSpec with PrivateMethodTester with TestingEnvironme
     val lineNo2 = 6
     val lineInfo2 = LineInfo.valueOf(newSplitLog(lineNo2)).get
     val f: Function[Window, Window] = w => w.copy(end = Some(LineTime(lineNo2, lineInfo2.datetime)))
-    clientLogCollector invokePrivate updateWithEnd(lineInfo2.windowName, windowBuffer, "", lineNo2,f)
+    clientLogClassifier invokePrivate updateWithEnd(lineInfo2.windowName, windowBuffer, "", lineNo2,f)
     assert(windowBuffer.head ===
       Window(lineInfo1.windowName, LineTime(lineNo1, lineInfo1.datetime), lineInfo1.underlyingClass, Some(LineTime(lineNo2, lineInfo2.datetime)))
     )
@@ -64,12 +64,12 @@ class WindowSpec extends FlatSpec with PrivateMethodTester with TestingEnvironme
     val lineNo3 = 9
     val lineInfo3 = LineInfo.valueOf(newSplitAndNewSplitLog(lineNo3)).get
     val f3: Function[Window, Window] = w => w.copy(end = Some(LineTime(lineNo3, lineInfo3.datetime)))
-    clientLogCollector invokePrivate updateWithEnd(lineInfo3.windowName, windowBuffer, "", lineNo3,f3)
+    clientLogClassifier invokePrivate updateWithEnd(lineInfo3.windowName, windowBuffer, "", lineNo3,f3)
 
     val lineNo4 = 12
     val lineInfo4 = LineInfo.valueOf(newSplitAndNewSplitLog(lineNo4)).get
     val f4: Function[Window, Window] = w => w.copy(end = Some(LineTime(lineNo4, lineInfo4.datetime)))
-    clientLogCollector invokePrivate updateWithEnd(lineInfo4.windowName, windowBuffer, "", lineNo4,f4)
+    clientLogClassifier invokePrivate updateWithEnd(lineInfo4.windowName, windowBuffer, "", lineNo4,f4)
 
     assert(windowBuffer.head ===
       Window(lineInfo1.windowName, LineTime(lineNo1, lineInfo1.datetime), lineInfo1.underlyingClass, Some(LineTime(lineNo4, lineInfo4.datetime)))
