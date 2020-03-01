@@ -37,7 +37,8 @@ trait ClientLogSenderComponent {
         case Some(aplInfo) =>
           logger.info(s"$file is analyzing...")
           val clientLogClassifier = clientLogClassifierFactory.create(aplInfo)
-          val actor = system.actorOf(ClientLogClassifierActor.props(clientLogClassifier))
+          val actor = system.actorOf(ClientLogClassifierActor.props(clientLogClassifier),
+            aplInfo.fileName)
           val stream = Files.lines(file, CHARSETNAME)
           for ((line, tmpNo) <- stream.iterator().asScala.zipWithIndex) {
             val lineNo = tmpNo + 1
@@ -81,15 +82,20 @@ trait ClientLogSenderComponent {
     override def receive: Receive = {
       case (line:String, lineNo: Int) =>
         log.info(s"$clientLogClassifier received #$lineNo")
-        clientLogClassifier.classify(line, lineNo)
+        try {
+          clientLogClassifier.classify(line, lineNo)
+        } catch {
+          case e: Exception => log.error(e,"Exception occurred in classification.")
+        }
+
       case _ =>
         log.info("received unknown message.")
     }
   }
 
   object ClientLogClassifierActor {
-    def props(clientLogCollector: ClientLogClassifier): Props = {
-      Props(new ClientLogClassifierActor(clientLogCollector))
+    def props(clientLogClassifier: ClientLogClassifier): Props = {
+      Props(new ClientLogClassifierActor(clientLogClassifier))
     }
   }
 

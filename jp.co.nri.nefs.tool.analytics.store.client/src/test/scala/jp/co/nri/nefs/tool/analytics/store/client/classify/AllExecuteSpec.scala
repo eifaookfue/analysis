@@ -23,6 +23,7 @@ class AllExecuteSpec extends FlatSpec with TestingEnvironment {
       val lineNo = tmpNo + 1
       clientLogClassifier.classify(line, lineNo)
     }
+    output.foreach(println)
     stream.close()
   }
 

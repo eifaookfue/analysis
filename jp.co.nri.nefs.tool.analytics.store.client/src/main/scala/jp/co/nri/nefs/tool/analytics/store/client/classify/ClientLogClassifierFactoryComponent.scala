@@ -77,7 +77,7 @@ trait ClientLogClassifierFactoryComponent {
         lineNo = start.lineNo,
         activator = relatedHandler.map(_.name).orElse(relatedWindow.map(_.name)),
         windowName = Some(name),
-        destinationType = None,
+        destinationType = relatedButtonEvent.flatMap(_.destinationType),
         action = relatedButtonEvent.map(_.event),
         method = None,
         time = start.time,
@@ -120,6 +120,7 @@ trait ClientLogClassifierFactoryComponent {
                 "OTHER"
             } yield destinationType
           op.flatMap(o => if (o == "OTHER") None else Some(o))
+        case _ => None
       }
 
     }
@@ -212,7 +213,7 @@ trait ClientLogClassifierFactoryComponent {
     private val windowNameRegex = """\[(.*)\].*""".r
     private val buttonActionRegex = """.*\((.*)\).*""".r
     private val lastAndDelNoRegex = """(.*)\$[0-9]""".r
-    private val requestRegex = """REQUEST\[(.*)\]""".r
+    private val requestRegex = """REQUEST=\[(.*)\],.*$""".r
     private val parameterRegex = """PARAMETER=DefaultEntity:\{(.*)\}""".r
     private val keyValueRegex = """(.*)=(.*)""".r
 
