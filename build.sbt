@@ -129,7 +129,7 @@ lazy val `model-client` = (project in file("jp.co.nri.nefs.tool.analytics.model.
 lazy val `sender-client` = (project in file("jp.co.nri.nefs.tool.analytics.sender.client"))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.sender_client)
-  .dependsOn(`store-client`)
+  .dependsOn(`store-client` % "test -> test; compile -> compile")
 
 lazy val `store-common` = (project in file("jp.co.nri.nefs.tool.analytics.store.common"))
   .settings(commonSettings: _*)
