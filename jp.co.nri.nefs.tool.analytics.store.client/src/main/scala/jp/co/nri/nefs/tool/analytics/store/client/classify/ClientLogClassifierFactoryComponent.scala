@@ -95,29 +95,52 @@ trait ClientLogClassifierFactoryComponent {
     private def getDestinationType(requestProperty: Option[String],
                                    requestParameter: Option[Map[String, String]]): Option[String] = {
       requestProperty match {
-        case Some("ENewChildOrderProperty") => Some("Child")
-        case Some("ENewChildOrderAndAlgoProperty") => Some("Algo")
-        case Some("ENewSliceProperty") | Some("ENewReservedSliceProperty") =>
+        case Some("ENewChildOrderProperty") => Some("CHILD_ORDER")
+        case Some("ENewChildOrderAndAlgoProperty") | Some("ENewOrderAndAlgoProperty") => Some("ALGO")
+        case Some("ENewBlockDetailProperty") => Some("WAVE")
+        case Some("ENewSliceProperty") | Some("ENewReservedSliceProperty") | Some("ENewOrderAndSliceProperty") |
+              Some("ENewOrderAndReservedSliceProperty") =>
           val op = for {
             params <- requestParameter
             market <- params.get("MARKET")
             crossCapacity <- params.get("CROSS_CAPACITY")
             crossType <- params.get("CROSS_TYPE")
+            counterParty <- params.get("CROSS_COUNTERPARTY")
             destinationType =
               if ((market == "TYO_TOST") && (crossCapacity == "PRINCIPAL"))
                 "TOST_PRINCIPAL"
               else if ((market == "TYO_TOST") && (crossCapacity == "AGENCY"))
                 "TOST_AGENCY"
-              else if ((market == "OTC_MAIN") && (crossCapacity == "PRINCIPAL"))
-                "OTC_PRINCIPAL"
-              else if ((market == "OTC_MAIN") && (crossCapacity == "AGENCY"))
-                "OTC_AGENCY"
+              else if ((market == "TYO_TOST") && (crossCapacity == "BROKER"))
+                "TOST_BROKER"
               else if ((market == "TYO_TOST") && (crossType == "FIXED_PRICE"))
                 "TOST2"
+              else if ((market == "TYO_TOST") && (crossType == "BUY_BACK"))
+                "TOST3_BUY_BACK"
+              else if ((market == "TYO_TOST") && (crossType == "DISTRIBUTION"))
+                "TOST3_BUNBAI"
+              else if ((market == "JSD_OTC") && (crossType == "PRINCIPAL"))
+                "OTC_PRINCIPAL"
+              else if ((market == "JSD_OTC") && (crossType == "AGENCY"))
+                "OTC_AGENCY"
+              else if ((market == "JSD_OTC") && (crossType == "BROKER"))
+                "OTC_BROKER"
+              else if ((market == "OSA_DERIV") && (crossType == "PRINCIPAL"))
+                "JNET_PRINCIPAL"
+              else if ((market == "OSA_DERIV") && (crossType == "BROKER"))
+                "JNET_BROKER"
               else if (crossType == "FIXED_PRICE")
+                "CLOSE_PRICE"
+              else if (crossType == "DISTRIBUTION")
+                "BUNBAI"
+              else if (crossType == "SINGLE")
                 "OFF_AUCTION"
+              else if (counterParty == "BROKER")
+                "ODD_LOT_PRINCIPAL"
+              else if (counterParty == "RETELA")
+                "ODD_LOT_AGENCY"
               else
-                "OTHER"
+                "EXCHANGE"
             } yield destinationType
           op.flatMap(o => if (o == "OTHER") None else Some(o))
         case _ => None
@@ -305,11 +328,15 @@ trait ClientLogClassifierFactoryComponent {
           event => event.copy(end = Some(LineTime(lineNo, lineInfo.datetime)))
         }
       }
-      for (property <- lineInfo.requestProperty; buttonEvent <- buttonEventBuffer.lastOption) {
+      // ENewBlockDetailPropertyはハンドリングしない
+      for (property <- lineInfo.requestProperty; buttonEvent <- buttonEventBuffer.lastOption
+            if property != "ENewBlockDetailProperty") {
         buttonEventBuffer.update(buttonEventBuffer.length - 1,
           buttonEvent.copy(requestProperty = Some(property)))
       }
-      for (parameter <- lineInfo.requestParameter; buttonEvent <- buttonEventBuffer.lastOption) {
+      //TODO BOCK_IDが含まれるENewBlockDetailPropertyはハンドリングしない。ほかのやり方をする必要あり
+      for (parameter <- lineInfo.requestParameter; buttonEvent <- buttonEventBuffer.lastOption
+            if parameter.get("BLOCK_ID").isEmpty) {
         buttonEventBuffer.update(buttonEventBuffer.length - 1,
           buttonEvent.copy(requestParameter = Some(parameter)))
       }
@@ -387,23 +414,26 @@ trait ClientLogClassifierFactoryComponent {
       */
     private def bindWithButtonEvent(fileName: String, lineNo: Int, windowBuffer: ListBuffer[Window],
                                     eventOp: Option[ButtonEvent]): Unit = {
-      val windowOp = windowBuffer.lastOption
-      for {
-        window <- windowOp
-        windowEnd <- window.end
-        event <- eventOp
-        eventEndOrStart = event.end.getOrElse(event.start)
-        if window.name == event.name
-        if windowEnd.lineNo > eventEndOrStart.lineNo
-      } {
-        windowBuffer.update(windowBuffer.length - 1, window.copy(relatedButtonEvent = eventOp))
-        return
+
+      windowBuffer.zipWithIndex.reverseIterator.find { case (window, _) =>
+        (for {
+          windowEnd <- window.end
+          event <- eventOp
+          eventEndOrStart = event.end.getOrElse(event.start)
+          if window.name == event.name
+          if windowEnd.lineNo > eventEndOrStart.lineNo
+          result = true
+        } yield result).getOrElse(false)
+      } match {
+        case Some((window, index)) =>
+          windowBuffer.update(index, window.copy(relatedButtonEvent = eventOp))
+        case _ =>
+          logger.info(s"$fileName:$lineNo Couldn't bind Button Event with window.")
       }
-      logger.warn(s"$fileName:$lineNo Couldn't bind Button Event with window.")
     }
 
     override def toString: String = {
-      s"${getClass.getSimpleName}($aplInfo.fileName)"
+      s"${getClass.getSimpleName}(${aplInfo.fileName})"
     }
 
   }

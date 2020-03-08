@@ -8,6 +8,11 @@ import sbt._
       Library.config
     )
     
+    val analyze_client: Seq[ModuleID] = Seq(
+      Library.logbackClassic,
+      Library.config
+    )
+    
     val sender_client: Seq[ModuleID] = Seq(
       Library.akka_actor,
     )

@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/analysis.iml" filepath="$PROJECT_DIR$/.idea/modules/analysis.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/analysis-build.iml" filepath="$PROJECT_DIR$/.idea/modules/analysis-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/analyze-client.iml" filepath="$PROJECT_DIR$/.idea/modules/analyze-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/collect-client.iml" filepath="$PROJECT_DIR$/.idea/modules/collect-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/config.iml" filepath="$PROJECT_DIR$/.idea/modules/config.iml" />
       <module fileurl="file://$PROJECT_DIR$/elp/elp.iml" filepath="$PROJECT_DIR$/elp/elp.iml" />
