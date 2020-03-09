@@ -70,7 +70,7 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
         (l.userId, w.windowName)
       }
       q2 = q.map { case ((userId, windowName), lw) =>
-        (range(i) + "_" + range(i+1), userId, windowName.getOrElse("OTHER"), lw.length, 0, 0d)
+        (range(i) + "_" + range(i+1), userId, windowName.getOrElse("OTHER"), lw.length, 0, 0l)
       }
       selectInsert = windowSlices forceInsertQuery q2
       f = db.run(selectInsert)
@@ -94,11 +94,19 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     } yield  f
 
     val agg2 = Future.sequence(list2)
-    val a = Await.result(agg2, Duration.Inf)
-    //val (s1,s2, s3, s4, s5) = a
+    val sliceList = Await.result(agg2, Duration.Inf)
 
-
-
+    // slice毎のList。select結果は複数ありえる（今回はないが）のでそれもList
+    val list3 = for {
+      tmpSlice <- sliceList
+      (slice, userId, windowName, count, avgStartupOp) <- tmpSlice
+      q = windowSlices.filter(_.slice === slice).filter(_.userId === userId).filter(_.windowName === windowName)
+        .map(s => (s.startupCount, s.avgStartup))
+      updateAction = q.update((count, avgStartupOp.getOrElse(0l)))
+      f = db.run(updateAction)
+    } yield f
+    val agg3 = Future.sequence(list3)
+    Await.result(agg3, Duration.Inf)
   }
 }
 
