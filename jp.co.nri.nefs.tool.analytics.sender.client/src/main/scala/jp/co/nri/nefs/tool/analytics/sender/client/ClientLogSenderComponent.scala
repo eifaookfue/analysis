@@ -47,7 +47,8 @@ trait ClientLogSenderComponent {
           }
           //actor ! PoisonPill
           try {
-            val stopped = gracefulStop(actor, 5.seconds)
+            logger.info("gracefulStop starts")
+            val stopped = gracefulStop(actor, 5.seconds, Manager.Shutdown)
             Await.result(stopped, 6.seconds)
           } catch {
             case e: akka.pattern.AskTimeoutException =>
@@ -78,6 +79,10 @@ trait ClientLogSenderComponent {
     }
   }
 
+  object Manager {
+    case object Shutdown
+  }
+
   class ClientLogClassifierActor(clientLogClassifier: ClientLogClassifier) extends Actor with ActorLogging{
     override def receive: Receive = {
       case (line:String, lineNo: Int) =>
@@ -87,7 +92,9 @@ trait ClientLogSenderComponent {
         } catch {
           case e: Exception => log.error(e,"Exception occurred in classification.")
         }
-
+      case Manager.Shutdown =>
+        clientLogClassifier.postStop()
+        context stop self
       case _ =>
         log.info("received unknown message.")
     }

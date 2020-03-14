@@ -4,11 +4,14 @@ import java.sql.Timestamp
 
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
-import jp.co.nri.nefs.tool.analytics.model.client.{Log, OMSAplInfo, WindowDetail}
+import jp.co.nri.nefs.tool.analytics.model.client.{Log, OMSAplInfo, PreCheck, WindowDetail}
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 import scala.util.matching.Regex
 
 trait ClientLogClassifierFactoryComponent {
@@ -26,6 +29,7 @@ trait ClientLogClassifierFactoryComponent {
 
   trait ClientLogClassifier {
     def classify(line: String, lineNo: Int): Unit
+    def postStop(): Unit
   }
 
   trait Naming {
@@ -40,7 +44,7 @@ trait ClientLogClassifierFactoryComponent {
     val end: Option[LineTime]
   }
 
-  case class LineTime(lineNo: Int, time: Timestamp)
+  case class LineTime(lineNo: Long, time: Timestamp)
 
   // HandlerのEndTimeは今のところ使用予定なし。また、WindowがCloseした時点でDBオブジェクトを作成して
   // しまうため、HandlerのEndまで記録できない
@@ -73,7 +77,7 @@ trait ClientLogClassifierFactoryComponent {
 
     def toWindowDetail: WindowDetail = {
       WindowDetail(
-        logId = 0L,
+        logId = 0,
         lineNo = start.lineNo,
         activator = relatedHandler.map(_.name).orElse(relatedWindow.map(_.name)),
         windowName = Some(name),
@@ -159,6 +163,7 @@ trait ClientLogClassifierFactoryComponent {
     lazy val buttonEvent: Option[String] = getButtonEvent(message)
     lazy val requestProperty: Option[String] = getRequestProperty(message)
     lazy val requestParameter: Option[Map[String, String]] = getRequestParameter(message)
+    lazy val preCheck: Option[(String, String)] = getPreCheck(message)
 
     /** "."で区切られた最後の文字列から$数字を取り除いた文字列を返します。
       *
@@ -182,11 +187,28 @@ trait ClientLogClassifierFactoryComponent {
       * @return 括弧内の文字列もしくは引数で指定されたデフォルト値
       */
     private def getWindowName(message: String, default: String): String = {
-      message match {
-        case LineInfo.windowNameRegex(n) => n
+      getMessageInFirstBrackets(message) match {
+        case Some(n) => n
         case _ => default
       }
     }
+
+    private def getMessageInFirstBrackets(message: String): Option[String] = {
+      val beginIndex = message.indexOf('[')
+      val endIndex = message.indexOf(']')
+      if ((beginIndex >= 0) && (endIndex > 0) && (endIndex > beginIndex)) {
+        Some(message.substring(beginIndex+1, endIndex))
+      } else None
+    }
+
+    private def getMessageInLastBrackets(message: String): Option[String] = {
+      val beginIndex = message.lastIndexOf('[')
+      val endIndex = message.lastIndexOf(']')
+      if ((beginIndex >= 0) && (endIndex > 0) && (endIndex > beginIndex)) {
+        Some(message.substring(beginIndex+1, endIndex))
+      } else None
+    }
+
 
     /** メッセージに含まれる丸括弧内の文字列を抜き出します。
       */
@@ -217,6 +239,16 @@ trait ClientLogClassifierFactoryComponent {
         case _ => None
       }
     }
+
+    private def getPreCheck(message: String): Option[(String, String)] = {
+      val windowNameOp = getMessageInFirstBrackets(message)
+      for {
+        windowName <- windowNameOp
+        message2 = message.replace("[" + windowName + "]", "")
+        code <- getMessageInLastBrackets(message2)
+        checkMessage = message2.replace("[" + code + "]", "")
+      } yield (code, checkMessage)
+    }
   }
 
   object LineInfo {
@@ -233,7 +265,6 @@ trait ClientLogClassifierFactoryComponent {
     private val classExpression: String = """\[(j.c.*)\]$"""
     private val lineRegex = new Regex(timeExpression + serviceExpression + logLevelExpression + applicationExpression +
       messageExpression + threadExpression + classExpression)
-    private val windowNameRegex = """\[(.*)\].*""".r
     private val buttonActionRegex = """.*\((.*)\).*""".r
     private val lastAndDelNoRegex = """(.*)\$[0-9]""".r
     private val requestRegex = """REQUEST=\[(.*)\],.*$""".r
@@ -255,16 +286,27 @@ trait ClientLogClassifierFactoryComponent {
   }
 
 
-  class DefaultClientLogClassifier(aplInfo: OMSAplInfo, clientLogStore: ClientLogRecorder) extends ClientLogClassifier with LazyLogging {
+  class DefaultClientLogClassifier(aplInfo: OMSAplInfo, clientLogRecorder: ClientLogRecorder) extends ClientLogClassifier with LazyLogging {
 
     final val HANDLER_MAPPING = "HandlerMapping"
     final val WINDOW_MAPPING = "WindowMapping"
     final val INPUT_DIR = "inputDir"
     final val OUT_DIR = "outDir"
-    protected val handlerBuffer: ListBuffer[Handler] = ListBuffer[Handler]()
-    protected val windowBuffer: ListBuffer[Window] = ListBuffer[Window]()
-    protected val buttonEventBuffer: ListBuffer[ButtonEvent] = ListBuffer[ButtonEvent]()
-    private var logId: Option[Long] = None
+    val handlerBuffer: ListBuffer[Handler] = ListBuffer[Handler]()
+    val windowBuffer: ListBuffer[Window] = ListBuffer[Window]()
+    val buttonEventBuffer: ListBuffer[ButtonEvent] = ListBuffer[ButtonEvent]()
+    val futureBuffer: ListBuffer[Future[Int]] = ListBuffer()
+    private lazy val logId: Option[Int] = clientLogRecorder.record(
+      Log(0, aplInfo.appName, aplInfo.computer,
+        aplInfo.userId, aplInfo.tradeDate, aplInfo.time, aplInfo.fileName)
+    )
+
+    def postStop(): Unit = {
+      logger.info("postStop starts")
+      val aggFut = Future.sequence(futureBuffer)
+      Await.result(aggFut, Duration.Inf)
+      logger.info("postStop ends")
+    }
 
     def classify(line: String, lineNo: Int): Unit = {
       val lineInfo = LineInfo.valueOf(line) match {
@@ -301,14 +343,9 @@ trait ClientLogClassifierFactoryComponent {
         bindWithButtonEvent(aplInfo.fileName, lineNo, windowBuffer, buttonEventBuffer.lastOption)
         windowBuffer.reverseIterator.find { w => w.name == windowName } match {
           case Some(window) =>
-            if (logId.isEmpty) {
-              logId = clientLogStore.write(Log(0L, aplInfo.appName, aplInfo.computer,
-                aplInfo.userId, aplInfo.tradeDate, aplInfo.time, aplInfo.fileName))
-            }
             if (logId.nonEmpty){
-              clientLogStore.write(logId.get, window.toWindowDetail)
+              futureBuffer += clientLogRecorder.record(logId.get, window.toWindowDetail)
             }
-
           case None => logger.warn(s"$aplInfo.fileName:$lineNo Couldn't find window.")
         }
       }
@@ -327,6 +364,10 @@ trait ClientLogClassifierFactoryComponent {
         updateWithEnd(lineInfo.windowName, buttonEventBuffer) {
           event => event.copy(end = Some(LineTime(lineNo, lineInfo.datetime)))
         }
+      } else if (lineInfo.underlyingClass == "DefaultValidationDataManager") {
+          for ((code, checkMsg) <- lineInfo.preCheck; id <- logId) {
+            futureBuffer += clientLogRecorder.record(PreCheck(id, lineNo, Some(lineInfo.windowName), code, checkMsg))
+          }
       }
       // ENewBlockDetailPropertyはハンドリングしない
       for (property <- lineInfo.requestProperty; buttonEvent <- buttonEventBuffer.lastOption

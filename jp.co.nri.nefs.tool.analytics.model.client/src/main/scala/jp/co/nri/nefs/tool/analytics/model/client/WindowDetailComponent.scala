@@ -5,14 +5,19 @@ import java.sql.Timestamp
 import play.api.db.slick.HasDatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
+case class WindowDetail(logId: Int, lineNo: Long,
+                        activator: Option[String], windowName: Option[String], destinationType: Option[String],
+                        action: Option[String], method: Option[String],
+                        time: Timestamp, startupTime: Option[Long])
+
 trait WindowDetailComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
 
   import profile.api._
 
   class WindowDetails(tag: Tag) extends Table[WindowDetail](tag, "WINDOW_DETAIL") {
-    def logId = column[Long]("LOG_ID")
-    def lineNo = column[Int]("LINE_NO", O.Length(20))
+    def logId = column[Int]("LOG_ID")
+    def lineNo = column[Long]("LINE_NO", O.Length(20))
     def activator = column[Option[String]]("ACTIVATOR")
     def windowName = column[Option[String]]("WINDOW_NAME")
     def destinationType = column[Option[String]]("DESTINATION_TYPE")

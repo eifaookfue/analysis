@@ -1,12 +1,13 @@
 package jp.co.nri.nefs.tool.analytics.store.client
 
 import com.google.inject.AbstractModule
-import jp.co.nri.nefs.tool.analytics.model.client.{Log, OMSAplInfo, WindowDetail}
+import jp.co.nri.nefs.tool.analytics.model.client.{Log, OMSAplInfo, PreCheck, WindowDetail}
 import jp.co.nri.nefs.tool.analytics.store.client.classify.ClientLogClassifierFactoryComponent
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
 import jp.co.nri.nefs.tool.analytics.store.common.ServiceInjector
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.Future
 
 trait TestingEnvironment extends ClientLogClassifierFactoryComponent {
 
@@ -29,12 +30,19 @@ trait TestingEnvironment extends ClientLogClassifierFactoryComponent {
 class MockLogRecorder extends ClientLogRecorder {
 
   val output: ListBuffer[WindowDetail] = ListBuffer[WindowDetail]()
+  val preCheckOutput: ListBuffer[PreCheck] = ListBuffer()
 
   def recreate(): Unit = {}
 
-  def write(log: Log): Option[Long] = {Some(0L)}
+  def record(log: Log): Option[Int] = {Some(0)}
 
-  def write(logId: Long, detail: WindowDetail): Unit = {
+  def record(logId: Int, detail: WindowDetail): Future[Int] = {
     output += detail
+    Future.successful(0)
+  }
+
+  def record(preCheck: PreCheck): Future[Int] = {
+    preCheckOutput += preCheck
+    Future.successful(0)
   }
 }

@@ -3,6 +3,9 @@ package jp.co.nri.nefs.tool.analytics.model.client
 import play.api.db.slick.HasDatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
+case class WindowSlice(slice: String, userId: String,
+                       count: Int)
+
 trait WindowSliceComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
 
