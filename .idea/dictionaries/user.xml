@@ -3,7 +3,11 @@
     <words>
       <w>addr</w>
       <w>algo</w>
+      <w>bunbai</w>
       <w>charsetname</w>
+      <w>counterparty</w>
+      <w>deriv</w>
+      <w>distriubution</w>
       <w>excelfile</w>
       <w>fname</w>
       <w>guice</w>
@@ -13,6 +17,7 @@
       <w>hmmss</w>
       <w>istream</w>
       <w>jdbc</w>
+      <w>jnet</w>
       <w>logdir</w>
       <w>materializer</w>
       <w>mydb</w>
@@ -23,6 +28,7 @@
       <w>ostream</w>
       <w>outpath</w>
       <w>outputdir</w>
+      <w>retela</w>
       <w>rownum</w>
       <w>scalaz</w>
       <w>searchdir</w>

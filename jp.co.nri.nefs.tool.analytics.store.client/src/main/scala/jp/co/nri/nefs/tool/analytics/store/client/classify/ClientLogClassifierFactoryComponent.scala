@@ -68,90 +68,137 @@ trait ClientLogClassifierFactoryComponent {
     }
   }
 
+  case class Request(property: String) {
+    val parameters: ListBuffer[Map[String, String]] = ListBuffer[Map[String, String]]()
+    def addParameter(parameter: Map[String, String]): Unit = {
+      parameters += parameter
+    }
+  }
+
   case class Window(name: String, start: LineTime, underlyingClass: String,
-                              end: Option[LineTime] = None,
-                              relatedHandler: Option[Handler] = None,
-                              relatedButtonEvent: Option[ButtonEvent] = None,
-                              relatedWindow: Option[Window] = None)
+                    end: Option[LineTime] = None,
+                    relatedHandler: Option[Handler] = None,
+                    relatedButtonEvent: Option[ButtonEvent] = None,
+                    relatedWindow: Option[Window] = None,
+                    requestBuffer: Option[ListBuffer[Request]] = None)
     extends Naming with Starting with Ending with StartupTiming {
 
     def toWindowDetail: WindowDetail = {
       WindowDetail(
         logId = 0,
         lineNo = start.lineNo,
-        activator = relatedHandler.map(_.name).orElse(relatedWindow.map(_.name)),
-        windowName = Some(name),
-        destinationType = relatedButtonEvent.flatMap(_.destinationType),
+        activator = relatedHandler.map(_.name).orElse(relatedWindow.flatMap(w => getWindowName(w.name))),
+        windowName = getWindowName(name),
+        destinationType = getDestinationType(requestBuffer),
         action = relatedButtonEvent.map(_.event),
         method = None,
         time = start.time,
         startupTime = startupTime
       )
     }
-  }
 
-  case class ButtonEvent(name: String, start: LineTime, event: String,
-                         end: Option[LineTime] = None,
-                         requestProperty: Option[String] = None,
-                         requestParameter: Option[Map[String, String]] = None)
-    extends Naming with Starting with Ending {
-    lazy val destinationType: Option[String] = getDestinationType(requestProperty, requestParameter)
-    private def getDestinationType(requestProperty: Option[String],
-                                   requestParameter: Option[Map[String, String]]): Option[String] = {
-      requestProperty match {
-        case Some("ENewChildOrderProperty") => Some("CHILD_ORDER")
-        case Some("ENewChildOrderAndAlgoProperty") | Some("ENewOrderAndAlgoProperty") => Some("ALGO")
-        case Some("ENewBlockDetailProperty") => Some("WAVE")
-        case Some("ENewSliceProperty") | Some("ENewReservedSliceProperty") | Some("ENewOrderAndSliceProperty") |
-              Some("ENewOrderAndReservedSliceProperty") =>
-          val op = for {
-            params <- requestParameter
-            market <- params.get("MARKET")
-            crossCapacity <- params.get("CROSS_CAPACITY")
-            crossType <- params.get("CROSS_TYPE")
-            counterParty <- params.get("CROSS_COUNTERPARTY")
-            destinationType =
+    /** ハイフン以降の文字列は除去、半角全角の空白は除去してwindowNameを取得します。
+      * 例1) Order Detail - OO202002130000010561 - 2020/02/13 - => OrderDetail
+      * 例2) New Split Cross　　　- Parent Order => NewSplitCross
+      */
+    private def getWindowName(windowName: String): Option[String] = {
+      val index = windowName.indexOf('-')
+      val forwardName = if (index > 0) windowName.substring(0, index)
+      else windowName
+      Some(forwardName.replace(" ", "").replace("　", ""))
+    }
+
+    private def getDestinationType(requestBufferOp: Option[ListBuffer[Request]]): Option[String] = {
+      (for {
+        requestBuffer <- requestBufferOp
+        request <- requestBuffer.lastOption
+        destinationType = request.property match {
+          case "ENewInterventionProperty" => "EXCHANGE"
+          case "ENewChildOrderProperty" => "CHILD_ORDER"
+          case "ENewChildOrderAndAlgoProperty" | "ENewOrderAndAlgoProperty" => "ALGO"
+          case "ENewBlockDetailProperty" =>
+            val newBlockRequestOp = requestBuffer.reverseIterator.find(_.property == "ENewBlockProperty")
+            val blockType = for {
+              newBlockRequest <- newBlockRequestOp
+              parameters <- newBlockRequest.parameters.headOption
+              bType <- parameters.get("BLOCK_TYPE")
+            } yield bType
+            blockType.map { bType => if (bType == "WAVE") "WAVE" else "TRADING_LIST" }.getOrElse("UNKNOWN")
+          case "ENewBasketCrossProperty" =>
+            val dTypeOp = for {
+              params <- request.parameters.headOption
+              market <- params.get("MARKET")
+              crossDestinationType =
+              if (market == "TYO_TOST")
+                "TOST_PRINCIPAL"
+              else if (market == "JSD_OTC")
+                "OTC_PRINCIPAL"
+              else
+                "UNKNOWN"
+            } yield crossDestinationType
+            dTypeOp.getOrElse("UNKNOWN")
+          case "ENewSliceProperty" | "ENewReservedSliceProperty" | "ENewOrderAndSliceProperty" |
+               "ENewOrderAndReservedSliceProperty" =>
+            val dTypeOp = for {
+              params <- request.parameters.headOption
+              market <- params.get("MARKET")
+              crossCapacity <- params.get("CROSS_CAPACITY")
+              crossType <- params.get("CROSS_TYPE")
+              crossCounterparty <- params.get("CROSS_COUNTERPARTY")
+              crossDestinationType =
               if ((market == "TYO_TOST") && (crossCapacity == "PRINCIPAL"))
                 "TOST_PRINCIPAL"
               else if ((market == "TYO_TOST") && (crossCapacity == "AGENCY"))
                 "TOST_AGENCY"
               else if ((market == "TYO_TOST") && (crossCapacity == "BROKER"))
                 "TOST_BROKER"
-              else if ((market == "TYO_TOST") && (crossType == "FIXED_PRICE"))
+              else if ((market == "TYO_TOST") && (crossCapacity == "FIXED_PRICE"))
                 "TOST2"
-              else if ((market == "TYO_TOST") && (crossType == "BUY_BACK"))
+              else if ((market == "TYO_TOST") && (crossCapacity == "BUY_BACK"))
                 "TOST3_BUY_BACK"
-              else if ((market == "TYO_TOST") && (crossType == "DISTRIBUTION"))
+              else if ((market == "TYO_TOST") && (crossCapacity == "DISTRIBUTION"))
                 "TOST3_BUNBAI"
-              else if ((market == "JSD_OTC") && (crossType == "PRINCIPAL"))
+              else if ((market == "JSD_OTC") && (crossCapacity == "PRINCIPAL"))
                 "OTC_PRINCIPAL"
-              else if ((market == "JSD_OTC") && (crossType == "AGENCY"))
+              else if ((market == "JSD_OTC") && (crossCapacity == "AGENCY"))
                 "OTC_AGENCY"
-              else if ((market == "JSD_OTC") && (crossType == "BROKER"))
+              else if ((market == "JSD_OTC") && (crossCapacity == "BROKER"))
                 "OTC_BROKER"
-              else if ((market == "OSA_DERIV") && (crossType == "PRINCIPAL"))
+              else if ((market == "OSA_DERIV") && (crossCapacity == "PRINCIPAL"))
                 "JNET_PRINCIPAL"
-              else if ((market == "OSA_DERIV") && (crossType == "BROKER"))
+              else if ((market == "OSA_DERIV") && (crossCapacity == "BROKER"))
                 "JNET_BROKER"
               else if (crossType == "FIXED_PRICE")
                 "CLOSE_PRICE"
-              else if (crossType == "DISTRIBUTION")
+              else if (crossType == "BUY_BACK")
+                "BUY_BACK"
+              else if (crossType == "DISTRIUBUTION")
                 "BUNBAI"
               else if (crossType == "SINGLE")
                 "OFF_AUCTION"
-              else if (counterParty == "BROKER")
+              else if (crossCounterparty == "BROKER")
                 "ODD_LOT_PRINCIPAL"
-              else if (counterParty == "RETELA")
+              else if (crossCounterparty == "RETELA")
                 "ODD_LOT_AGENCY"
               else
                 "EXCHANGE"
-            } yield destinationType
-          op.flatMap(o => if (o == "OTHER") None else Some(o))
-        case _ => None
+            } yield crossDestinationType
+            dTypeOp.getOrElse("UNKNOWN")
+          case _ => "UNKNOWN"
+        }
+      } yield destinationType).flatMap { d =>
+        if (d == "UNKNOWN")
+          None
+        else
+          Some(d)
       }
-
     }
+
   }
+
+  case class ButtonEvent(name: String, start: LineTime, event: String,
+                         end: Option[LineTime] = None)
+    extends Naming with Starting with Ending
 
   case class LineInfo(datetimeStr: String, service: String, logLevel: String, appName: String, message: String,
                                 thread: String, clazz: String) {
@@ -181,6 +228,7 @@ trait ClientLogClassifierFactoryComponent {
     /** メッセージに含まれる括弧内の文字列を抜き出します。
       * 例1: ("[Select Symbol Multi]Dialog opened.", "SelectMultiDialog") => "Select Symbol Multi"
       * 例2: ("Opened.", "QuestionDialog") => "QuestionDialog"
+      * 例3: ("[]Dialog Opened.", "QuickInputDialog") => "QuickInputDialog"
       *
       * @param  message メッセージ
       * @param  default 括弧内の文字列がなかった場合に算出される文字列
@@ -285,7 +333,6 @@ trait ClientLogClassifierFactoryComponent {
     final val HANDLER_END = "Handler end."
   }
 
-
   class DefaultClientLogClassifier(aplInfo: OMSAplInfo, clientLogRecorder: ClientLogRecorder) extends ClientLogClassifier with LazyLogging {
 
     final val HANDLER_MAPPING = "HandlerMapping"
@@ -295,6 +342,7 @@ trait ClientLogClassifierFactoryComponent {
     val handlerBuffer: ListBuffer[Handler] = ListBuffer[Handler]()
     val windowBuffer: ListBuffer[Window] = ListBuffer[Window]()
     val buttonEventBuffer: ListBuffer[ButtonEvent] = ListBuffer[ButtonEvent]()
+    val requestBuffer: ListBuffer[Request] = ListBuffer[Request]()
     val futureBuffer: ListBuffer[Future[Int]] = ListBuffer()
     private lazy val logId: Option[Int] = clientLogRecorder.record(
       Log(0, aplInfo.appName, aplInfo.computer,
@@ -340,14 +388,17 @@ trait ClientLogClassifierFactoryComponent {
         updateWithEnd(windowName, windowBuffer, aplInfo.fileName, lineNo) {
           window => window.copy(end = Some(LineTime(lineNo, lineInfo.datetime)))
         }
-        bindWithButtonEvent(aplInfo.fileName, lineNo, windowBuffer, buttonEventBuffer.lastOption)
-        windowBuffer.reverseIterator.find { w => w.name == windowName } match {
-          case Some(window) =>
-            if (logId.nonEmpty){
+        bindWithButtonEvent(aplInfo.fileName, lineNo, windowBuffer, windowName, buttonEventBuffer)
+        windowBuffer.zipWithIndex.reverseIterator.find { case (w, _) => w.name == windowName } match {
+          case Some((window, index)) =>
+            if (logId.nonEmpty) {
               futureBuffer += clientLogRecorder.record(logId.get, window.toWindowDetail)
             }
+            windowBuffer.remove(index)
           case None => logger.warn(s"$aplInfo.fileName:$lineNo Couldn't find window.")
         }
+        // リクエストバッファはクリアしておく
+        requestBuffer.clear()
       }
       else if ((lineInfo.message contains "Button event starts") || (lineInfo.message contains "Button Pressed")) {
         lineInfo.buttonEvent match {
@@ -357,7 +408,7 @@ trait ClientLogClassifierFactoryComponent {
               start = LineTime(lineNo, lineInfo.datetime),
               event = event
             )
-          case None => logger.warn(s"$aplInfo.fileName:$lineNo Couldn't find action from message.")
+          case None => logger.warn(s"${aplInfo.fileName}:$lineNo Couldn't find action from message.")
         }
       }
       else if (lineInfo.message contains "Button event ends") {
@@ -365,27 +416,21 @@ trait ClientLogClassifierFactoryComponent {
           event => event.copy(end = Some(LineTime(lineNo, lineInfo.datetime)))
         }
       } else if (lineInfo.underlyingClass == "DefaultValidationDataManager") {
-          for ((code, checkMsg) <- lineInfo.preCheck; id <- logId) {
-            futureBuffer += clientLogRecorder.record(PreCheck(id, lineNo, Some(lineInfo.windowName), code, checkMsg))
-          }
+        for ((code, checkMsg) <- lineInfo.preCheck; id <- logId) {
+          futureBuffer += clientLogRecorder.record(PreCheck(id, lineNo, Some(lineInfo.windowName), code, checkMsg))
+        }
       }
-      // ENewBlockDetailPropertyはハンドリングしない
-      for (property <- lineInfo.requestProperty; buttonEvent <- buttonEventBuffer.lastOption
-            if property != "ENewBlockDetailProperty") {
-        buttonEventBuffer.update(buttonEventBuffer.length - 1,
-          buttonEvent.copy(requestProperty = Some(property)))
-      }
-      //TODO BOCK_IDが含まれるENewBlockDetailPropertyはハンドリングしない。ほかのやり方をする必要あり
-      for (parameter <- lineInfo.requestParameter; buttonEvent <- buttonEventBuffer.lastOption
-            if parameter.get("BLOCK_ID").isEmpty) {
-        buttonEventBuffer.update(buttonEventBuffer.length - 1,
-          buttonEvent.copy(requestParameter = Some(parameter)))
+      for (property <- lineInfo.requestProperty) requestBuffer += Request(property)
+
+      for (parameter <- lineInfo.requestParameter; request <- requestBuffer.lastOption) {
+        request.addParameter(parameter)
       }
     }
 
     /** Handlerのリストから直近のHandlerを抜き出し、それがクラス名と紐づく場合、そのHandlerを返します。
       * 紐づかない場合は、Noneを返します。
       * マッピングはあらかじめコンフィグファイルで定義しておく必要があります。
+      *
       * @param  handlerBuffer   Handlerが格納されているListBuffer
       * @param  underlyingClass クラス名
       * @return 直近のHandler。紐づかない場合はNone
@@ -397,6 +442,7 @@ trait ClientLogClassifierFactoryComponent {
     /** Windowのリストから直近のWindowを抜き出し、それがクラス名と紐づく場合、そのHandlerを返します。
       * 紐づかない場合は、Noneを返します。
       * マッピングはあらかじめコンフィグファイルで定義しておく必要があります。
+      *
       * @param  windowBuffer   Handlerが格納されているListBuffer
       * @param  underlyingClass クラス名
       * @return 直近のHandler。紐づかない場合はNone
@@ -451,15 +497,19 @@ trait ClientLogClassifierFactoryComponent {
       * @param fileName     ファイル名
       * @param lineNo       行番号
       * @param windowBuffer Windowが格納されているListBuffer
-      * @param eventOp      結び付けたいボタンイベント
+      * @param windowName   結び付けたいwindowName
+      * @param buttonEventBuffer 結び付けたいボタンイベントが格納されているListBuffer
       */
     private def bindWithButtonEvent(fileName: String, lineNo: Int, windowBuffer: ListBuffer[Window],
-                                    eventOp: Option[ButtonEvent]): Unit = {
+                                    windowName: String, buttonEventBuffer: ListBuffer[ButtonEvent]): Unit = {
 
+      val eventOpWithIndex = buttonEventBuffer.zipWithIndex.reverseIterator.find { case (buttonEvent, _) =>
+        buttonEvent.name == windowName
+      }
       windowBuffer.zipWithIndex.reverseIterator.find { case (window, _) =>
         (for {
           windowEnd <- window.end
-          event <- eventOp
+          (event, _) <- eventOpWithIndex
           eventEndOrStart = event.end.getOrElse(event.start)
           if window.name == event.name
           if windowEnd.lineNo > eventEndOrStart.lineNo
@@ -467,7 +517,9 @@ trait ClientLogClassifierFactoryComponent {
         } yield result).getOrElse(false)
       } match {
         case Some((window, index)) =>
-          windowBuffer.update(index, window.copy(relatedButtonEvent = eventOp))
+          windowBuffer.update(index, window.copy(relatedButtonEvent = eventOpWithIndex.map(_._1)))
+          // bindされたbuttonEventはbufferから削除
+          buttonEventBuffer.remove(eventOpWithIndex.map(_._2).get)
         case _ =>
           logger.info(s"$fileName:$lineNo Couldn't bind Button Event with window.")
       }
