@@ -152,11 +152,11 @@ trait ClientLogClassifierFactoryComponent {
                 "TOST_AGENCY"
               else if ((market == "TYO_TOST") && (crossCapacity == "BROKER"))
                 "TOST_BROKER"
-              else if ((market == "TYO_TOST") && (crossCapacity == "FIXED_PRICE"))
+              else if ((market == "TYO_TOST") && (crossType == "FIXED_PRICE"))
                 "TOST2"
-              else if ((market == "TYO_TOST") && (crossCapacity == "BUY_BACK"))
+              else if ((market == "TYO_TOST") && (crossType == "BUY_BACK"))
                 "TOST3_BUY_BACK"
-              else if ((market == "TYO_TOST") && (crossCapacity == "DISTRIBUTION"))
+              else if ((market == "TYO_TOST") && (crossType == "DISTRIBUTION"))
                 "TOST3_BUNBAI"
               else if ((market == "JSD_OTC") && (crossCapacity == "PRINCIPAL"))
                 "OTC_PRINCIPAL"
