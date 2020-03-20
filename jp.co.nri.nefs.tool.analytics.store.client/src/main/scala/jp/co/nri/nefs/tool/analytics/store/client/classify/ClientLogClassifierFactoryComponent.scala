@@ -4,6 +4,13 @@ import java.sql.Timestamp
 
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
+import jp.co.nri.nefs.tool.analytics.common.property.EBlockType._
+import jp.co.nri.nefs.tool.analytics.common.property.ECounterParty.ECounterParty
+import jp.co.nri.nefs.tool.analytics.common.property.ECrossCapacity._
+import jp.co.nri.nefs.tool.analytics.common.property.ECrossType._
+import jp.co.nri.nefs.tool.analytics.common.property.{ECrossCapacity, ECrossType, EMarket, ECrossCapacity => _, ECrossType => _, EMarket => _, _}
+import jp.co.nri.nefs.tool.analytics.common.property.EDestinationType.EDestinationType
+import jp.co.nri.nefs.tool.analytics.common.property.EMarket._
 import jp.co.nri.nefs.tool.analytics.model.client.{Log, OMSAplInfo, PreCheck, WindowDetail}
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
 
@@ -70,9 +77,41 @@ trait ClientLogClassifierFactoryComponent {
 
   case class Request(property: String) {
     val parameters: ListBuffer[Map[String, String]] = ListBuffer[Map[String, String]]()
+
+    def headMarket: Option[EMarket] = for {
+      headParameter <- parameters.headOption
+      market <- headParameter.get(EMarket.key)
+      eMarket = EMarket.withName(market)
+    } yield eMarket
+
+    def headCrossCapacity: Option[ECrossCapacity] = for {
+      headParameter <- parameters.headOption
+      crossCapacity <- headParameter.get(ECrossCapacity.key)
+      eCrossCapacity = ECrossCapacity.withName(crossCapacity)
+    } yield eCrossCapacity
+
+    def headCrossType: Option[ECrossType] = for {
+      headParameter <- parameters.headOption
+      crossType <- headParameter.get(ECrossType.key)
+      eCrossType = ECrossType.withName(crossType)
+    } yield eCrossType
+
+    def headCounterParty: Option[ECounterParty] = for {
+      headParameter <- parameters.headOption
+      counterParty <- headParameter.get(ECounterParty.key)
+      eCounterParty <- ECounterParty.withName(counterParty)
+    } yield eCounterParty
+
+    def headBlockType: Option[EBlockType] = for {
+      headParameter <- parameters.headOption
+      blockType <- headParameter.get(EBlockType.key)
+      eBlockType <- EBlockType.withName(blockType)
+    } yield eBlockType
+
     def addParameter(parameter: Map[String, String]): Unit = {
       parameters += parameter
     }
+
   }
 
   case class Window(name: String, start: LineTime, underlyingClass: String,
@@ -89,7 +128,7 @@ trait ClientLogClassifierFactoryComponent {
         lineNo = start.lineNo,
         activator = relatedHandler.map(_.name).orElse(relatedWindow.flatMap(w => getWindowName(w.name))),
         windowName = getWindowName(name),
-        destinationType = getDestinationType(requestBuffer),
+        destinationType = getDestinationType(requestBuffer).map(_.toString),
         action = relatedButtonEvent.map(_.event),
         method = None,
         time = start.time,
@@ -108,89 +147,109 @@ trait ClientLogClassifierFactoryComponent {
       Some(forwardName.replace(" ", "").replace("　", ""))
     }
 
-    private def getDestinationType(requestBufferOp: Option[ListBuffer[Request]]): Option[String] = {
-      (for {
+    private def getDestinationType(requestBufferOp: Option[ListBuffer[Request]]): Option[EDestinationType] = {
+      for {
         requestBuffer <- requestBufferOp
         request <- requestBuffer.lastOption
-        destinationType = request.property match {
-          case "ENewInterventionProperty" => "EXCHANGE"
-          case "ENewChildOrderProperty" => "CHILD_ORDER"
-          case "ENewChildOrderAndAlgoProperty" | "ENewOrderAndAlgoProperty" => "ALGO"
+        destinationType <- request.property match {
+          case "ENewInterventionProperty" => Some(EDestinationType.EXCHANGE)
+          case "ENewChildOrderProperty" => Some(EDestinationType.CHILD_ORDER)
+          case "ENewChildOrderAndAlgoProperty" | "ENewOrderAndAlgoProperty" => Some(EDestinationType.ALGO)
           case "ENewBlockDetailProperty" =>
             val newBlockRequestOp = requestBuffer.reverseIterator.find(_.property == "ENewBlockProperty")
-            val blockType = for {
+            val blockTypeOp = for {
               newBlockRequest <- newBlockRequestOp
-              parameters <- newBlockRequest.parameters.headOption
-              bType <- parameters.get("BLOCK_TYPE")
+              bType <- newBlockRequest.headBlockType
             } yield bType
-            blockType.map { bType => if (bType == "WAVE") "WAVE" else "TRADING_LIST" }.getOrElse("UNKNOWN")
+            blockTypeOp match {
+              case Some(blockType) =>
+                blockType match {
+                  case WAVE         => Some(EDestinationType.WAVE)
+                  case TRADING_LIST => Some(EDestinationType.TRADING_LIST)
+                }
+              case _                => None
+            }
           case "ENewBasketCrossProperty" =>
-            val dTypeOp = for {
-              params <- request.parameters.headOption
-              market <- params.get("MARKET")
-              crossDestinationType =
-              if (market == "TYO_TOST")
-                "TOST_PRINCIPAL"
-              else if (market == "JSD_OTC")
-                "OTC_PRINCIPAL"
-              else
-                "UNKNOWN"
-            } yield crossDestinationType
-            dTypeOp.getOrElse("UNKNOWN")
+            (for {
+              market <- request.headMarket
+              crossDestinationType = market match {
+                case TYO_TOST => Some(EDestinationType.TOST_PRINCIPAL)
+                case JSD_OTC  => Some(EDestinationType.OTC_PRINCIPAL)
+                case _        => None
+              }
+            } yield crossDestinationType).get
           case "ENewSliceProperty" | "ENewReservedSliceProperty" | "ENewOrderAndSliceProperty" |
                "ENewOrderAndReservedSliceProperty" =>
-            val dTypeOp = for {
-              params <- request.parameters.headOption
-              market <- params.get("MARKET")
-              crossCapacity <- params.get("CROSS_CAPACITY")
-              crossType <- params.get("CROSS_TYPE")
-              crossCounterparty <- params.get("CROSS_COUNTERPARTY")
-              crossDestinationType =
-              if ((market == "TYO_TOST") && (crossCapacity == "PRINCIPAL"))
-                "TOST_PRINCIPAL"
-              else if ((market == "TYO_TOST") && (crossCapacity == "AGENCY"))
-                "TOST_AGENCY"
-              else if ((market == "TYO_TOST") && (crossCapacity == "BROKER"))
-                "TOST_BROKER"
-              else if ((market == "TYO_TOST") && (crossType == "FIXED_PRICE"))
-                "TOST2"
-              else if ((market == "TYO_TOST") && (crossType == "BUY_BACK"))
-                "TOST3_BUY_BACK"
-              else if ((market == "TYO_TOST") && (crossType == "DISTRIBUTION"))
-                "TOST3_BUNBAI"
-              else if ((market == "JSD_OTC") && (crossCapacity == "PRINCIPAL"))
-                "OTC_PRINCIPAL"
-              else if ((market == "JSD_OTC") && (crossCapacity == "AGENCY"))
-                "OTC_AGENCY"
-              else if ((market == "JSD_OTC") && (crossCapacity == "BROKER"))
-                "OTC_BROKER"
-              else if ((market == "OSA_DERIV") && (crossCapacity == "PRINCIPAL"))
-                "JNET_PRINCIPAL"
-              else if ((market == "OSA_DERIV") && (crossCapacity == "BROKER"))
-                "JNET_BROKER"
-              else if (crossType == "FIXED_PRICE")
-                "CLOSE_PRICE"
-              else if (crossType == "BUY_BACK")
-                "BUY_BACK"
-              else if (crossType == "DISTRIUBUTION")
-                "BUNBAI"
-              else if (crossType == "SINGLE")
-                "OFF_AUCTION"
-              else if (crossCounterparty == "BROKER")
-                "ODD_LOT_PRINCIPAL"
-              else if (crossCounterparty == "RETELA")
-                "ODD_LOT_AGENCY"
-              else
-                "EXCHANGE"
-            } yield crossDestinationType
-            dTypeOp.getOrElse("UNKNOWN")
-          case _ => "UNKNOWN"
+            getCrossDestinationType(request.headMarket, request.headCrossCapacity,
+              request.headCrossType, request.headCounterParty)
         }
-      } yield destinationType).flatMap { d =>
-        if (d == "UNKNOWN")
-          None
-        else
-          Some(d)
+      } yield destinationType
+    }
+
+    private def getCrossDestinationType(marketOp: Option[EMarket], crossCapacityOp: Option[ECrossCapacity],
+                                        crossTypeOp: Option[ECrossType], counterPartyOp: Option[ECounterParty]): Option[EDestinationType] = {
+      marketOp match {
+        case Some(market) =>
+          market match {
+            case TYO_TOST =>
+              crossCapacityOp match {
+                case Some(crossCapacity) =>
+                  crossCapacity match {
+                    case PRINCIPAL         => Some(EDestinationType.TOST_PRINCIPAL)
+                    case AGENCY            => Some(EDestinationType.TOST_AGENCY)
+                    case BROKER            => Some(EDestinationType.TOST_BROKER)
+                  }
+                case _ =>
+                  crossTypeOp match {
+                    case Some(crossType) =>
+                      crossType match {
+                        case FIXED_PRICE   => Some(EDestinationType.TOST2)
+                        case BUY_BACK      => Some(EDestinationType.TOST3_BUY_BACK)
+                        case DISTRIUBUTION => Some(EDestinationType.TOST3_BUNBAI)
+                        case _             => None
+                      }
+                  }
+              }
+            case JSD_OTC =>
+              crossCapacityOp match {
+                case Some(crossCapacity) =>
+                  crossCapacity match {
+                    case PRINCIPAL         => Some(EDestinationType.OTC_PRINCIPAL)
+                    case AGENCY            => Some(EDestinationType.OTC_AGENCY)
+                    case BROKER            => Some(EDestinationType.OTC_BROKER)
+                  }
+                case _                     => None
+              }
+            case OSA_DERIV =>
+              crossCapacityOp match {
+                case Some(crossCapacity) =>
+                  crossCapacity match {
+                    case PRINCIPAL         => Some(EDestinationType.JNET_PRINCIPAL)
+                    case AGENCY            => None
+                    case BROKER            => Some(EDestinationType.JNET_BROKER)
+                  }
+              }
+            case _ =>
+              crossTypeOp match {
+                case Some(crossType) =>
+                  crossType match {
+                    case SINGLE            => Some(EDestinationType.OFF_AUCTION)
+                    case BASKET            => None
+                    case FIXED_PRICE       => Some(EDestinationType.CLOSE_PRICE)
+                    case BUY_BACK          => Some(EDestinationType.BUY_BACK)
+                    case DISTRIUBUTION     => Some(EDestinationType.BUNBAI)
+                  }
+                case _  =>
+                  counterPartyOp match {
+                    case Some(counterParty) =>
+                      counterParty match {
+                        case ECounterParty.BROKER => Some(EDestinationType.ODD_LOT_PRINCIPAL)
+                        case ECounterParty.RETELA => Some(EDestinationType.ODD_LOT_AGENCY)
+                      }
+                    case _                        => Some(EDestinationType.EXCHANGE)
+                  }
+              }
+          }
       }
     }
 
@@ -282,7 +341,7 @@ trait ClientLogClassifierFactoryComponent {
       message match {
         case LineInfo.parameterRegex(p) =>
           Some(p.split(",").collect{
-            case LineInfo.keyValueRegex(key, value) => (key.trim, value.trim)
+            case LineInfo.keyValueRegex(key1, value) => (key1.trim, value.trim)
           }.toMap)
         case _ => None
       }

@@ -123,6 +123,9 @@ lazy val `collect-client` = (project in file("jp.co.nri.nefs.tool.analytics.coll
   .settings(libraryDependencies ++= Dependencies.collect_client)
   .dependsOn(`model-client`, util)
 
+lazy val `common-property` = (project in file("jp.co.nri.nefs.tool.analytics.common.property"))
+  .settings(commonSettings: _*)
+
 lazy val `model-common` = (project in file("jp.co.nri.nefs.tool.analytics.model.common"))
   .settings(commonSettings: _*)
   .dependsOn(`play-slick`)
@@ -149,7 +152,7 @@ lazy val `store-client` = (project in file("jp.co.nri.nefs.tool.analytics.store.
     organization := "jp.co.nri.nefs.tool",
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
   )
-  .dependsOn(`play-slick`, `store-common`, `model-client`, util, config)
+  .dependsOn(`play-slick`, `store-common`, `model-client`, `common-property`, util, config)
 
 
 lazy val util = (project in file("jp.co.nri.nefs.tool.util"))

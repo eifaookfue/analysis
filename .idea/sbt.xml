@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.analyze.client" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.collect.client" />
+            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.common.property" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.config" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.model.client" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.model.common" />
