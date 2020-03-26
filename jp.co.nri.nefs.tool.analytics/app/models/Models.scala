@@ -10,8 +10,8 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
 }
 
 
-case class Params(page: Int = 0, orderBy: Option[Int]  = None, logId: Option[Long] = None,
-                  appName: Option[String]  = None, computerName: Option[String]  = None, userName:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Int]  = None,
+case class Params(page: Int = 0, orderBy: Option[Int]  = None, logId: Option[Int] = None,
+                  appName: Option[String]  = None, computerName: Option[String]  = None, userName:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Long]  = None,
                   activator: Option[String]  = None, windowName: Option[String]  = None, destinationType: Option[String]  = None,
                   action: Option[String]  = None, method: Option[String]  = None,
                   time: Option[Timestamp]  = None, startupTime: Option[Long]  = None, logFile: Option[String]  = None)
@@ -25,7 +25,7 @@ object Params {
       val page = intBinder.bind("page", params)
       val orderBy = intBinder.bind("orderBy", params)
       val appName = strBinder.bind("appName", params)
-      val logId = longBinder.bind("logId", params)
+      val logId = intBinder.bind("logId", params)
       val computerName = strBinder.bind("computerName", params)
       val userId = strBinder.bind("userId", params)
       val tradeDate = strBinder.bind("tradeDate", params)

@@ -4,12 +4,17 @@ import java.sql.Timestamp
 
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
+import jp.co.nri.nefs.tool.analytics.common.property.EBlockType
 import jp.co.nri.nefs.tool.analytics.common.property.EBlockType._
+import jp.co.nri.nefs.tool.analytics.common.property.ECounterParty
 import jp.co.nri.nefs.tool.analytics.common.property.ECounterParty.ECounterParty
+import jp.co.nri.nefs.tool.analytics.common.property.ECrossCapacity
 import jp.co.nri.nefs.tool.analytics.common.property.ECrossCapacity._
+import jp.co.nri.nefs.tool.analytics.common.property.ECrossType
 import jp.co.nri.nefs.tool.analytics.common.property.ECrossType._
-import jp.co.nri.nefs.tool.analytics.common.property.{ECrossCapacity, ECrossType, EMarket, ECrossCapacity => _, ECrossType => _, EMarket => _, _}
+import jp.co.nri.nefs.tool.analytics.common.property.EDestinationType
 import jp.co.nri.nefs.tool.analytics.common.property.EDestinationType.EDestinationType
+import jp.co.nri.nefs.tool.analytics.common.property.EMarket
 import jp.co.nri.nefs.tool.analytics.common.property.EMarket._
 import jp.co.nri.nefs.tool.analytics.model.client.{Log, OMSAplInfo, PreCheck, WindowDetail}
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
@@ -78,39 +83,21 @@ trait ClientLogClassifierFactoryComponent {
   case class Request(property: String) {
     val parameters: ListBuffer[Map[String, String]] = ListBuffer[Map[String, String]]()
 
-    def headMarket: Option[EMarket] = for {
-      headParameter <- parameters.headOption
-      market <- headParameter.get(EMarket.key)
-      eMarket = EMarket.withName(market)
-    } yield eMarket
-
-    def headCrossCapacity: Option[ECrossCapacity] = for {
-      headParameter <- parameters.headOption
-      crossCapacity <- headParameter.get(ECrossCapacity.key)
-      eCrossCapacity = ECrossCapacity.withName(crossCapacity)
-    } yield eCrossCapacity
-
-    def headCrossType: Option[ECrossType] = for {
-      headParameter <- parameters.headOption
-      crossType <- headParameter.get(ECrossType.key)
-      eCrossType = ECrossType.withName(crossType)
-    } yield eCrossType
-
-    def headCounterParty: Option[ECounterParty] = for {
-      headParameter <- parameters.headOption
-      counterParty <- headParameter.get(ECounterParty.key)
-      eCounterParty <- ECounterParty.withName(counterParty)
-    } yield eCounterParty
-
-    def headBlockType: Option[EBlockType] = for {
-      headParameter <- parameters.headOption
-      blockType <- headParameter.get(EBlockType.key)
-      eBlockType <- EBlockType.withName(blockType)
-    } yield eBlockType
+    def headMarket: Option[EMarket] = headOption(EMarket.key)(EMarket.withNameOp)
+    def headCrossCapacity: Option[ECrossCapacity] = headOption(ECrossCapacity.key)(ECrossCapacity.withNameOp)
+    def headCrossType: Option[ECrossType] = headOption(ECrossType.key)(ECrossType.withNameOp)
+    def headCounterParty: Option[ECounterParty] = headOption(ECounterParty.key)(ECounterParty.withNameOp)
+    def headBlockType: Option[EBlockType] = headOption(EBlockType.key)(EBlockType.withNameOp)
 
     def addParameter(parameter: Map[String, String]): Unit = {
       parameters += parameter
     }
+
+    private def headOption[T](key: String)(f: String => Option[T]): Option[T] = for {
+      headParameter <- parameters.headOption
+      str <- headParameter.get(key)
+      result <- f(str)
+    } yield result
 
   }
 
@@ -208,6 +195,7 @@ trait ClientLogClassifierFactoryComponent {
                         case DISTRIUBUTION => Some(EDestinationType.TOST3_BUNBAI)
                         case _             => None
                       }
+                    case _ => None
                   }
               }
             case JSD_OTC =>
@@ -228,6 +216,7 @@ trait ClientLogClassifierFactoryComponent {
                     case AGENCY            => None
                     case BROKER            => Some(EDestinationType.JNET_BROKER)
                   }
+                case _ => None
               }
             case _ =>
               crossTypeOp match {
@@ -250,6 +239,7 @@ trait ClientLogClassifierFactoryComponent {
                   }
               }
           }
+        case _ => None
       }
     }
 
@@ -445,7 +435,7 @@ trait ClientLogClassifierFactoryComponent {
       else if ((lineInfo.message contains "Dialog closed.") || (lineInfo.message contains "Closed.")) {
         val windowName = lineInfo.windowName
         updateWithEnd(windowName, windowBuffer, aplInfo.fileName, lineNo) {
-          window => window.copy(end = Some(LineTime(lineNo, lineInfo.datetime)))
+          window => window.copy(end = Some(LineTime(lineNo, lineInfo.datetime)), requestBuffer = Some(requestBuffer))
         }
         bindWithButtonEvent(aplInfo.fileName, lineNo, windowBuffer, windowName, buttonEventBuffer)
         windowBuffer.zipWithIndex.reverseIterator.find { case (w, _) => w.name == windowName } match {
@@ -471,7 +461,7 @@ trait ClientLogClassifierFactoryComponent {
         }
       }
       else if (lineInfo.message contains "Button event ends") {
-        updateWithEnd(lineInfo.windowName, buttonEventBuffer) {
+        updateWithEnd(lineInfo.windowName, buttonEventBuffer, aplInfo.fileName, lineNo) {
           event => event.copy(end = Some(LineTime(lineNo, lineInfo.datetime)))
         }
       } else if (lineInfo.underlyingClass == "DefaultValidationDataManager") {
@@ -526,7 +516,7 @@ trait ClientLogClassifierFactoryComponent {
       }
     }
 
-    /** 同じ名前でEndがまだ登録されていないオブジェクトをBufferから見つけ出し、Endを更新します。
+    /** 同じ名前でのオブジェクトをBufferから見つけ出し、Endを更新します。
       * fileNameが指定されてかつ対象が見つからなかった場合、Warningを出力します。
       *
       * @param  name     オブジェクトの名前
@@ -536,10 +526,10 @@ trait ClientLogClassifierFactoryComponent {
       * @param  f        見つかった検索対象オブジェクトを元に新しいオブジェクトを作成するファンクション
       * @tparam T ListBufferの型。NamingとEndingをミックスインしたもの
       */
-    private def updateWithEnd[T <: Naming with Ending](name: String, buffer: ListBuffer[T],
+    private def updateWithEnd[T <: Naming](name: String, buffer: ListBuffer[T],
                                                        fileName: String = null, lineNo: Int = 0)(f: T => T): Unit = {
       buffer.zipWithIndex.reverseIterator.find {
-        case (t, _) => t.end.isEmpty && t.name == name
+        case (t, _) => t.name == name
       } match {
         case Some((t, index)) =>
           buffer.update(index, f(t))

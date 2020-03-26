@@ -171,7 +171,7 @@
     <orderEntry type="library" name="sbt: cglib:cglib-nodep:3.2.4:jar" level="project" />
     <orderEntry type="library" name="sbt: aopalliance:aopalliance:1.0:jar" level="project" />
     <orderEntry type="module" module-name="util" exported="" />
-    <orderEntry type="module" module-name="store-client" exported="" />
     <orderEntry type="module" module-name="play-slick" exported="" />
+    <orderEntry type="module" module-name="model-common" exported="" />
   </component>
 </module>

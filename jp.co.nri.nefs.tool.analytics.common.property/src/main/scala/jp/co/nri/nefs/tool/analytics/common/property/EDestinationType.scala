@@ -1,6 +1,8 @@
 package jp.co.nri.nefs.tool.analytics.common.property
 
-object EDestinationType extends Enumeration {
+import jp.co.nri.nefs.tool.util.EnumerationLike
+
+object EDestinationType extends Enumeration with EnumerationLike  {
   type EDestinationType = Value
   val EXCHANGE, CHILD_ORDER, ALGO,
   TOST_PRINCIPAL, TOST_AGENCY, TOST_BROKER, TOST2, TOST3_BUY_BACK, TOST3_BUNBAI,

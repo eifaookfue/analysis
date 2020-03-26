@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding" addBOMForNewFiles="with NO BOM" />
+  <component name="Encoding" addBOMForNewFiles="with NO BOM">
+    <file url="file://$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.store.client/logFiles/TradeSheet_OMS_TKY_FID2CAD332_356435_20191010155412452.log" charset="windows-31j" />
+  </component>
 </project>

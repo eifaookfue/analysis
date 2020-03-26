@@ -98,7 +98,7 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
     } yield Page(result, page, offset, totalRows)
   }
 
-  def fileName(logId: Long): Future[String] = {
+  def fileName(logId: Int): Future[String] = {
     val query = logs.filter(_.logId === logId).map(_.fileName)
     val action = query.result.head
     db.run(action)

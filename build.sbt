@@ -109,7 +109,7 @@ lazy val `play-analytics` = (project in file("jp.co.nri.nefs.tool.analytics"))
   .settings(javaOptions in Test += "-Dslick.dbs.default.connectionTimeout=30 seconds")
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.analytics)
-  .dependsOn(`play-slick`, `model-client`, util, `store-client`, config)
+  .dependsOn(`play-slick`, `model-client`, `model-common`, util, config)
 
 lazy val `analyze-client` = (project in file("jp.co.nri.nefs.tool.analytics.analyze.client"))
   .settings(commonSettings: _*)
@@ -125,6 +125,7 @@ lazy val `collect-client` = (project in file("jp.co.nri.nefs.tool.analytics.coll
 
 lazy val `common-property` = (project in file("jp.co.nri.nefs.tool.analytics.common.property"))
   .settings(commonSettings: _*)
+  .dependsOn(util)
 
 lazy val `model-common` = (project in file("jp.co.nri.nefs.tool.analytics.model.common"))
   .settings(commonSettings: _*)

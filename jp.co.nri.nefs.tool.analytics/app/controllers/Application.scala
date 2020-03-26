@@ -42,7 +42,7 @@ class Application @Inject() (
     windowDetails.map(wd => Ok(html.list(wd, params)))
   }
 
-  def fileDownload(logId: Long) = Action {
+  def fileDownload(logId: Int) = Action {
     val fileName = Await.result(windowDetailDao.fileName(logId), 10.seconds)
     val fileDir = config.underlying.getString("logDir")
     Ok.sendFile(
