@@ -2,6 +2,8 @@ package models
 
 import java.sql.Timestamp
 
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 import play.api.mvc.QueryStringBindable
 
 case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
@@ -59,4 +61,16 @@ object Params {
       ).collect({ case Some(p) => p}).reduceLeft(_ + "&" + _)
     }
   }
+}
+
+case class WindowCountBySlice(slice: String, newOrderSingleCount: Int, newSliceCount: Int,
+                              count: Int)
+
+object WindowCountBySlice {
+  implicit val windowSliceWrites: Writes[WindowCountBySlice] = (
+    (JsPath \ "slice").write[String] and
+      (JsPath \ "newordersingle_count").write[Int] and
+      (JsPath \ "newslice_count").write[Int] and
+      (JsPath \ "total_count").write[Int]
+  )(unlift(WindowCountBySlice.unapply))
 }

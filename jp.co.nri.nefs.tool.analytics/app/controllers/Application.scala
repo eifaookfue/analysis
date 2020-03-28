@@ -4,9 +4,10 @@ import java.nio.file.Paths
 
 import dao.WindowDetailDAO
 import javax.inject.Inject
-import models.Params
+import models.{Params, WindowCountBySlice}
 import play.api.Configuration
 import play.api.i18n.I18nSupport
+import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, ControllerComponents, Result}
 import views.html
 
@@ -21,7 +22,7 @@ class Application @Inject() (
 )(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents) with I18nSupport {
 
   /** This result directly redirect to the application home.*/
-  val Home: Result = Redirect(routes.Application.list(Params()))
+  val Home: Result = Redirect(routes.Application.dashboard_client())
 
   /** Describe the computer form (used in both edit and create screens).*/
 
@@ -29,6 +30,17 @@ class Application @Inject() (
 
   /** Handle default path requests, redirect to computers list */
   def index = Action { Home }
+
+  def dashboard_client = Action {
+    val windowCount = List(
+      WindowCountBySlice("06:00", 10,20,30),
+      WindowCountBySlice("06:10", 30,10,40),
+      WindowCountBySlice("06:20", 40,30,70),
+      WindowCountBySlice("06:30", 20,30,50)
+    )
+    Ok(html.dashboard_client(Json.toJson(windowCount)))
+  }
+
 
   /**
    * Display the paginated list of computers.

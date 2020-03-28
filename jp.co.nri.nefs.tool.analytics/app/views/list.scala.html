@@ -26,7 +26,7 @@ params: Params)(implicit request: play.api.mvc.RequestHeader, flash: play.api.mv
     }
 }
 
-@main {
+@main ("window-detail", "window"){
     
     <h1>@Messages("windowDetails.list.title", currentPage.total)</h1>
 
