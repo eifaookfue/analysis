@@ -5,11 +5,13 @@ var chart = c3.generate({
     },
     data: {
         json: data1,
+        type: 'bar',
         xFormat: '%H:%M',
         keys: {
             x: 'slice',
-            value: ['newordersingle_count', 'newslice_count']
-        }
+            value: ['NewOrderSingle', 'NewSlice']
+        },
+        groups: [['NewOrderSingle', 'NewSlice']]
     },
     axis: {
         x: {

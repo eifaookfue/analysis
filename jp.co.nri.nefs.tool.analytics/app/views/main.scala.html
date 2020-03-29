@@ -1,4 +1,4 @@
-@(title: String, activeParent: String)(content: Html)
+@(title: String, menu: Menu)(content: Html)
 <!DOCTYPE html>
 <html lang="ja">
     <head>
@@ -63,8 +63,13 @@
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                         <!-- Add icons to the links using the .nav-icon class
                              with font-awesome or any other icon font library -->
-                        <li class="nav-item has-treeview">
+                    @if(menu.parent == DASHBOARD) {
+                        <li class="nav-item has-treeview menu-open">
                             <a href="#" class="nav-link active">
+                    } else {
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                           }
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
                                 <p>
                                     Dashboard
@@ -73,13 +78,21 @@
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="./client.html" class="nav-link">
+                                @if(menu == DASHBOARD_CLIENT) {
+                                    <a href="@routes.Application.dashboard_client()" class="nav-link active">
+                                } else {
+                                    <a href="@routes.Application.dashboard_client()" class="nav-link">
+                                }
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Client</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="./server.html" class="nav-link">
+                                @if(menu == DASHBOARD_SERVER) {
+                                    <a href="@routes.Application.dashboard_server()" class="nav-link" class="nav-link active">
+                                } else {
+                                    <a href="@routes.Application.dashboard_server()" class="nav-link" class="nav-link">
+                                }
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Server</p>
                                     </a>

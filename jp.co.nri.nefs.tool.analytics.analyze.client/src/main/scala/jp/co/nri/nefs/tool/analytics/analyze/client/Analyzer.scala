@@ -61,6 +61,16 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     val f1 = db.run(setup)
     Await.result(f1, Duration.Inf)
 
+    /*
+      INSERT INTO WINDOW_SLICE(
+	      SELECT '0900', l.USER_ID, NVL(WINDOW_NAME,'OTHER'), COUNT(1), 0, 0
+	      FROM
+		      LOG l INNER JOIN WINDOW_DETAIL w
+		      ON l.LOG_ID = w.LOG_ID
+	      WHERE
+		    to_char(w.TIME, 'HH24MI') > '0000' AND to_char(w.TIME, 'HH24MI') < '0900'
+      )
+     */
     val list = for {
       i <- 0 until range.length -1
       q = (for {
@@ -78,6 +88,20 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     val aggregated: Future[Seq[Int]] = Future.sequence(list)
     Await.result(aggregated, Duration.Inf)
 
+    /*
+      updateActionで利用するため、slice、userId、windowNameをキー、
+      カウント、startupTime平均値のテーブルを算出する
+
+      SELECT '0900', l.USER_ID, NVL(WINDOW_NAME,'OTHER'), COUNT(1), AVG(STARTUP_TIME)
+      FROM
+	      LOG l INNER JOIN WINDOW_DETAIL w
+	      ON l.LOG_ID = w.LOG_ID
+      WHERE
+	      to_char(w.TIME, 'HH24MI') > '0000' AND to_char(w.TIME, 'HH24MI') < '0900'
+	      AND w.STARTUP_TIME is not null
+      GROUP BY
+	      l.USER_ID, w.WINDOW_NAME
+     */
     val list2 = for {
       i <- 0 until range.length - 1
       q = (for {
@@ -96,6 +120,14 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     val agg2 = Future.sequence(list2)
     val sliceList = Await.result(agg2, Duration.Inf)
 
+    /*
+      UPDATE WINDOW_SLICE
+        SET STARTUP_COUNT = ?, AVG_STARTUP = ?
+      WHERE
+	      SLICE = '0900'
+        AND USER_ID = 'user-A'
+        AND WINDOW_NAME = 'NewSplit'
+     */
     // slice毎のList。select結果は複数ありえる（今回はないが）のでそれもList
     val list3 = for {
       tmpSlice <- sliceList

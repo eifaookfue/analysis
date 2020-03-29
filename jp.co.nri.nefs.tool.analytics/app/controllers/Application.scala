@@ -13,8 +13,8 @@ import views.html
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
+import scala.util.Random
 
-/** Manage a database of computers. */
 class Application @Inject() (
     windowDetailDao: WindowDetailDAO,
     controllerComponents: ControllerComponents,
@@ -32,23 +32,21 @@ class Application @Inject() (
   def index = Action { Home }
 
   def dashboard_client = Action {
-    val windowCount = List(
-      WindowCountBySlice("06:00", 10,20,30),
-      WindowCountBySlice("06:10", 30,10,40),
-      WindowCountBySlice("06:20", 40,30,70),
-      WindowCountBySlice("06:30", 20,30,50)
-    )
+    val r = Random
+    val windowCount = for {
+      hour <- 6 to 17
+      minute <- 0 to 5
+      slice =  f"$hour%02d" + ":" + f"${minute*10}%02d"
+      w = WindowCountBySlice(slice, r.nextInt(100), r.nextInt(100), r.nextInt(100))
+    } yield w
+
     Ok(html.dashboard_client(Json.toJson(windowCount)))
   }
 
+  def dashboard_server = Action {
+    NotFound
+  }
 
-  /**
-   * Display the paginated list of computers.
-   *
-   * @param page Current page number (starts from 0)
-   * @param orderBy Column to be sorted
-   * @param filter Filter applied on computer names
-   */
   def list(params: Params) = Action.async { implicit request =>
     val windowDetails = windowDetailDao.list(params)
     windowDetails.map(wd => Ok(html.list(wd, params)))

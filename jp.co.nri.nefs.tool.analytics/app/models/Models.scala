@@ -69,8 +69,16 @@ case class WindowCountBySlice(slice: String, newOrderSingleCount: Int, newSliceC
 object WindowCountBySlice {
   implicit val windowSliceWrites: Writes[WindowCountBySlice] = (
     (JsPath \ "slice").write[String] and
-      (JsPath \ "newordersingle_count").write[Int] and
-      (JsPath \ "newslice_count").write[Int] and
-      (JsPath \ "total_count").write[Int]
+      (JsPath \ "NewOrderSingle").write[Int] and
+      (JsPath \ "NewSlice").write[Int] and
+      (JsPath \ "Total").write[Int]
   )(unlift(WindowCountBySlice.unapply))
 }
+
+sealed abstract class Menu(val parent: Menu)
+
+case object DASHBOARD extends Menu(null)
+case object DASHBOARD_CLIENT extends Menu(DASHBOARD)
+case object DASHBOARD_SERVER extends Menu(DASHBOARD)
+case object WINDOW extends Menu(null)
+case object NEW_ORDER_SINGLE extends Menu(WINDOW)

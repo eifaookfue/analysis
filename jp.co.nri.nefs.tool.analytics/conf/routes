@@ -10,6 +10,8 @@ GET     /windowDetails                  controllers.Application.list(params: mod
 
 GET     /dashboard-client               controllers.Application.dashboard_client()
 
+GET     /dashboard-server               controllers.Application.dashboard_server()
+
 GET  /fileDownload               controllers.Application.fileDownload(logId: Int)
 
 # Map static resources from the /public folder to the /assets URL path
