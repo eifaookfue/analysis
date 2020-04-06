@@ -6,6 +6,8 @@ import jp.co.nri.nefs.tool.analytics.store.client.classify.ClientLogClassifierFa
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
 import jp.co.nri.nefs.tool.analytics.store.common.ServiceInjector
 
+import scala.io.StdIn
+
 object Keywords {
   val OBJ_EXTENSION = ".obj"
   val LOG_SUFFIX = "_Log"
@@ -18,7 +20,7 @@ object ClientLogSenderExecutor extends ClientLogSenderComponent with ClientLogCl
   val sender = new DefaultClientLogSender()
   ServiceInjector.initialize()
   val clientLogRecorder: ClientLogRecorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
-  val clientLogClassifierFactory = new DefaultClientLogClassifyFactory(clientLogRecorder)
+  val clientLogClassifierFactory = new DefaultClientLogClassifierFactory(clientLogRecorder)
 
   def main(args: Array[String]): Unit = {
 
@@ -42,6 +44,7 @@ object ClientLogSenderExecutor extends ClientLogSenderComponent with ClientLogCl
 
     try {
       sender.start()
+      //StdIn.readLine()
     } catch {
       case e: Exception => logger.warn("", e)
     } finally {

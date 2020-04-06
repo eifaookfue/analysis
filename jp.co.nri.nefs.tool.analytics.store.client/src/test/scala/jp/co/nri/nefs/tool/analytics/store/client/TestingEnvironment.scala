@@ -20,7 +20,7 @@ trait TestingEnvironment extends ClientLogClassifierFactoryComponent {
   //val clientLogRecorder: ClientLogRecorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
 
   val clientLogRecorder = new MockLogRecorder
-  val clientLogClassifierFactory = new DefaultClientLogClassifyFactory(clientLogRecorder)
+  val clientLogClassifierFactory = new DefaultClientLogClassifierFactory(clientLogRecorder)
   val omsAplInfo = OMSAplInfo("","","","","","20200216152000000")
   val clientLogClassifier: DefaultClientLogClassifier  = clientLogClassifierFactory.create(omsAplInfo).asInstanceOf[DefaultClientLogClassifier]
   val output: ListBuffer[WindowDetail] = clientLogRecorder.output

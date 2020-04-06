@@ -29,7 +29,7 @@ trait ClientLogSenderComponent {
   class DefaultClientLogSender(implicit val system: ActorSystem) extends ClientLogSender with LazyLogging {
     def start(): Unit = {
       // トップレベルActor
-      val fileSenderActor = system.actorOf(Props[FileSendActor], "fileSender")
+      val fileSenderActor = system.actorOf(FileSendActor.props, "fileSender")
       fileSenderActor.ask(Manager.Start)(5.hours)
     }
   }
@@ -49,7 +49,7 @@ trait ClientLogSenderComponent {
           case e: Exception => log.error(e,"Exception occurred in classification.")
         }
       case Manager.Shutdown =>
-        clientLogClassifier.postStop()
+        clientLogClassifier.preStop()
         context stop self
       case _ =>
         log.info("received unknown message.")
@@ -79,7 +79,7 @@ trait ClientLogSenderComponent {
 
     override def receive: Receive = {
       case Manager.Start =>
-        val lineSenderActor = context.actorOf(FromConfig.props(Props[LineSenderActor]), "lineSender")
+        val lineSenderActor = context.actorOf(FromConfig.props(LineSenderActor.props), "lineSender")
         // ファイル一覧の取得
         val files = FileUtils.autoClose(Files.walk(input)) {
           stream =>
@@ -94,16 +94,20 @@ trait ClientLogSenderComponent {
             log.info(s"unzip ends $file")
             val files2 = FileUtils.autoClose(Files.list(expandedDir)) { s => s.iterator().asScala.map(_.toString).toList }
             for (file2 <- files2) {
-              lineSenderActor ! file2
+              lineSenderActor.ask(file2)(60.minutes)
             }
             log.info(s"delete starts $file")
             FileUtils.delete(expandedDir)
             log.info(s"delete end $file")
           } else
-            lineSenderActor ! file.toString
+            lineSenderActor.ask(file.toString)(60.minutes)
         }
         sender() ! "completed"
     }
+  }
+
+  object FileSendActor {
+    def props: Props = Props(new FileSendActor)
   }
 
   class LineSenderActor extends Actor with RequiresMessageQueue[BoundedMessageQueueSemantics] with ActorLogging {
@@ -152,6 +156,13 @@ trait ClientLogSenderComponent {
           case None =>
             log.debug(s"$file was not valid format, so skipped log sending.")
         }
+        sender() ! "lineCompleted"
+    }
+  }
+
+  object LineSenderActor {
+    def props: Props = {
+      Props(new LineSenderActor)
     }
   }
 

@@ -13,7 +13,7 @@ class ClientLogSenderExecutorSpec extends FlatSpec with ClientLogSenderComponent
   val sender = new DefaultClientLogSender()
   ServiceInjector.initialize()
   val clientLogRecorder: ClientLogRecorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
-  val clientLogClassifierFactory = new DefaultClientLogClassifyFactory(clientLogRecorder)
+  val clientLogClassifierFactory = new DefaultClientLogClassifierFactory(clientLogRecorder)
 
   clientLogRecorder.recreate()
 

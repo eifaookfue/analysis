@@ -33,7 +33,7 @@ trait ClientLogClassifierFactoryComponent {
     def create(aplInfo: OMSAplInfo): ClientLogClassifier
   }
 
-  class DefaultClientLogClassifyFactory(clientLogStore: ClientLogRecorder) extends ClientLogClassifierFactory {
+  class DefaultClientLogClassifierFactory(clientLogStore: ClientLogRecorder) extends ClientLogClassifierFactory {
     def create(aplInfo: OMSAplInfo): ClientLogClassifier = {
       new DefaultClientLogClassifier(aplInfo, clientLogStore)
     }
@@ -41,7 +41,7 @@ trait ClientLogClassifierFactoryComponent {
 
   trait ClientLogClassifier {
     def classify(line: String, lineNo: Int): Unit
-    def postStop(): Unit
+    def preStop(): Unit
   }
 
   trait Naming {
@@ -398,11 +398,11 @@ trait ClientLogClassifierFactoryComponent {
         aplInfo.userId, aplInfo.tradeDate, aplInfo.time, aplInfo.fileName)
     )
 
-    def postStop(): Unit = {
-      logger.info("postStop starts")
+    def preStop(): Unit = {
+      logger.info("preStop starts.")
       val aggFut = Future.sequence(futureBuffer)
       Await.result(aggFut, Duration.Inf)
-      logger.info("postStop ends")
+      logger.info("preStop ends.")
     }
 
     def classify(line: String, lineNo: Int): Unit = {
