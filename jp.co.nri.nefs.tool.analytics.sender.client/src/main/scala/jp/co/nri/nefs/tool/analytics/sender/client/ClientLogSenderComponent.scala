@@ -5,8 +5,9 @@ import java.nio.file.{Files, Paths}
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import akka.dispatch.{BoundedMessageQueueSemantics, RequiresMessageQueue}
-import akka.pattern.{gracefulStop,ask}
+import akka.pattern.{ask, gracefulStop}
 import akka.routing.FromConfig
+import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.analytics.model.client.OMSAplInfo
@@ -16,6 +17,7 @@ import jp.co.nri.nefs.tool.util.{FileUtils, ZipCommand, ZipUtils}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.Await
+import scala.io.StdIn
 import scala.language.implicitConversions
 
 trait ClientLogSenderComponent {
@@ -26,11 +28,14 @@ trait ClientLogSenderComponent {
     def start(): Unit
   }
 
-  class DefaultClientLogSender(implicit val system: ActorSystem) extends ClientLogSender with LazyLogging {
+  class DefaultClientLogSender(implicit val system: ActorSystem, timeout: Timeout) extends ClientLogSender with LazyLogging {
     def start(): Unit = {
       // トップレベルActor
-      val fileSenderActor = system.actorOf(FileSendActor.props, "fileSender")
-      fileSenderActor.ask(Manager.Start)(5.hours)
+      val fileSenderActor = system.actorOf(FileSendActor.props(timeout), "fileSender")
+      val fut = fileSenderActor ? Manager.Start
+      logger.info("ask call starts.")
+      val message =  Await.result(fut, timeout.duration)
+      logger.info(s"ask call ends. received = $message")
     }
   }
 
@@ -62,7 +67,7 @@ trait ClientLogSenderComponent {
     }
   }
 
-  class FileSendActor extends Actor with RequiresMessageQueue[BoundedMessageQueueSemantics] with ActorLogging {
+  class FileSendActor(implicit val timeout: Timeout) extends Actor with RequiresMessageQueue[BoundedMessageQueueSemantics] with ActorLogging {
     final val INPUT_DIR = "inputDir"
     final val ZIP_COMMAND = "zipCommand"
     private val config = ConfigFactory.load()
@@ -94,20 +99,25 @@ trait ClientLogSenderComponent {
             log.info(s"unzip ends $file")
             val files2 = FileUtils.autoClose(Files.list(expandedDir)) { s => s.iterator().asScala.map(_.toString).toList }
             for (file2 <- files2) {
-              lineSenderActor.ask(file2)(60.minutes)
+              lineSenderActor ? file2
             }
             log.info(s"delete starts $file")
             FileUtils.delete(expandedDir)
             log.info(s"delete end $file")
-          } else
-            lineSenderActor.ask(file.toString)(60.minutes)
+          } else {
+            log.info("ask call starts.")
+            val f = lineSenderActor ? file.toString
+            val message = Await.result(f, timeout.duration)
+            log.info(s"ask call ends. message = $message")
+          }
+
         }
-        sender() ! "completed"
+        sender() ! "All files are processed."
     }
   }
 
   object FileSendActor {
-    def props: Props = Props(new FileSendActor)
+    def props(implicit timeout: Timeout): Props = Props(new FileSendActor)
   }
 
   class LineSenderActor extends Actor with RequiresMessageQueue[BoundedMessageQueueSemantics] with ActorLogging {
@@ -156,7 +166,8 @@ trait ClientLogSenderComponent {
           case None =>
             log.debug(s"$file was not valid format, so skipped log sending.")
         }
-        sender() ! "lineCompleted"
+        //StdIn.readLine()
+        sender() ! s"All line of $fileName processed."
     }
   }
 
