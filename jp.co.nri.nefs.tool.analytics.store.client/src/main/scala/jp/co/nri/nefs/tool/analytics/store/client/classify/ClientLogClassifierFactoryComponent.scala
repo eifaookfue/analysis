@@ -290,18 +290,28 @@ trait ClientLogClassifierFactoryComponent {
       }
     }
 
+    /**
+      * 引数の先頭にある[]内のメッセージを抜き出します。
+      * @param message メッセージ
+      * @return
+      */
     private def getMessageInFirstBrackets(message: String): Option[String] = {
       val beginIndex = message.indexOf('[')
       val endIndex = message.indexOf(']')
-      if ((beginIndex >= 0) && (endIndex > 0) && (endIndex > beginIndex)) {
+      if ((beginIndex == 0) && (endIndex > 0) && (endIndex > beginIndex)) {
         Some(message.substring(beginIndex+1, endIndex))
       } else None
     }
 
+    /**
+      * 引数の最後にある[]内のメッセージを抜き出します。
+      * @param message メッセージ
+      * @return
+      */
     private def getMessageInLastBrackets(message: String): Option[String] = {
       val beginIndex = message.lastIndexOf('[')
       val endIndex = message.lastIndexOf(']')
-      if ((beginIndex >= 0) && (endIndex > 0) && (endIndex > beginIndex)) {
+      if ((beginIndex >= 0) && (endIndex > 0) && (endIndex == message.length - 1)) {
         Some(message.substring(beginIndex+1, endIndex))
       } else None
     }
@@ -339,9 +349,9 @@ trait ClientLogClassifierFactoryComponent {
 
     private def getPreCheck(message: String): Option[(String, String)] = {
       val windowNameOp = getMessageInFirstBrackets(message)
+      // windowNameが存在すれば除去
+      val message2 = windowNameOp.map(wn => message.replace("[" + wn + "]", "")).getOrElse(message)
       for {
-        windowName <- windowNameOp
-        message2 = message.replace("[" + windowName + "]", "")
         code <- getMessageInLastBrackets(message2)
         checkMessage = message2.replace("[" + code + "]", "")
       } yield (code, checkMessage)
@@ -466,7 +476,7 @@ trait ClientLogClassifierFactoryComponent {
         }
       } else if (lineInfo.underlyingClass == "DefaultValidationDataManager") {
         for ((code, checkMsg) <- lineInfo.preCheck; id <- logId) {
-          futureBuffer += clientLogRecorder.record(PreCheck(id, lineNo, Some(lineInfo.windowName), code, checkMsg))
+          futureBuffer += clientLogRecorder.record(PreCheck(id, lineNo, windowBuffer.lastOption.map(_.name), code, checkMsg))
         }
       }
       for (property <- lineInfo.requestProperty) requestBuffer += Request(property)
