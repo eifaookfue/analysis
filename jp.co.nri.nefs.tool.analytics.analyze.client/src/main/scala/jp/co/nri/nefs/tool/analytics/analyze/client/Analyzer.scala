@@ -8,11 +8,10 @@ import com.typesafe.config.{Config, ConfigFactory}
 import javax.inject.Inject
 import jp.co.nri.nefs.tool.analytics.model.client.{LogComponent, WindowDetailComponent, WindowSliceComponent}
 import jp.co.nri.nefs.tool.analytics.store.common.ServiceInjector
-import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider, SlickModule}
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
@@ -27,24 +26,23 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   val windowSlices = TableQuery[WindowSlices]
 
 
-  /** startTimeからendTimeまでintervalMinutes毎に時刻(HHMM)を算出します。
-    * 先頭には"0000"、末尾には"2400"を自動で挿入します。
+  /** Returns a sequence of Time String from startTime to endTime by intervalMinutes
    */
   def timeRange(startTime: LocalTime, endTime: LocalTime, intervalMinutes: Int): Seq[String] = {
-    val mid = for {
+    for {
       diff <- 0 to ChronoUnit.MINUTES.between(startTime, endTime).toInt by intervalMinutes
       calcTime = startTime.plus(java.time.Duration.ofMinutes(diff))
       str = "%02d".format(calcTime.getHour) + "%02d".format(calcTime.getMinute)
     } yield str
-    val buffer = ListBuffer[String]()
-    buffer += "0000"
-    buffer ++= mid
-    buffer += "2400"
-    buffer
   }
 
   val config: Config = ConfigFactory.load()
-  val conf: Config = config.getConfig(config.getString("play.slick.db.default"))
+
+  // slick.dbs.default
+  val dbName: String = config.getString(SlickModule.DbKeyConfig) +
+    "." + config.getString(SlickModule.DefaultDbName)
+
+  val conf: Config = config.getConfig(dbName)
   val fname: String = conf.getString("dateToChar.function")
   val format: String = conf.getString("dateToChar.format")
 
@@ -80,7 +78,7 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
         (l.userId, w.windowName)
       }
       q2 = q.map { case ((userId, windowName), lw) =>
-        (range(i) + "_" + range(i+1), userId, windowName.getOrElse("OTHER"), lw.length, 0, 0l)
+        (range(i), userId, windowName.getOrElse("OTHER"), lw.length, 0, 0l)
       }
       selectInsert = windowSlices forceInsertQuery q2
       f = db.run(selectInsert)
@@ -112,7 +110,7 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
         (l.userId, w.windowName)
       }
       q2 = q.map { case ((userId, windowName), lw) =>
-        (range(i) + "_" + range(i + 1), userId, windowName.getOrElse("OTHER"), lw.length, lw.map(_._2.startupTime).avg)
+        (range(i), userId, windowName.getOrElse("OTHER"), lw.length, lw.map(_._2.startupTime).avg)
       }
       f = db.run(q2.result)
     } yield  f
