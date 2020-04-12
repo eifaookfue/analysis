@@ -1,4 +1,4 @@
-@(title: String, menu: Menu)(content: Html)
+@(title: String, menu: Menu)(content: Html)(js_script:Html)
 <!DOCTYPE html>
 <html lang="ja">
     <head>
@@ -185,6 +185,7 @@
 
     <!-- jQuery -->
     <script src="@routes.Assets.at("javascripts/jquery/jquery.js")"></script>
+    @js_script
     <!-- Bootstrap 4 -->
     <script src="@routes.Assets.at("javascripts/bootstrap/js/bootstrap.bundle.js")"></script>
     <!-- AdminLTE App -->

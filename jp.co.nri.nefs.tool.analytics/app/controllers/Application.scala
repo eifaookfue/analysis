@@ -2,7 +2,7 @@ package controllers
 
 import java.nio.file.Paths
 
-import dao.WindowDetailDAO
+import dao.{WindowDetailDAO, WindowSliceDAO}
 import javax.inject.Inject
 import models.{Params, WindowCountBySlice}
 import play.api.Configuration
@@ -17,6 +17,7 @@ import scala.util.Random
 
 class Application @Inject() (
     windowDetailDao: WindowDetailDAO,
+    windowSliceDao: WindowSliceDAO,
     controllerComponents: ControllerComponents,
     config: Configuration
 )(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents) with I18nSupport {
@@ -32,6 +33,8 @@ class Application @Inject() (
   def index = Action { Home }
 
   def dashboard_client = Action {
+    windowSliceDao.list.foreach(println)
+
     val r = Random
     val windowCount = for {
       hour <- 6 to 17
