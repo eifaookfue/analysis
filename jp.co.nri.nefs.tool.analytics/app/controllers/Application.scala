@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 import dao.{WindowDetailDAO, WindowSliceDAO}
 import javax.inject.Inject
-import models.{Params, WindowCountBySlice}
+import models.{Params, WindowCountByDate, WindowCountBySlice}
 import play.api.Configuration
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Json
@@ -34,16 +34,24 @@ class Application @Inject() (
 
   def dashboard_client = Action {
     windowSliceDao.list.foreach(println)
+    windowDetailDao.windowCountByDate.foreach(println)
 
     val r = Random
-    val windowCount = for {
+    val windowCountBySlice = for {
       hour <- 6 to 17
       minute <- 0 to 5
       slice =  f"$hour%02d" + ":" + f"${minute*10}%02d"
       w = WindowCountBySlice(slice, r.nextInt(100), r.nextInt(100), r.nextInt(100))
     } yield w
 
-    Ok(html.dashboard_client(Json.toJson(windowCount)))
+    val windowCountByDate = for {
+      month <- 1 to 12
+      day <- 1 to 30
+      tradeDate = "2020" + f"$month%02d" + f"$day%02d"
+      w = WindowCountByDate(tradeDate, r.nextInt(100), r.nextInt(100), r.nextInt(100))
+    } yield w
+
+    Ok(html.dashboard_client(Json.toJson(windowCountBySlice), Json.toJson(windowCountByDate)))
   }
 
   def dashboard_server = Action {

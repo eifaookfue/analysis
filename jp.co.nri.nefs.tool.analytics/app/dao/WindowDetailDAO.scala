@@ -3,10 +3,11 @@ package dao
 import javax.inject.{Inject, Singleton}
 import jp.co.nri.nefs.tool.analytics.model.client.{Log, LogComponent, WindowDetail, WindowDetailComponent}
 import jp.co.nri.nefs.tool.analytics.model.common.{User, UserComponent}
-import models.{Page, Params}
+import models.{Page, Params, WindowCountByDate}
 import play.api.Configuration
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
@@ -97,6 +98,35 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
       result <- db.run(list)
     } yield Page(result, page, offset, totalRows)
   }
+
+  /**
+    * select l.trade_date, w.window_name, count(1)
+    * from log l, window_detail w
+    * where l.logId = w.logId
+    * group by l.trade_date, w.window_name
+    * order by l.trade_date, w.window_name
+    *
+    * @return
+    */
+  def windowCountByDate: Future[Seq[WindowCountByDate]] = {
+    val q = (for {
+      (l, w) <- logs join windowDetails on (_.logId === _.logId)
+    } yield (l, w)).groupBy { case (l, w) => (l.tradeDate, w.windowName)}
+    val q2 = q.map { case ((logId, windowName), lw) =>
+      (logId, windowName.getOrElse(""), lw.length)
+    }.sortBy { case (logId, windowName, _) => (logId, windowName)}
+    val fut = db.run(q2.result)
+    val groupFut = fut.map(_.groupBy(_._1))
+    groupFut.map { fut =>
+      (for {
+        (tradeDate, seq) <- fut
+        nos = seq.count(_._2 == "NewOrderSingle")
+        ns = seq.count(_._2 == "NewSplit")
+        ws = WindowCountByDate(tradeDate, nos, ns, seq.length - nos - ns)
+      } yield ws).toSeq
+    }
+  }
+
 
   def fileName(logId: Int): Future[String] = {
     val query = logs.filter(_.logId === logId).map(_.fileName)

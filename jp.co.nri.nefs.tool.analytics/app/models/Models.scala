@@ -64,16 +64,28 @@ object Params {
 }
 
 case class WindowCountBySlice(slice: String, newOrderSingleCount: Int, newSliceCount: Int,
-                              count: Int)
+                              otherCount: Int)
 
 object WindowCountBySlice {
-  implicit val windowSliceWrites: Writes[WindowCountBySlice] = (
+  implicit val windowCountBySliceWrites: Writes[WindowCountBySlice] = (
     (JsPath \ "slice").write[String] and
       (JsPath \ "NewOrderSingle").write[Int] and
       (JsPath \ "NewSlice").write[Int] and
-      (JsPath \ "Total").write[Int]
+      (JsPath \ "Other").write[Int]
   )(unlift(WindowCountBySlice.unapply))
 }
+
+case class WindowCountByDate(tradeDate: String, newOrderSingleCount: Int, newSliceCount: Int, otherCount: Int)
+
+object WindowCountByDate {
+  implicit val windowCountByDateWrites: Writes[WindowCountByDate] = (
+    (JsPath \ "trade_date").write[String] and
+      (JsPath \ "NewOrderSingle").write[Int] and
+      (JsPath \ "NewSlice").write[Int] and
+      (JsPath \ "Other").write[Int]
+    )(unlift(WindowCountByDate.unapply))
+}
+
 
 sealed abstract class Menu(val parent: Menu)
 
