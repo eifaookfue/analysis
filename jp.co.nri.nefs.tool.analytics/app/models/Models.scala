@@ -86,6 +86,7 @@ object WindowCountByDate {
     )(unlift(WindowCountByDate.unapply))
 }
 
+case class WindowCountByUser(userName: String, windowName: String, count: Int)
 
 sealed abstract class Menu(val parent: Menu)
 

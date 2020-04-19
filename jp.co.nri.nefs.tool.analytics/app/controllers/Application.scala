@@ -35,6 +35,7 @@ class Application @Inject() (
   def dashboard_client = Action {
     windowSliceDao.list.foreach(println)
     windowDetailDao.windowCountByDate.foreach(println)
+    windowDetailDao.windowCountByUser.foreach(println)
 
     val r = Random
     val windowCountBySlice = for {

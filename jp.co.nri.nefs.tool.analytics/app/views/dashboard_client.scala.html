@@ -35,7 +35,7 @@
                 <div class="col-lg-6">
                     <div class="card card-outline">
                         <div class="card-header">
-                            <h3 class="card-title">Window Count per 10 minutes</h3>
+                            <h3 class="card-title">Window count per in minutes</h3>
                             <div id="starting-count-graph" class="card-tools">
                                 <button type="button" class="btn btn-tool" data-card-widget="maximize"><i class="fas fa-expand"></i></button>
                                 <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
@@ -49,16 +49,47 @@
                         </div>
                     </div>
 
-                    <div class="card card-primary card-outline">
+                    <div class="card card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">Window count by user and window name</h3>
+                            <div id="starting-count-graph" class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="maximize"><i class="fas fa-expand"></i></button>
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                                <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
                         <div class="card-body">
-                            <h5 class="card-title">Card title</h5>
-
-                            <p class="card-text">
-                                Some quick example text to build on the card title and make up the bulk of the card's
-                                content.
-                            </p>
-                            <a href="#" class="card-link">Card link</a>
-                            <a href="#" class="card-link">Another link</a>
+                            <table id="example1" class="table table-bordered table-hover">
+                                <thead>
+                                <tr>
+                                    <th>UserName</th>
+                                    <th>WindowName</th>
+                                    <th>Count</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>nakamura-s</td>
+                                    <td>NewOrderSingle</td>
+                                    <td>10</td>
+                                </tr>
+                                <tr>
+                                    <td>nakamura-s</td>
+                                    <td>NewOrderSingle</td>
+                                    <td>10</td>
+                                </tr>
+                                <tr>
+                                    <td>nakamura-s</td>
+                                    <td>NewOrderSingle</td>
+                                    <td>10</td>
+                                </tr>
+                                <tr>
+                                    <td>nakamura-s</td>
+                                    <td>NewOrderSingle</td>
+                                    <td>10</td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div><!-- /.card -->
                 </div>
@@ -66,7 +97,7 @@
                 <div class="col-lg-6">
                     <div class="card card-outline">
                         <div class="card-header">
-                            <h3 class="card-title">Window Count by TradeDate</h3>
+                            <h3 class="card-title">Window count by trade date</h3>
                             <div id="window-count-by-tradedate-graph" class="card-tools">
                                 <button type="button" class="btn btn-tool" data-card-widget="maximize"><i class="fas fa-expand"></i></button>
                                 <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
@@ -107,10 +138,10 @@
     <!-- 下記でもOK -->
     <!--var data2 = document.getElementById("root").dataset.jsondata-->
     <!-- .data('jsondata')だとうまくいかない -->
-    var data1 = $('#root').attr('data-jsondata1')
-    var json1 = JSON.parse(data1)
-    var data2 = $('#root').attr('data-jsondata2')
-    var json2 = JSON.parse(data2)
+    var data1 = $('#root').attr('data-jsondata1');
+    var json1 = JSON.parse(data1);
+    var data2 = $('#root').attr('data-jsondata2');
+    var json2 = JSON.parse(data2);
     $('#starting-count-graph').on('minimized.lte.cardwidget', function(){setTimeout(function(){
         chart1.resize({height:200});
     }, 100)});
@@ -123,5 +154,11 @@
     $('#window-count-by-tradedate-graph').on('maximized.lte.cardwidget', function(){setTimeout(function(){
         chart2.resize({height:500});
     }, 500)});
+    $(function () {
+        $("#example1").DataTable({
+            "responsive": true,
+            "autoWidth": false,
+        });
+    });
 </script>
 }
