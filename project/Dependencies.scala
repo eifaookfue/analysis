@@ -35,7 +35,8 @@ import sbt._
     
     val store_common: Seq[ModuleID] = Seq(
       Library.guice,
-      Library.config
+      Library.config,
+      Library.logbackClassic
     )
 
     val util: Seq[ModuleID] = Seq(

@@ -50,7 +50,7 @@ class DefaultUserStore @Inject() (protected val dbConfigProvider: DatabaseConfig
   }
 
   def upload(userData: Seq[User]): Unit = {
-    val action = users ++= userData
+    val action = users.map(u => (u.userId, u.userName)) ++= userData.map(u => (u.userId, u.userName))
     val f = db.run(action)
     Await.ready(f, Duration.Inf)
   }

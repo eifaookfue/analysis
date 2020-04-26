@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 import dao.{WindowDetailDAO, WindowSliceDAO}
 import javax.inject.Inject
-import models.{Params, WindowCountByDate, WindowCountBySlice}
+import models.{Params, WindowCountByDate, WindowCountBySlice, WindowCountByUser}
 import play.api.Configuration
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Json
@@ -32,7 +32,7 @@ class Application @Inject() (
   /** Handle default path requests, redirect to computers list */
   def index = Action { Home }
 
-  def dashboard_client = Action {
+  def dashboard_client = Action { implicit request =>
     windowSliceDao.list.foreach(println)
     windowDetailDao.windowCountByDate.foreach(println)
     windowDetailDao.windowCountByUser.foreach(println)
@@ -52,7 +52,17 @@ class Application @Inject() (
       w = WindowCountByDate(tradeDate, r.nextInt(100), r.nextInt(100), r.nextInt(100))
     } yield w
 
-    Ok(html.dashboard_client(Json.toJson(windowCountBySlice), Json.toJson(windowCountByDate)))
+    val userNames = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
+    val windowNames = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
+    val windowCountByUser = for {
+      _ <- 1 to 100
+      userName = userNames(r.nextInt(userNames.length))
+      windowName = windowNames(r.nextInt(windowNames.length))
+      count = r.nextInt(1000)
+      windowCount = WindowCountByUser(userName, windowName, count)
+    } yield windowCount
+
+    Ok(html.dashboard_client(Json.toJson(windowCountBySlice), Json.toJson(windowCountByDate), windowCountByUser))
   }
 
   def dashboard_server = Action {
@@ -71,6 +81,21 @@ class Application @Inject() (
       content = Paths.get(fileDir).resolve(fileName).toFile,
       inline = false
     )
+  }
+
+  def ajaxCall = Action { implicit request =>
+    val r = Random
+    val userNames = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
+    val windowNames = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
+    val windowCountByUser = for {
+      _ <- 1 to 100
+      userName = userNames(r.nextInt(userNames.length))
+      windowName = windowNames(r.nextInt(windowNames.length))
+      count = r.nextInt(1000)
+      windowCount = WindowCountByUser(userName, windowName, count)
+    } yield windowCount
+    println(Json.toJson(windowCountByUser).toString())
+    Ok(Json.toJson(windowCountByUser).toString())
   }
 
 

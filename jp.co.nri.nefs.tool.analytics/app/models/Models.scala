@@ -88,6 +88,15 @@ object WindowCountByDate {
 
 case class WindowCountByUser(userName: String, windowName: String, count: Int)
 
+object WindowCountByUser {
+  implicit val windowCountByUserWrites: Writes[WindowCountByUser] = (
+    (JsPath \ "user_name").write[String] and
+      (JsPath \ "window_name").write[String] and
+      (JsPath \ "count").write[Int]
+    )(unlift(WindowCountByUser.unapply)
+  )
+}
+
 sealed abstract class Menu(val parent: Menu)
 
 case object DASHBOARD extends Menu(null)
