@@ -28,6 +28,8 @@
       <w>nozip</w>
       <w>objs</w>
       <w>ooxml</w>
+      <w>ordable</w>
+      <w>orderable</w>
       <w>ostream</w>
       <w>outpath</w>
       <w>outputdir</w>

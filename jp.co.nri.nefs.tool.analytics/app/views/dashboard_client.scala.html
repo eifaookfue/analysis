@@ -71,15 +71,6 @@
                                     <th>Count</th>
                                 </tr>
                                 </thead>
-                                <tbody>
-                                @windowCountByUserSeq.map { windowCountByUser =>
-                                    <tr>
-                                        <td>@windowCountByUser.userName</td>
-                                        <td>@windowCountByUser.windowName</td>
-                                        <td>@windowCountByUser.count</td>
-                                    </tr>
-                                }
-                                </tbody>
                             </table>
                         </div>
                     </div><!-- /.card -->
@@ -126,26 +117,6 @@
 }{
 <!-- mainに渡すjava script -->
 <script>
-    $(function() {
-        ajaxCall();
-    });
-    var ajaxCall = function() {
-        var ajaxCallBack = {
-            success: onSuccess,
-            error: onError
-        }
-        jsRoutes.controllers.Application.ajaxCall().ajax(ajaxCallBack);
-    };
-
-    var onSuccess = function(data) {
-        var json3 = JSON.parse(data);
-        alert(JSON.stringify(json3));
-    }
-
-    var onError = function(error) {
-        alert(error)
-    }
-
 
     <!-- 下記でもOK -->
     <!--var data2 = document.getElementById("root").dataset.jsondata-->
@@ -174,7 +145,12 @@
         "pagingType": "simple",
         "processing": true,
         "serverSide": true,
-        "ajax": jsRoutes.controllers.Application.ajaxCall()
+        "ajax": "@routes.Application.ajaxCall()",
+        "columns": [
+            { data: "user_name" },
+            { data: "window_name" },
+            { data: "count" }
+        ]
     });
     $("#window-count-by-user-and-name").on('maximized.lte.cardwidget', function(){
         console.log("called");

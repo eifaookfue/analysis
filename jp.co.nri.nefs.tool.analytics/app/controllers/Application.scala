@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 import dao.{WindowDetailDAO, WindowSliceDAO}
 import javax.inject.Inject
-import models.{Params, WindowCountByDate, WindowCountBySlice, WindowCountByUser}
+import models._
 import play.api.Configuration
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Json
@@ -83,19 +83,23 @@ class Application @Inject() (
     )
   }
 
-  def ajaxCall = Action { implicit request =>
-    val r = Random
-    val userNames = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
-    val windowNames = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
-    val windowCountByUser = for {
-      _ <- 1 to 100
-      userName = userNames(r.nextInt(userNames.length))
-      windowName = windowNames(r.nextInt(windowNames.length))
-      count = r.nextInt(1000)
-      windowCount = WindowCountByUser(userName, windowName, count)
-    } yield windowCount
-    println(Json.toJson(windowCountByUser).toString())
-    Ok(Json.toJson(windowCountByUser).toString())
+  val r: Random = Random
+  val userNames: Seq[String] = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
+  val windowNames: Seq[String] = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
+  val windowCountByUsers: Seq[WindowCountByUser] = for {
+    _ <- 1 to 100
+    userName = userNames(r.nextInt(userNames.length))
+    windowName = windowNames(r.nextInt(windowNames.length))
+    count = r.nextInt(1000)
+    windowCount = WindowCountByUser(userName, windowName, count)
+  } yield windowCount
+
+  def ajaxCall(params: DataTableParams) = Action { implicit request =>
+    println(request)
+    val filtered = windowCountByUsers.filter(uw => uw.windowName.contains(params.searchValue) || uw.userName.contains(params.searchValue))
+    val data = WindowCountByUserData(params.draw, 100, filtered.length, filtered.slice(params.start, params.start + params.length))
+    println(Json.toJson(data).toString())
+    Ok(Json.toJson(data))
   }
 
 

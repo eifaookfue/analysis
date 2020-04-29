@@ -148,5 +148,15 @@ trait LogCollection {
     "2019-10-10 15:55:08.473 [OMS:INFO ][TradeSheet]Handler end.[main][j.c.n.n.o.t.h.NewSplitHandler]"
   )
 
+  lazy val waveLog = List(
+    "a"
+  )
 
+  lazy val newOrderAndSliceDerivativeLog = List(
+    "a"
+  )
+
+  lazy val principalBasketCross = List(
+    "a"
+  )
 }

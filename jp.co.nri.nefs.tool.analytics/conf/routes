@@ -14,7 +14,7 @@ GET     /dashboard-server               controllers.Application.dashboard_server
 
 GET  /fileDownload               controllers.Application.fileDownload(logId: Int)
 
-GET     /ajax-call                      controllers.Application.ajaxCall
+GET     /ajax-call                      controllers.Application.ajaxCall(params: models.DataTableParams ?= null)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
