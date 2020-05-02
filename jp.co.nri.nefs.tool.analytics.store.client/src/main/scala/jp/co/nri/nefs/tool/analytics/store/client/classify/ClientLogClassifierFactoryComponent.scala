@@ -252,7 +252,7 @@ trait ClientLogClassifierFactoryComponent {
   case class LineInfo(datetimeStr: String, service: String, logLevel: String, appName: String, message: String,
                                 thread: String, clazz: String) {
     // SimpleDateFormatはスレッドセーフではない
-    private val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
+    private val format = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
     val datetime = new Timestamp(format.parse(datetimeStr).getTime)
     lazy val underlyingClass: String = getLastAndDelNo(clazz)
     lazy val windowName: String = getWindowName(message, underlyingClass)

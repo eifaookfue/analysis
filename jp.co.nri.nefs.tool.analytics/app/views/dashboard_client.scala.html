@@ -1,5 +1,5 @@
 @import _root_.play.api.libs.json.JsValue
-@(d1: JsValue, d2: JsValue, windowCountByUserSeq: Seq[WindowCountByUser])(implicit request: play.api.mvc.RequestHeader)
+@(d1: JsValue, d2: JsValue)(implicit request: play.api.mvc.RequestHeader)
 @main("dashboard-client", DASHBOARD_CLIENT){
 @helper.javascriptRouter("jsRoutes")(
     routes.javascript.Application.ajaxCall
@@ -57,7 +57,6 @@
                         <div class="card-header">
                             <h3 class="card-title">Window count by user and window name</h3>
                             <div id="window-count-by-user-and-name" class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="maximize"><i class="fas fa-expand"></i></button>
                                 <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                                 <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
                             </div>
@@ -152,12 +151,5 @@
             { data: "count" }
         ]
     });
-    $("#window-count-by-user-and-name").on('maximized.lte.cardwidget', function(){
-        console.log("called");
-        table.clear().rows.add([
-            ["aaaa", "abcd", 5],
-            ["aaaab", "abdcd", 10]
-            ]).draw();
-    })
 </script>
 }

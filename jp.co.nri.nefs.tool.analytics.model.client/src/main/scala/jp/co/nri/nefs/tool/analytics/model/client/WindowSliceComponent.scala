@@ -21,6 +21,6 @@ trait WindowSliceComponent {
     //def * = (slice, userId, windowName, count, startupCount, avgStartup)
     def * = (slice, userId, windowName, count, startupCount, avgStartup)
     //def pk = primaryKey("pk_1", (slice, userId, windowName))
-    def pk = primaryKey("pk_1", (slice, userId, windowName))
+    def pk = primaryKey("WINDOW_SLICE_PK_1", (slice, userId, windowName))
   }
 }

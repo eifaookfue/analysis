@@ -2,6 +2,7 @@ package models
 
 import java.sql.Timestamp
 
+import play.api.Logging
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import play.api.mvc.QueryStringBindable
@@ -151,13 +152,30 @@ object WindowCountByDate {
 
 case class WindowCountByUser(userName: String, windowName: String, count: Int)
 
-object WindowCountByUser {
+object WindowCountByUser extends Logging {
   implicit val windowCountByUserWrites: Writes[WindowCountByUser] = (
     (JsPath \ "user_name").write[String] and
       (JsPath \ "window_name").write[String] and
       (JsPath \ "count").write[Int]
     )(unlift(WindowCountByUser.unapply)
   )
+  def sort(users: Seq[WindowCountByUser], index: Int, dic: String): Seq[WindowCountByUser] = {
+    val isDesc = dic == "desc"
+
+    if (index == 0 && isDesc) {
+      users.sortBy(u => u.userName)(Ordering[String].reverse)
+    } else if (index == 0 && !isDesc) {
+      users.sortBy(u => u.userName)
+    } else if (index == 1 && isDesc) {
+      users.sortBy(u => u.windowName)(Ordering[String].reverse)
+    } else if (index == 1 && !isDesc) {
+      users.sortBy(u => u.windowName)
+    } else if (index == 2 && isDesc) {
+      users.sortBy(u => u.count)(Ordering[Int].reverse)
+    } else  {
+      users.sortBy(u => u.count)
+    }
+  }
 }
 
 case class WindowCountByUserData(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[WindowCountByUser])

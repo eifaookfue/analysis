@@ -12,7 +12,7 @@ import play.api.mvc.{AbstractController, ControllerComponents, Result}
 import views.html
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Random
 
 class Application @Inject() (
@@ -32,37 +32,48 @@ class Application @Inject() (
   /** Handle default path requests, redirect to computers list */
   def index = Action { Home }
 
-  def dashboard_client = Action { implicit request =>
-    windowSliceDao.list.foreach(println)
-    windowDetailDao.windowCountByDate.foreach(println)
-    windowDetailDao.windowCountByUser.foreach(println)
+  val r: Random = Random
+  val userNames: Seq[String] = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
+  val windowNames: Seq[String] = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
 
-    val r = Random
-    val windowCountBySlice = for {
-      hour <- 6 to 17
-      minute <- 0 to 5
-      slice =  f"$hour%02d" + ":" + f"${minute*10}%02d"
-      w = WindowCountBySlice(slice, r.nextInt(100), r.nextInt(100), r.nextInt(100))
-    } yield w
+  val windowCountByUsers: Seq[WindowCountByUser] = for {
+    _ <- 1 to 100
+    userName = userNames(r.nextInt(userNames.length))
+    windowName = windowNames(r.nextInt(windowNames.length))
+    count = r.nextInt(1000)
+    windowCount = WindowCountByUser(userName, windowName, count)
+  } yield windowCount
 
-    val windowCountByDate = for {
-      month <- 1 to 12
-      day <- 1 to 30
-      tradeDate = "2020" + f"$month%02d" + f"$day%02d"
-      w = WindowCountByDate(tradeDate, r.nextInt(100), r.nextInt(100), r.nextInt(100))
-    } yield w
+  def dashboard_client = Action.async { implicit request =>
+    /*val windowCountBySlice = windowSliceDao.list
+    val windowCountByDate = windowDetailDao.windowCountByDate*/
 
-    val userNames = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
-    val windowNames = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
-    val windowCountByUser = for {
-      _ <- 1 to 100
-      userName = userNames(r.nextInt(userNames.length))
-      windowName = windowNames(r.nextInt(windowNames.length))
-      count = r.nextInt(1000)
-      windowCount = WindowCountByUser(userName, windowName, count)
-    } yield windowCount
+    val windowCountBySlice = Future {
+      for {
+        hour <- 6 to 17
+        minute <- 0 to 5
+        slice =  f"$hour%02d" + ":" + f"${minute*10}%02d"
+        w = WindowCountBySlice(slice, r.nextInt(100), r.nextInt(100), r.nextInt(100))
+      } yield w
+    }
 
-    Ok(html.dashboard_client(Json.toJson(windowCountBySlice), Json.toJson(windowCountByDate), windowCountByUser))
+    val windowCountByDate = Future {
+      for {
+        month <- 1 to 12
+        day <- 1 to 30
+        tradeDate = "2020" + f"$month%02d" + f"$day%02d"
+        w = WindowCountByDate(tradeDate, r.nextInt(100), r.nextInt(100), r.nextInt(100))
+      } yield w
+    }
+
+    for {
+      slice <- windowCountBySlice
+      sliceJson = Json.toJson(slice)
+      _ = println(sliceJson)
+      date <- windowCountByDate
+      dateJson = Json.toJson(date)
+      _ = println(dateJson)
+    } yield Ok(html.dashboard_client(sliceJson, dateJson))
   }
 
   def dashboard_server = Action {
@@ -83,24 +94,14 @@ class Application @Inject() (
     )
   }
 
-  val r: Random = Random
-  val userNames: Seq[String] = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
-  val windowNames: Seq[String] = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
-  val windowCountByUsers: Seq[WindowCountByUser] = for {
-    _ <- 1 to 100
-    userName = userNames(r.nextInt(userNames.length))
-    windowName = windowNames(r.nextInt(windowNames.length))
-    count = r.nextInt(1000)
-    windowCount = WindowCountByUser(userName, windowName, count)
-  } yield windowCount
-
   def ajaxCall(params: DataTableParams) = Action { implicit request =>
     println(request)
+    println(params)
     val filtered = windowCountByUsers.filter(uw => uw.windowName.contains(params.searchValue) || uw.userName.contains(params.searchValue))
-    val data = WindowCountByUserData(params.draw, 100, filtered.length, filtered.slice(params.start, params.start + params.length))
+    val sorted  = WindowCountByUser.sort(filtered, params.order0Column, params.order0Dir)
+    val data = WindowCountByUserData(params.draw, 100, sorted.length, sorted.slice(params.start, params.start + params.length))
     println(Json.toJson(data).toString())
     Ok(Json.toJson(data))
   }
-
 
 }
