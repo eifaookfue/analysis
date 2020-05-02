@@ -33,7 +33,7 @@ trait ClientLogClassifierFactoryComponent {
     def create(aplInfo: OMSAplInfo): ClientLogClassifier
   }
 
-  class DefaultClientLogClassifyFactory(clientLogStore: ClientLogRecorder) extends ClientLogClassifierFactory {
+  class DefaultClientLogClassifierFactory(clientLogStore: ClientLogRecorder) extends ClientLogClassifierFactory {
     def create(aplInfo: OMSAplInfo): ClientLogClassifier = {
       new DefaultClientLogClassifier(aplInfo, clientLogStore)
     }
@@ -41,7 +41,7 @@ trait ClientLogClassifierFactoryComponent {
 
   trait ClientLogClassifier {
     def classify(line: String, lineNo: Int): Unit
-    def postStop(): Unit
+    def preStop(): Unit
   }
 
   trait Naming {
@@ -252,7 +252,7 @@ trait ClientLogClassifierFactoryComponent {
   case class LineInfo(datetimeStr: String, service: String, logLevel: String, appName: String, message: String,
                                 thread: String, clazz: String) {
     // SimpleDateFormatはスレッドセーフではない
-    private val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS")
+    private val format = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
     val datetime = new Timestamp(format.parse(datetimeStr).getTime)
     lazy val underlyingClass: String = getLastAndDelNo(clazz)
     lazy val windowName: String = getWindowName(message, underlyingClass)
@@ -290,18 +290,28 @@ trait ClientLogClassifierFactoryComponent {
       }
     }
 
+    /**
+      * 引数の先頭にある[]内のメッセージを抜き出します。
+      * @param message メッセージ
+      * @return
+      */
     private def getMessageInFirstBrackets(message: String): Option[String] = {
       val beginIndex = message.indexOf('[')
       val endIndex = message.indexOf(']')
-      if ((beginIndex >= 0) && (endIndex > 0) && (endIndex > beginIndex)) {
+      if ((beginIndex == 0) && (endIndex > 0) && (endIndex > beginIndex)) {
         Some(message.substring(beginIndex+1, endIndex))
       } else None
     }
 
+    /**
+      * 引数の最後にある[]内のメッセージを抜き出します。
+      * @param message メッセージ
+      * @return
+      */
     private def getMessageInLastBrackets(message: String): Option[String] = {
       val beginIndex = message.lastIndexOf('[')
       val endIndex = message.lastIndexOf(']')
-      if ((beginIndex >= 0) && (endIndex > 0) && (endIndex > beginIndex)) {
+      if ((beginIndex >= 0) && (endIndex > 0) && (endIndex == message.length - 1)) {
         Some(message.substring(beginIndex+1, endIndex))
       } else None
     }
@@ -339,9 +349,9 @@ trait ClientLogClassifierFactoryComponent {
 
     private def getPreCheck(message: String): Option[(String, String)] = {
       val windowNameOp = getMessageInFirstBrackets(message)
+      // windowNameが存在すれば除去
+      val message2 = windowNameOp.map(wn => message.replace("[" + wn + "]", "")).getOrElse(message)
       for {
-        windowName <- windowNameOp
-        message2 = message.replace("[" + windowName + "]", "")
         code <- getMessageInLastBrackets(message2)
         checkMessage = message2.replace("[" + code + "]", "")
       } yield (code, checkMessage)
@@ -398,11 +408,11 @@ trait ClientLogClassifierFactoryComponent {
         aplInfo.userId, aplInfo.tradeDate, aplInfo.time, aplInfo.fileName)
     )
 
-    def postStop(): Unit = {
-      logger.info("postStop starts")
+    def preStop(): Unit = {
+      logger.info("preStop starts.")
       val aggFut = Future.sequence(futureBuffer)
       Await.result(aggFut, Duration.Inf)
-      logger.info("postStop ends")
+      logger.info("preStop ends.")
     }
 
     def classify(line: String, lineNo: Int): Unit = {
@@ -466,7 +476,7 @@ trait ClientLogClassifierFactoryComponent {
         }
       } else if (lineInfo.underlyingClass == "DefaultValidationDataManager") {
         for ((code, checkMsg) <- lineInfo.preCheck; id <- logId) {
-          futureBuffer += clientLogRecorder.record(PreCheck(id, lineNo, Some(lineInfo.windowName), code, checkMsg))
+          futureBuffer += clientLogRecorder.record(PreCheck(id, lineNo, windowBuffer.lastOption.map(_.name), code, checkMsg))
         }
       }
       for (property <- lineInfo.requestProperty) requestBuffer += Request(property)

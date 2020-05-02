@@ -3,9 +3,6 @@ package jp.co.nri.nefs.tool.analytics.model.client
 import play.api.db.slick.HasDatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
-case class WindowSlice(slice: String, userId: String,
-                       count: Int)
-
 trait WindowSliceComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
 
@@ -24,6 +21,6 @@ trait WindowSliceComponent {
     //def * = (slice, userId, windowName, count, startupCount, avgStartup)
     def * = (slice, userId, windowName, count, startupCount, avgStartup)
     //def pk = primaryKey("pk_1", (slice, userId, windowName))
-    def pk = primaryKey("pk_1", (slice, userId, windowName))
+    def pk = primaryKey("WINDOW_SLICE_PK_1", (slice, userId, windowName))
   }
 }

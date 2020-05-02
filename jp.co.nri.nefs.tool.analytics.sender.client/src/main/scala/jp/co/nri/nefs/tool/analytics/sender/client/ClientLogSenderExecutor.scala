@@ -1,10 +1,15 @@
 package jp.co.nri.nefs.tool.analytics.sender.client
 
 import akka.actor.ActorSystem
+import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.analytics.store.client.classify.ClientLogClassifierFactoryComponent
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
 import jp.co.nri.nefs.tool.analytics.store.common.ServiceInjector
+
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.io.StdIn
 
 object Keywords {
   val OBJ_EXTENSION = ".obj"
@@ -15,10 +20,15 @@ object Keywords {
 object ClientLogSenderExecutor extends ClientLogSenderComponent with ClientLogClassifierFactoryComponent
   with LazyLogging{
   implicit val system: ActorSystem = ActorSystem("ClientLogSender")
+  final val WAIT_TIME_UNTIL_RECEIVER_ACK = "wait-time-until-receiver-ack"
+  private val config = ConfigFactory.load()
+  private val waitTimeUntilReceiverAck: FiniteDuration = Duration.fromNanos(config.getDuration(WAIT_TIME_UNTIL_RECEIVER_ACK).toNanos)
+  implicit val timeout: Timeout = Timeout(waitTimeUntilReceiverAck)
+
   val sender = new DefaultClientLogSender()
   ServiceInjector.initialize()
   val clientLogRecorder: ClientLogRecorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
-  val clientLogClassifierFactory = new DefaultClientLogClassifyFactory(clientLogRecorder)
+  val clientLogClassifierFactory = new DefaultClientLogClassifierFactory(clientLogRecorder)
 
   def main(args: Array[String]): Unit = {
 
@@ -42,6 +52,7 @@ object ClientLogSenderExecutor extends ClientLogSenderComponent with ClientLogCl
 
     try {
       sender.start()
+      //StdIn.readLine()
     } catch {
       case e: Exception => logger.warn("", e)
     } finally {

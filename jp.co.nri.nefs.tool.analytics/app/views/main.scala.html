@@ -1,25 +1,206 @@
-@(content: Html)
-
+@(title: String, menu: Menu)(content: Html)(js_script:Html)
 <!DOCTYPE html>
-<html>
+<html lang="ja">
     <head>
-        <title>Computers database</title>
-        <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.at("stylesheets/bootstrap.min.css")"> 
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+        <title>Log Analysis | @title</title>
+        <!-- Font Awesome Icons -->
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/fontawesome-free/all.min.css")">
+        <!-- Theme style -->
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/adminlte/adminlte.min.css")">
+        <!-- Google Font: Source Sans Pro -->
+        <!--<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">-->
+        <!-- c3 -->
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/c3-0.7.15/c3.css")">
+
         <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.at("stylesheets/main.css")"> 
     </head>
-    <body>
-        
-        <header class="topbar">
-            <h1 class="fill">
-                <a href="@routes.Application.index()">
-                    Play application &mdash; analysis
-                </a>
-            </h1>
-        </header>
-        
-        <section id="main">
-            @content
+    <body class="hold-transition sidebar-mini">
+    <div class="wrapper">
+
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="home.html" class="nav-link">Home</a>
+                </li>
+            </ul>
+
+            <!-- SEARCH FORM -->
+            <form class="form-inline ml-3">
+                <div class="input-group input-group-sm">
+                    <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
+                    <div class="input-group-append">
+                        <button class="btn btn-navbar" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+        </nav>
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="index3.html" class="brand-link">
+                <img src="@routes.Assets.at("images/AdminLTELogo.png")" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
+                     style="opacity: .8">
+                <span class="brand-text font-weight-light">AdminLTE 3</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <!-- Add icons to the links using the .nav-icon class
+                             with font-awesome or any other icon font library -->
+                    @if(menu.parent == DASHBOARD) {
+                        <li class="nav-item has-treeview menu-open">
+                            <a href="#" class="nav-link active">
+                    } else {
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                           }
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>
+                                    Dashboard
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                @if(menu == DASHBOARD_CLIENT) {
+                                    <a href="@routes.Application.dashboard_client()" class="nav-link active">
+                                } else {
+                                    <a href="@routes.Application.dashboard_client()" class="nav-link">
+                                }
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Client</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                @if(menu == DASHBOARD_SERVER) {
+                                    <a href="@routes.Application.dashboard_server()" class="nav-link" class="nav-link active">
+                                } else {
+                                    <a href="@routes.Application.dashboard_server()" class="nav-link" class="nav-link">
+                                }
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Server</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon far fa-window-restore"></i>
+                                <p>
+                                    Window
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="./newOrderSingle.html" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>NewOrderSingle</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="./newSplit.html" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>NewSplit</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-table"></i>
+                                <p>
+                                    Detail
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="./windowDetail.html" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>WindowDetail</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="./userDetail.html" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>UserDetail</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="./preCheck.html" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>PreCheck</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="./exception.html" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Exception</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <section id="content">
+        @content
         </section>
-        
+
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <!-- To the right -->
+            <div class="float-right d-none d-sm-inline">
+                Anything you want
+            </div>
+            <!-- Default to the left -->
+            <strong>Copyright &copy; 2014-2019 <a href="https://adminlte.io">AdminLTE.io</a>.</strong> All rights reserved.
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+    <!-- REQUIRED SCRIPTS -->
+
+    <!-- jQuery -->
+    <script src="@routes.Assets.at("javascripts/jquery/jquery.js")"></script>
+    <!-- DataTables -->
+    <script src="@routes.Assets.at("javascripts/datatables/jquery.dataTables.js")"></script>
+    <script src="@routes.Assets.at("javascripts/datatables-bs4/js/dataTables.bootstrap4.js")"></script>
+    <script src="@routes.Assets.at("javascripts/datatables-responsive/js/dataTables.responsive.js")"></script>
+    <script src="@routes.Assets.at("javascripts/datatables-responsive/js/responsive.bootstrap4.js")"></script>
+    @js_script
+    <!-- Bootstrap 4 -->
+    <script src="@routes.Assets.at("javascripts/bootstrap/js/bootstrap.bundle.js")"></script>
+    <!-- AdminLTE App -->
+    <script src="@routes.Assets.at("javascripts/adminLTE/adminlte.min.js")"></script>
+
+    <!--D3 and C3-->
+    <script src="@routes.Assets.at("javascripts/d3/d3.js")" charset="utf-8"></script>
+
+    <script src="@routes.Assets.at("javascripts/c3-0.7.15/c3.js")" charset="utf-8"></script>
+
+    <script src="@routes.Assets.at("javascripts/client.js")"></script>
     </body>
 </html>

@@ -1,6 +1,13 @@
 import sbt._
 
   object Dependencies {
+    
+    val actor_test: Seq[ModuleID] = Seq(
+      Library.akka_actor,
+      Library.akka_slf4j,
+      Library.scalaLogging,
+      Library.logbackClassic
+    )
 
     val analytics: Seq[ModuleID] = Seq(
       Library.scalaLogging,
@@ -15,6 +22,7 @@ import sbt._
     
     val sender_client: Seq[ModuleID] = Seq(
       Library.akka_actor,
+      Library.akka_slf4j
     )
 
     val store_client: Seq[ModuleID] = Seq(
@@ -27,7 +35,8 @@ import sbt._
     
     val store_common: Seq[ModuleID] = Seq(
       Library.guice,
-      Library.config
+      Library.config,
+      Library.logbackClassic
     )
 
     val util: Seq[ModuleID] = Seq(
@@ -148,6 +157,7 @@ import sbt._
     val akka_http           = "com.typesafe.akka"          %% "akka-http"                % Version.akka_http
     val akka_stream         = "com.typesafe.akka"          %% "akka-stream"              % Version.akka_stream
     val akka_actor          = "com.typesafe.akka"          %% "akka-actor"               % Version.akka_actor
+    val akka_slf4j          = "com.typesafe.akka"          %% "akka-slf4j"               % Version.akka_actor
     val scalaz              = "org.scalaz"                 %% "scalaz-core"              % Version.scalaz
     val guice               = "com.google.inject"          % "guice"                     % Version.guice
   }

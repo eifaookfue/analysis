@@ -95,6 +95,11 @@ version := "0.1"
 
 //fork := true
 
+lazy val actor = (project in file("jp.co.nri.nefs.tool.actor"))
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.actor_test)
+
+
 lazy val `play-analytics` = (project in file("jp.co.nri.nefs.tool.analytics"))
   .enablePlugins(PlayScala)
   .disablePlugins(PlayFilters)

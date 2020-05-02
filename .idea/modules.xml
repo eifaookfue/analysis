@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/actor.iml" filepath="$PROJECT_DIR$/.idea/modules/actor.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/analysis.iml" filepath="$PROJECT_DIR$/.idea/modules/analysis.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/analysis-build.iml" filepath="$PROJECT_DIR$/.idea/modules/analysis-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/analyze-client.iml" filepath="$PROJECT_DIR$/.idea/modules/analyze-client.iml" />

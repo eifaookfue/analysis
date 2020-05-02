@@ -16,7 +16,9 @@
       <w>hikari</w>
       <w>hikaricp</w>
       <w>hmmss</w>
+      <w>ifnull</w>
       <w>istream</w>
+      <w>javascripts</w>
       <w>jdbc</w>
       <w>jnet</w>
       <w>logdir</w>
@@ -26,6 +28,8 @@
       <w>nozip</w>
       <w>objs</w>
       <w>ooxml</w>
+      <w>ordable</w>
+      <w>orderable</w>
       <w>ostream</w>
       <w>outpath</w>
       <w>outputdir</w>
