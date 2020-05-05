@@ -2,6 +2,7 @@ package models
 
 import java.sql.Timestamp
 
+import jp.co.nri.nefs.tool.analytics.model.client.E9n
 import play.api.Logging
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -12,17 +13,17 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
   lazy val next: Option[Int] = Option(page + 1).filter(_ => (offset + items.size) < total)
 }
 
-case class DataTableParams(draw: Int,
-                            col0Data: String, col0Name: String, col0Searchable: Boolean, col0Orderable: Boolean, col0SearchValue: String, col0SearchRegex: Boolean,
-                           col1Data: String, col1Name: String, col1Searchable: Boolean, col1Orderable: Boolean, col1SearchValue: String, col1SearchRegex: Boolean,
-                           col2Data: String, col2Name: String, col2Searchable: Boolean, col2Orderable: Boolean, col2SearchValue: String, col2SearchRegex: Boolean,
-                           order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean)
+case class WindowCountTableParams(draw: Int,
+                                  col0Data: String, col0Name: String, col0Searchable: Boolean, col0Orderable: Boolean, col0SearchValue: String, col0SearchRegex: Boolean,
+                                  col1Data: String, col1Name: String, col1Searchable: Boolean, col1Orderable: Boolean, col1SearchValue: String, col1SearchRegex: Boolean,
+                                  col2Data: String, col2Name: String, col2Searchable: Boolean, col2Orderable: Boolean, col2SearchValue: String, col2SearchRegex: Boolean,
+                                  order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean)
 
-object DataTableParams {
+object WindowCountTableParams {
   implicit def queryStringBindable(implicit intBinder: QueryStringBindable[Int],
                                    strBinder: QueryStringBindable[String],
-                                   boolBinder: QueryStringBindable[Boolean]): QueryStringBindable[DataTableParams] = new QueryStringBindable[DataTableParams] {
-    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, DataTableParams]] = {
+                                   boolBinder: QueryStringBindable[Boolean]): QueryStringBindable[WindowCountTableParams] = new QueryStringBindable[WindowCountTableParams] {
+    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, WindowCountTableParams]] = {
       val draw = intBinder.bind("draw", params)
       val col0Data = strBinder.bind("columns[0][data]", params)
       val col0Name = strBinder.bind("columns[0][name]", params)
@@ -48,7 +49,7 @@ object DataTableParams {
       val length = intBinder.bind("length", params)
       val searchValue = strBinder.bind("search[value]", params)
       val searchRegex = boolBinder.bind("search[regex]", params)
-      Some(Right(DataTableParams(draw.get.right.get,
+      Some(Right(WindowCountTableParams(draw.get.right.get,
         col0Data.get.right.get, col0Name.get.right.get, col0Searchable.get.right.get, col0Orderable.get.right.get, col0SearchValue.get.right.get, col0SearchRegex.get.right.get,
         col1Data.get.right.get, col1Name.get.right.get, col1Searchable.get.right.get, col1Orderable.get.right.get, col1SearchValue.get.right.get, col1SearchRegex.get.right.get,
         col2Data.get.right.get, col2Name.get.right.get, col2Searchable.get.right.get, col2Orderable.get.right.get, col2SearchValue.get.right.get, col2SearchRegex.get.right.get,
@@ -56,7 +57,70 @@ object DataTableParams {
       )))
     }
 
-    override def unbind(key: String, value: DataTableParams): String = {
+    override def unbind(key: String, value: WindowCountTableParams): String = {
+      List(intBinder.unbind("draw", value.draw), strBinder.unbind("columns[0][data]", value.col0Data), strBinder.unbind("columns[0][name]", value.col0Name),
+        boolBinder.unbind("columns[0][searchable]", value.col0Searchable), boolBinder.unbind("columns[0][orderable]", value.col0Orderable),
+        strBinder.unbind("columns[0][search][value]", value.col0SearchValue), boolBinder.unbind("columns[0][search][regex]", value.col0SearchRegex),
+        strBinder.unbind("columns[1][data]", value.col1Data), strBinder.unbind("columns[1][name]", value.col1Name),
+        boolBinder.unbind("columns[1][searchable]", value.col1Searchable), boolBinder.unbind("columns[1][orderable]", value.col1Orderable),
+        strBinder.unbind("columns[1][search][value]", value.col1SearchValue), boolBinder.unbind("columns[1][search][regex]", value.col1SearchRegex),
+        strBinder.unbind("columns[2][data]", value.col2Data), strBinder.unbind("columns[2][name]", value.col2Name),
+        boolBinder.unbind("columns[2][searchable]", value.col2Searchable), boolBinder.unbind("columns[2][orderable]", value.col2Orderable),
+        strBinder.unbind("columns[2][search][value]", value.col2SearchValue), boolBinder.unbind("columns[2][search][regex]", value.col2SearchRegex),
+        intBinder.unbind("order[0][column]", value.order0Column), strBinder.unbind("order[0][dir]", value.order0Dir),
+        intBinder.unbind("start", value.start), intBinder.unbind("length", value.length),
+        strBinder.unbind("search[value]", value.searchValue), boolBinder.unbind("search[regex]", value.searchRegex)
+      ).mkString("&")
+    }
+  }
+
+}
+
+case class E9nListTableParams(draw: Int,
+                                  col0Data: String, col0Name: String, col0Searchable: Boolean, col0Orderable: Boolean, col0SearchValue: String, col0SearchRegex: Boolean,
+                                  col1Data: String, col1Name: String, col1Searchable: Boolean, col1Orderable: Boolean, col1SearchValue: String, col1SearchRegex: Boolean,
+                                  col2Data: String, col2Name: String, col2Searchable: Boolean, col2Orderable: Boolean, col2SearchValue: String, col2SearchRegex: Boolean,
+                                  order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean)
+
+object E9nListTableParams {
+  implicit def queryStringBindable(implicit intBinder: QueryStringBindable[Int],
+                                   strBinder: QueryStringBindable[String],
+                                   boolBinder: QueryStringBindable[Boolean]): QueryStringBindable[E9nListTableParams] = new QueryStringBindable[E9nListTableParams] {
+    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, E9nListTableParams]] = {
+      val draw = intBinder.bind("draw", params)
+      val col0Data = strBinder.bind("columns[0][data]", params)
+      val col0Name = strBinder.bind("columns[0][name]", params)
+      val col0Searchable = boolBinder.bind("columns[0][searchable]", params)
+      val col0Orderable = boolBinder.bind("columns[0][orderable]", params)
+      val col0SearchValue = strBinder.bind("columns[0][search][value]", params)
+      val col0SearchRegex = boolBinder.bind("columns[0][search][regex]", params)
+      val col1Data = strBinder.bind("columns[1][data]", params)
+      val col1Name = strBinder.bind("columns[1][name]", params)
+      val col1Searchable = boolBinder.bind("columns[1][searchable]", params)
+      val col1Orderable = boolBinder.bind("columns[1][orderable]", params)
+      val col1SearchValue = strBinder.bind("columns[1][search][value]", params)
+      val col1SearchRegex = boolBinder.bind("columns[1][search][regex]", params)
+      val col2Data = strBinder.bind("columns[2][data]", params)
+      val col2Name = strBinder.bind("columns[2][name]", params)
+      val col2Searchable = boolBinder.bind("columns[2][searchable]", params)
+      val col2Orderable = boolBinder.bind("columns[2][orderable]", params)
+      val col2SearchValue = strBinder.bind("columns[2][search][value]", params)
+      val col2SearchRegex = boolBinder.bind("columns[2][search][regex]", params)
+      val order0Column = intBinder.bind("order[0][column]", params)
+      val order0Dir = strBinder.bind("order[0][dir]", params)
+      val start = intBinder.bind("start", params)
+      val length = intBinder.bind("length", params)
+      val searchValue = strBinder.bind("search[value]", params)
+      val searchRegex = boolBinder.bind("search[regex]", params)
+      Some(Right(E9nListTableParams(draw.get.right.get,
+        col0Data.get.right.get, col0Name.get.right.get, col0Searchable.get.right.get, col0Orderable.get.right.get, col0SearchValue.get.right.get, col0SearchRegex.get.right.get,
+        col1Data.get.right.get, col1Name.get.right.get, col1Searchable.get.right.get, col1Orderable.get.right.get, col1SearchValue.get.right.get, col1SearchRegex.get.right.get,
+        col2Data.get.right.get, col2Name.get.right.get, col2Searchable.get.right.get, col2Orderable.get.right.get, col2SearchValue.get.right.get, col2SearchRegex.get.right.get,
+        order0Column.get.right.get, order0Dir.get.right.get, start.get.right.get, length.get.right.get, searchValue.get.right.get, searchRegex.get.right.get
+      )))
+    }
+
+    override def unbind(key: String, value: E9nListTableParams): String = {
       List(intBinder.unbind("draw", value.draw), strBinder.unbind("columns[0][data]", value.col0Data), strBinder.unbind("columns[0][name]", value.col0Name),
         boolBinder.unbind("columns[0][searchable]", value.col0Searchable), boolBinder.unbind("columns[0][orderable]", value.col0Orderable),
         strBinder.unbind("columns[0][search][value]", value.col0SearchValue), boolBinder.unbind("columns[0][search][regex]", value.col0SearchRegex),
@@ -77,7 +141,7 @@ object DataTableParams {
 
 
 case class Params(page: Int = 0, orderBy: Option[Int]  = None, logId: Option[Int] = None,
-                  appName: Option[String]  = None, computerName: Option[String]  = None, userName:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Long]  = None,
+                  appName: Option[String]  = None, computerName: Option[String]  = None, userName:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Int]  = None,
                   activator: Option[String]  = None, windowName: Option[String]  = None, destinationType: Option[String]  = None,
                   action: Option[String]  = None, method: Option[String]  = None,
                   time: Option[Timestamp]  = None, startupTime: Option[Long]  = None, logFile: Option[String]  = None)
@@ -187,6 +251,18 @@ object WindowCountByUserData {
       (JsPath \ "recordsFiltered").write[Int] and
       (JsPath \ "data").write[Seq[WindowCountByUser]]
     )(unlift(WindowCountByUserData.unapply)
+  )
+}
+
+case class E9nListData(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[E9n])
+
+object E9nListData {
+  implicit val e9nListDataWrites: Writes[E9nListData] = (
+    (JsPath \ "draw").write[Int] and
+      (JsPath \ "recordsTotal").write[Int] and
+      (JsPath \ "recordsFiltered").write[Int] and
+      (JsPath \ "data").write[Seq[E9n]]
+    )(unlift(E9nListData.unapply)
   )
 }
 

@@ -22,6 +22,6 @@ trait LogComponent {
     def time = column[Timestamp]("TIME")
     def fileName = column[String]("FILE_NAME", O.Length(60))
     def * = (logId, appName, computerName, userId, tradeDate, time, fileName) <> (Log.tupled, Log.unapply)
-    def idx_1 = index("idx_1", fileName, unique = true)
+    def uk_1 = index("LOG_UK_1", fileName, unique = true)
   }
 }

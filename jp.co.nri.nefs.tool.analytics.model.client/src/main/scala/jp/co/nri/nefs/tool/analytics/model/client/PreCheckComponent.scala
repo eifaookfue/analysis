@@ -17,6 +17,6 @@ trait PreCheckComponent {
     def code = column[String]("CODE", O.Length(10))
     def message = column[String]("MESSAGE", O.Length(200))
     def * = (logId, lineNo, windowName, code, message) <> (PreCheck.tupled, PreCheck.unapply)
-    def pk = primaryKey("pk_1", (logId, lineNo))
+    def pk = primaryKey("PRE_CHECK_PK_1", (logId, lineNo))
   }
 }

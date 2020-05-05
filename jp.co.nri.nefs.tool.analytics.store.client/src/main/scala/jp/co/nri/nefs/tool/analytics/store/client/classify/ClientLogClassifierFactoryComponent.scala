@@ -16,7 +16,7 @@ import jp.co.nri.nefs.tool.analytics.common.property.EDestinationType
 import jp.co.nri.nefs.tool.analytics.common.property.EDestinationType.EDestinationType
 import jp.co.nri.nefs.tool.analytics.common.property.EMarket
 import jp.co.nri.nefs.tool.analytics.common.property.EMarket._
-import jp.co.nri.nefs.tool.analytics.model.client.{Log, OMSAplInfo, PreCheck, WindowDetail}
+import jp.co.nri.nefs.tool.analytics.model.client._
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
 
 import scala.collection.JavaConverters._
@@ -56,7 +56,7 @@ trait ClientLogClassifierFactoryComponent {
     val end: Option[LineTime]
   }
 
-  case class LineTime(lineNo: Long, time: Timestamp)
+  case class LineTime(lineNo: Int, time: Timestamp)
 
   // HandlerのEndTimeは今のところ使用予定なし。また、WindowがCloseした時点でDBオブジェクトを作成して
   // しまうため、HandlerのEndまで記録できない
@@ -387,6 +387,17 @@ trait ClientLogClassifierFactoryComponent {
     }
   }
 
+  case class OtherInfo(orgMessage: String) {
+    val message: String = orgMessage.trim
+    lazy val e9nMessage: Option[String] = if (message.contains("Exception: ")) Some(message) else None
+    lazy val stackTraceMessage: Option[String] = {
+      if ((message.take(3) == "at ") || (message.take(9) == "Caused by")) {
+        Some(message)
+      } else
+        None
+    }
+  }
+
   object KEY_MESSAGE {
     final val HANDLER_START = "Handler start."
     final val HANDLER_END = "Handler end."
@@ -394,19 +405,17 @@ trait ClientLogClassifierFactoryComponent {
 
   class DefaultClientLogClassifier(aplInfo: OMSAplInfo, clientLogRecorder: ClientLogRecorder) extends ClientLogClassifier with LazyLogging {
 
-    final val HANDLER_MAPPING = "HandlerMapping"
-    final val WINDOW_MAPPING = "WindowMapping"
-    final val INPUT_DIR = "inputDir"
-    final val OUT_DIR = "outDir"
     val handlerBuffer: ListBuffer[Handler] = ListBuffer[Handler]()
     val windowBuffer: ListBuffer[Window] = ListBuffer[Window]()
     val buttonEventBuffer: ListBuffer[ButtonEvent] = ListBuffer[ButtonEvent]()
     val requestBuffer: ListBuffer[Request] = ListBuffer[Request]()
     val futureBuffer: ListBuffer[Future[Int]] = ListBuffer()
+    val e9nMessageBuffer: ListBuffer[(Int, String)] = ListBuffer()
     private lazy val logId: Option[Int] = clientLogRecorder.record(
       Log(0, aplInfo.appName, aplInfo.computer,
         aplInfo.userId, aplInfo.tradeDate, aplInfo.time, aplInfo.fileName)
     )
+    private var e9nMode: E9N_MODE = MAYBE_E9N
 
     def preStop(): Unit = {
       logger.info("preStop starts.")
@@ -416,10 +425,11 @@ trait ClientLogClassifierFactoryComponent {
     }
 
     def classify(line: String, lineNo: Int): Unit = {
-      val lineInfo = LineInfo.valueOf(line) match {
-        case Some(info) => info
-        case None => return
-      }
+      for (info <- LineInfo.valueOf(line)) classifyLineInfo(info, lineNo)
+      classifyOtherInfo(OtherInfo(line), lineNo)
+    }
+
+    private def classifyLineInfo(lineInfo: LineInfo, lineNo: Int): Unit = {
 
       if (lineInfo.message contains KEY_MESSAGE.HANDLER_START) {
         handlerBuffer += Handler(lineInfo.underlyingClass, LineTime(lineNo, lineInfo.datetime))
@@ -495,7 +505,7 @@ trait ClientLogClassifierFactoryComponent {
       * @return 直近のHandler。紐づかない場合はNone
       */
     private def findRelatedHandler(handlerBuffer: ListBuffer[Handler], underlyingClass: String): Option[Handler] = {
-      findRelatedObject[Handler](handlerBuffer, underlyingClass, _.name, HANDLER_MAPPING)
+      findRelatedObject[Handler](handlerBuffer, underlyingClass, _.name, DefaultClientLogClassifier.HANDLER_MAPPING)
     }
 
     /** Windowのリストから直近のWindowを抜き出し、それがクラス名と紐づく場合、そのHandlerを返します。
@@ -507,7 +517,7 @@ trait ClientLogClassifierFactoryComponent {
       * @return 直近のHandler。紐づかない場合はNone
       */
     private def findRelatedWindow(windowBuffer: ListBuffer[Window], underlyingClass: String): Option[Window] = {
-      findRelatedObject[Window](windowBuffer, underlyingClass, _.underlyingClass, WINDOW_MAPPING)
+      findRelatedObject[Window](windowBuffer, underlyingClass, _.underlyingClass, DefaultClientLogClassifier.WINDOW_MAPPING)
     }
 
     private def findRelatedObject[T](buffer: ListBuffer[T], underlyingClass: String, f: T => String, configKeyPrefix: String): Option[T] = {
@@ -584,10 +594,70 @@ trait ClientLogClassifierFactoryComponent {
       }
     }
 
+    /**
+      * Classifies any format log messages.
+      *
+      * @param otherInfo log information
+      * @param lineNo    line number
+      */
+    private def classifyOtherInfo(otherInfo: OtherInfo, lineNo: Int): Unit = {
+      e9nMode match {
+        case MAYBE_E9N =>
+          otherInfo.e9nMessage match {
+            case Some(message) =>
+              e9nMessageBuffer += ((lineNo, message))
+              e9nMode = MAYBE_REASON
+            case None =>
+          }
+        case MAYBE_REASON =>
+          otherInfo.stackTraceMessage match {
+            case Some(message) =>
+              e9nMessageBuffer += ((lineNo, message))
+              e9nMode = STACKTRACE
+            case None =>
+              if (e9nMessageBuffer.size >= DefaultClientLogClassifier.e9nReasonAcceptableNumber && logId.nonEmpty) {
+                // Records only head element regarding others as no longer reason message
+                val (headLineNo, message) = e9nMessageBuffer.head
+                clientLogRecorder.recordE9n(logId.get, headLineNo, Seq(E9nStackTrace(0, 0, message)))
+                e9nMessageBuffer.clear()
+                e9nMode = MAYBE_E9N
+              } else {
+                e9nMessageBuffer += ((lineNo, otherInfo.message))
+              }
+          }
+        case STACKTRACE =>
+          otherInfo.stackTraceMessage match {
+            case Some(message) =>
+              e9nMessageBuffer += ((lineNo, message))
+            case None =>
+              if (logId.nonEmpty) {
+                val (headLineNo, _) = e9nMessageBuffer.head
+                val e9nStackTraceSeq =  for (((_, message), number) <- e9nMessageBuffer.zipWithIndex)
+                  yield E9nStackTrace(0, number, message)
+                clientLogRecorder.recordE9n(logId.get, headLineNo, e9nStackTraceSeq)
+                e9nMessageBuffer.clear()
+                e9nMode = MAYBE_E9N
+              }
+          }
+      }
+
+    }
+
     override def toString: String = {
       s"${getClass.getSimpleName}(${aplInfo.fileName})"
     }
 
   }
 
+  object DefaultClientLogClassifier {
+    final val HANDLER_MAPPING = "handler-mapping"
+    final val WINDOW_MAPPING = "window-mapping"
+    final val E9N_REASON_ACCEPTABLE_NUMBER = "e9n-reason-acceptable-number"
+    val e9nReasonAcceptableNumber: Int = ConfigFactory.load().getInt(E9N_REASON_ACCEPTABLE_NUMBER)
+  }
+
+  sealed trait E9N_MODE
+  case object MAYBE_E9N extends E9N_MODE
+  case object MAYBE_REASON extends E9N_MODE
+  case object STACKTRACE extends E9N_MODE
 }

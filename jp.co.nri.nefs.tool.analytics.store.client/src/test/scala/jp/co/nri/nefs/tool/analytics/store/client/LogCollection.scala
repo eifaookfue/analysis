@@ -159,4 +159,26 @@ trait LogCollection {
   lazy val principalBasketCross = List(
     "a"
   )
+
+  lazy val slickE9nLog = List(
+    "2019-10-10 15:54:12.452 [OMS:INFO ][TradeSheet]Handler start.[main][j.c.n.n.o.t.h.NewSplitHandler]",
+    "org.h2.jdbc.JdbcSQLException: テーブル \"PRE_CHECK\" が見つかりません",
+    "Table \"PRE_CHECK\" not found; SQL statement:",
+    "alter table \"PRE_CHECK\" drop constraint \"PRE_CHECK_PK_1\" [42102-197]",
+    "4",
+    "5",
+    "6",
+    "	at org.h2.message.DbException.getJdbcSQLException(DbException.java:357) ~[h2.jar:1.4.197]",
+    "	at org.h2.message.DbException.get(DbException.java:179) ~[h2.jar:1.4.197]",
+    " at org.h2.message.DbException.get(DbException.java:155) ~[h2.jar:1.4.197]",
+    " at org.h2.command.Parser.tableIfTableExists(Parser.java:6275) ~[h2.jar:1.4.197]",
+    " at org.h2.command.Parser.commandIfTableExists(Parser.java:6288) ~[h2.jar:1.4.197]",
+    " at org.h2.command.Parser.parseAlterTable(Parser.java:6042) ~[h2.jar:1.4.197]",
+    " at org.h2.command.Parser.parseAlter(Parser.java:5373) ~[h2.jar:1.4.197]",
+    " at org.h2.command.Parser.parsePrepared(Parser.java:362) ~[h2.jar:1.4.197]",
+    " at org.h2.command.Parser.parse(Parser.java:335) ~[h2.jar:1.4.197]",
+    " at org.h2.command.Parser.parse(Parser.java:307) ~[h2.jar:1.4.197]",
+    "Executing prepared statement: prep7: create table if not exists"
+  )
+
 }

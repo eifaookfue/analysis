@@ -9,6 +9,7 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success}
 
 @ImplementedBy(classOf[DefaultClientLogRecorder])
 trait ClientLogRecorder {
@@ -16,10 +17,12 @@ trait ClientLogRecorder {
   def record(log: Log): Option[Int]
   def record(logId: Int, detail: WindowDetail): Future[Int]
   def record(preCheck: PreCheck): Future[Int]
+  def recordE9n(logId: Int, lineNo: Int, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any]
 }
 
 class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   extends ClientLogRecorder with LogComponent with WindowDetailComponent with PreCheckComponent
+  with E9nComponent with E9nStackTraceComponent with E9nDetailComponent
     with LazyLogging
     with HasDatabaseConfigProvider[JdbcProfile]{
 
@@ -28,18 +31,31 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
   val logs = TableQuery[Logs]
   val windowDetails = TableQuery[WindowDetails]
   val preChecks = TableQuery[PreChecks]
+  val e9ns = TableQuery[E9ns]
+  val e9nStackTraces = TableQuery[E9nStackTraces]
+  val e9nDetails = TableQuery[E9nDetails]
 
   def recreate(): Unit = {
-    for {tableQuery <- Seq(logs, windowDetails, preChecks)}{
+    for {tableQuery <- Seq(logs, windowDetails, preChecks, e9ns, e9nStackTraces, e9nDetails)}{
       val schema = tableQuery.schema
-      println("create statements")
-      schema.create.statements.foreach(println)
-      val setup = DBIO.seq(
-        schema.dropIfExists,
-        schema.createIfNotExists
-      )
-      val setupFuture = db.run(setup)
-      Await.result(setupFuture, Duration.Inf)
+      logger.debug("create statements")
+      schema.create.statements.foreach(s => logger.debug(s))
+
+      val drop = schema.dropIfExists
+      val f1 = db.run(drop)
+      Await.ready(f1, Duration.Inf)
+      f1.value.get match {
+        case Success(_) => logger.info("drop succeeded.")
+        case Failure(e) => logger.error("drop failed", e)
+      }
+
+      val create = schema.createIfNotExists
+      val f2 = db.run(create)
+      Await.ready(f2, Duration.Inf)
+      f2.value.get match {
+        case Success(_) => logger.info("create succeeded.")
+        case Failure(e) => logger.error("create failed", e)
+      }
     }
   }
 
@@ -63,6 +79,41 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
   def record(preCheck: PreCheck): Future[Int] = {
     val insert = preChecks += preCheck
     db.run(insert)
+  }
+
+  override def recordE9n(logId: Int, lineNo: Int, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any] = {
+
+    val headMessage = e9nStackTraceSeq.head.message
+    val length = e9nStackTraceSeq.map(_.message).mkString.length
+    val q1 = e9ns.filter(e => e.e9nHeadMessage === headMessage && e.e9nLength === length).map(e => (e.e9nId, e.count))
+    val f1 = db.run(q1.result.headOption)
+    Await.ready(f1, Duration.Inf)
+    f1.value.get match {
+      case Success(op) =>
+        op match {
+          case Some((e9nId, count)) =>
+            val updateE9n = e9ns.filter(_.e9nId === e9nId).map(_.count).update(count + 1)
+            val insertE9nDetail = e9nDetails += E9nDetail(logId, lineNo, e9nId)
+            db.run(DBIO.seq(updateE9n, insertE9nDetail))
+          case None =>
+            val e9n = E9n(0, headMessage, length, 1)
+            val insertE9n = e9ns returning e9ns.map(_.e9nId) += e9n
+            val f2 = db.run(insertE9n)
+            Await.ready(f2, Duration.Inf)
+            f2.value.get match {
+              case Success(e9nId) =>
+                val insertE9nStackTrace = e9nStackTraces ++= e9nStackTraceSeq.map(_.copy(e9nId = e9nId))
+                val insertE9nDetail = e9nDetails += E9nDetail(logId, lineNo, e9nId)
+                db.run(DBIO.seq(insertE9nStackTrace, insertE9nDetail))
+              case Failure(e) =>
+                Future.failed(e)
+            }
+
+        }
+      case Failure(e) =>
+        Future.failed(e)
+    }
+
   }
 
 }

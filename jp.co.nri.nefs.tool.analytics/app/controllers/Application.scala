@@ -4,6 +4,7 @@ import java.nio.file.Paths
 
 import dao.{WindowDetailDAO, WindowSliceDAO}
 import javax.inject.Inject
+import jp.co.nri.nefs.tool.analytics.model.client.E9n
 import models._
 import play.api.Configuration
 import play.api.i18n.I18nSupport
@@ -35,6 +36,7 @@ class Application @Inject() (
   val r: Random = Random
   val userNames: Seq[String] = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
   val windowNames: Seq[String] = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
+  val e9ns: Seq[String] = Seq("IllegalArgumentException", "RuntimeException", "TimeoutException")
 
   val windowCountByUsers: Seq[WindowCountByUser] = for {
     _ <- 1 to 100
@@ -43,6 +45,13 @@ class Application @Inject() (
     count = r.nextInt(1000)
     windowCount = WindowCountByUser(userName, windowName, count)
   } yield windowCount
+
+  val e9nList: Seq[E9n] = for {
+    e9nId <- 1 to 100
+    message = e9ns(r.nextInt(e9ns.length))
+    count = r.nextInt(1000)
+    e9n = E9n(e9nId, message, 0, count)
+  } yield e9n
 
   def dashboard_client = Action.async { implicit request =>
     /*val windowCountBySlice = windowSliceDao.list
@@ -94,7 +103,7 @@ class Application @Inject() (
     )
   }
 
-  def ajaxCall(params: DataTableParams) = Action { implicit request =>
+  def windowCountTable(params: WindowCountTableParams) = Action { implicit request =>
     println(request)
     println(params)
     val filtered = windowCountByUsers.filter(uw => uw.windowName.contains(params.searchValue) || uw.userName.contains(params.searchValue))
@@ -103,5 +112,16 @@ class Application @Inject() (
     println(Json.toJson(data).toString())
     Ok(Json.toJson(data))
   }
+
+  def e9nListTable(params: E9nListTableParams) = Action { implicit request =>
+    println(request)
+    println(params)
+    val filtered = e9nList.filter(_.e9nHeadMessage.contains(params.searchValue))
+    val sorted  = E9n.sort(filtered, params.order0Column, params.order0Dir)
+    val data = E9nListData(params.draw, 100, sorted.length, sorted.slice(params.start, params.start + params.length))
+    println(Json.toJson(data).toString())
+    Ok(Json.toJson(data))
+  }
+
 
 }
