@@ -16,6 +16,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-analytics.iml" filepath="$PROJECT_DIR$/.idea/modules/play-analytics.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-slick.iml" filepath="$PROJECT_DIR$/.idea/modules/play-slick.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sender-client.iml" filepath="$PROJECT_DIR$/.idea/modules/sender-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/setup-client.iml" filepath="$PROJECT_DIR$/.idea/modules/setup-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/store-client.iml" filepath="$PROJECT_DIR$/.idea/modules/store-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/store-common.iml" filepath="$PROJECT_DIR$/.idea/modules/store-common.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/transfer.iml" filepath="$PROJECT_DIR$/.idea/modules/transfer.iml" />
