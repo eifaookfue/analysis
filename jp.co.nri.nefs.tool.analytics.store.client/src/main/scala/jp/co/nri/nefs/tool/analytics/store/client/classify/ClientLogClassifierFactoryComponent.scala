@@ -409,7 +409,7 @@ trait ClientLogClassifierFactoryComponent {
     val windowBuffer: ListBuffer[Window] = ListBuffer[Window]()
     val buttonEventBuffer: ListBuffer[ButtonEvent] = ListBuffer[ButtonEvent]()
     val requestBuffer: ListBuffer[Request] = ListBuffer[Request]()
-    val futureBuffer: ListBuffer[Future[Int]] = ListBuffer()
+    val futureBuffer: ListBuffer[Future[Any]] = ListBuffer()
     val e9nMessageBuffer: ListBuffer[(Int, String)] = ListBuffer()
     private lazy val logId: Option[Int] = clientLogRecorder.record(
       Log(0, aplInfo.appName, aplInfo.computer,
@@ -618,7 +618,7 @@ trait ClientLogClassifierFactoryComponent {
               if (e9nMessageBuffer.size >= DefaultClientLogClassifier.e9nReasonAcceptableNumber && logId.nonEmpty) {
                 // Records only head element regarding others as no longer reason message
                 val (headLineNo, message) = e9nMessageBuffer.head
-                clientLogRecorder.recordE9n(logId.get, headLineNo, Seq(E9nStackTrace(0, 0, message)))
+                futureBuffer += clientLogRecorder.recordE9n(logId.get, headLineNo, Seq(E9nStackTrace(0, 0, message)))
                 e9nMessageBuffer.clear()
                 e9nMode = MAYBE_E9N
               } else {

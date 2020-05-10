@@ -1,4 +1,4 @@
-package jp.co.nri.nefs.tool.analytics.setup.client
+package jp.co.nri.nefs.tool.analytics.generator.client
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -7,40 +7,17 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 
 import com.typesafe.config.ConfigFactory
-import javax.inject.Inject
 import jp.co.nri.nefs.tool.analytics.common.property.EDestinationType
 import jp.co.nri.nefs.tool.analytics.model.client._
-import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import slick.jdbc.JdbcProfile
+import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
+import jp.co.nri.nefs.tool.analytics.store.common.ServiceInjector
 
 import scala.collection.JavaConverters._
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.util.{Failure, Random, Success, Try}
 
-trait Initializer {
-  def initialize(): Unit
-}
-
-class DefaultInitializer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
-  extends Initializer with LogComponent with WindowDetailComponent with PreCheckComponent
-    with E9nComponent
-  with E9nStackTraceComponent with E9nDetailComponent with HasDatabaseConfigProvider[JdbcProfile] {
-
-  import profile.api._
-
-  val logs = TableQuery[Logs]
-  val windowDetails = TableQuery[WindowDetails]
-  val preChecks = TableQuery[PreChecks]
-  val e9ns = TableQuery[E9ns]
-  val e9nStackTraces = TableQuery[E9nStackTraces]
-  val e9nDetails = TableQuery[E9nDetails]
-
-  override def initialize(): Unit = {
-
-  }
-
-}
-
-object Setup {
+object Generator {
   val r: Random = Random
   val appNames: Seq[String] = Seq("TradeSheet", "TradeSheet", "TradeSheet", "BasketSheet", "BasketSheet", "IOISheet")
   val userNames: Seq[String] = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
@@ -49,6 +26,19 @@ object Setup {
   val destinationTypes: Seq[String] = EDestinationType.values.map(_.toString).toSeq
   val actions: Seq[String] = Seq("OK", "OK", "OK", "OK", "CANCEL")
   val e9ns: Seq[String] = Seq("IllegalArgumentException", "RuntimeException", "TimeoutException")
+
+  def main(args: Array[String]): Unit = {
+    ServiceInjector.initialize()
+    val recorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
+    recorder.recreate()
+    for {
+      log <- Generator.logs("2019-01-01", "2019-01-31", 10)
+      logId = recorder.record(log)
+      windowDetail <- Generator.windowDetails(log, 20)
+      f = recorder.record(logId.get, windowDetail)
+      _ = Await.result(f, Duration.Inf)
+    } {}
+  }
 
   def fileName(appName: String, env: String, computer: String, userId: String, startTime: Date): String = {
     val format = new SimpleDateFormat("yyyyMMddHHmmssSSS")
@@ -114,12 +104,11 @@ object Setup {
   def destinationType(windowName: String): Option[String] =
     if (windowName == "NewSplit") Some(randomValue(destinationTypes)) else None
 
-  def windowDetails(logs: Seq[Log], countPerLog: Int): Seq[WindowDetail] = {
+  def windowDetails(log: Log, countPerLog: Int): Seq[WindowDetail] = {
     val dateFormat = new SimpleDateFormat("hhMM")
+    val ts = times(log.tradeDate, dateFormat.format(log.time), "1830", countPerLog)
     for {
-      log <- logs
-      ts = times(log.tradeDate, dateFormat.format(log.time), "1830", countPerLog)
-      lineNo <- 0 until countPerLog
+      lineNo <- 1 to countPerLog
       windowName = randomValue(windowNames)
       act = activator(windowName)
       dest = destinationType(windowName)

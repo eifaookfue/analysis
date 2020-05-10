@@ -13,6 +13,13 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
   lazy val next: Option[Int] = Option(page + 1).filter(_ => (offset + items.size) < total)
 }
 
+case class WindowDetailTableParams(draw: Int,
+                                   col0SearchValue: String,
+                                   col1SearchValue: String,
+                                   col2SearchValue: String,
+                                   order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
+                                  )
+
 case class WindowCountTableParams(draw: Int,
                                   col0Data: String, col0Name: String, col0Searchable: Boolean, col0Orderable: Boolean, col0SearchValue: String, col0SearchRegex: Boolean,
                                   col1Data: String, col1Name: String, col1Searchable: Boolean, col1Orderable: Boolean, col1SearchValue: String, col1SearchRegex: Boolean,
@@ -49,6 +56,7 @@ object WindowCountTableParams {
       val length = intBinder.bind("length", params)
       val searchValue = strBinder.bind("search[value]", params)
       val searchRegex = boolBinder.bind("search[regex]", params)
+      println(s"bind called. draw=$draw")
       Some(Right(WindowCountTableParams(draw.get.right.get,
         col0Data.get.right.get, col0Name.get.right.get, col0Searchable.get.right.get, col0Orderable.get.right.get, col0SearchValue.get.right.get, col0SearchRegex.get.right.get,
         col1Data.get.right.get, col1Name.get.right.get, col1Searchable.get.right.get, col1Orderable.get.right.get, col1SearchValue.get.right.get, col1SearchRegex.get.right.get,
@@ -191,14 +199,48 @@ object Params {
   }
 }
 
+case class WindowDetailTable(logId: Int, appName: String, computerName: String, userName: String, tradeDate: String,
+                            lineNo: Int, activator: String, windowName: String, destinationType: String, action: String,
+                            method: String, time: Timestamp, startupTime: Option[Long])
+
+object WindowDetailTable {
+  implicit val windowDetailTableWrites: Writes[WindowDetailTable] = (
+    (JsPath \ "log-id").write[Int] and
+      (JsPath \ "app-name").write[String] and
+      (JsPath \ "computer-name").write[String] and
+      (JsPath \ "user-name").write[String] and
+      (JsPath \ "trade-date").write[String] and
+      (JsPath \ "line-no").write[Int] and
+      (JsPath \ "activator").write[String] and
+      (JsPath \ "window-name").write[String] and
+      (JsPath \ "destination-type").write[String] and
+      (JsPath \ "action").write[String] and
+      (JsPath \ "method").write[String] and
+      (JsPath \ "time").write[Timestamp] and
+      (JsPath \ "startup-time").writeNullable[Long]
+    )(unlift(WindowDetailTable.unapply))
+}
+
+case class WindowDetailTableData(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[WindowDetailTable])
+
+object WindowDetailTableData {
+  implicit val windowDetailTableDataWrites: Writes[WindowDetailTableData] = (
+    (JsPath \ "draw").write[Int] and
+      (JsPath \ "recordsTotal").write[Int] and
+      (JsPath \ "recordsFiltered").write[Int] and
+      (JsPath \ "data").write[Seq[WindowDetailTable]]
+    )(unlift(WindowDetailTableData.unapply))
+}
+
+
 case class WindowCountBySlice(slice: String, newOrderSingleCount: Int, newSliceCount: Int,
                               otherCount: Int)
 
 object WindowCountBySlice {
   implicit val windowCountBySliceWrites: Writes[WindowCountBySlice] = (
-    (JsPath \ "slice").write[String] and
-      (JsPath \ "NewOrderSingle").write[Int] and
-      (JsPath \ "NewSlice").write[Int] and
+    (JsPath \ "Slice").write[String] and
+      (JsPath \ "NewOrder").write[Int] and
+      (JsPath \ "NewSplit").write[Int] and
       (JsPath \ "Other").write[Int]
   )(unlift(WindowCountBySlice.unapply))
 }
@@ -207,9 +249,9 @@ case class WindowCountByDate(tradeDate: String, newOrderSingleCount: Int, newSli
 
 object WindowCountByDate {
   implicit val windowCountByDateWrites: Writes[WindowCountByDate] = (
-    (JsPath \ "trade_date").write[String] and
-      (JsPath \ "NewOrderSingle").write[Int] and
-      (JsPath \ "NewSlice").write[Int] and
+    (JsPath \ "TradeDate").write[String] and
+      (JsPath \ "NewOrder").write[Int] and
+      (JsPath \ "NewSplit").write[Int] and
       (JsPath \ "Other").write[Int]
     )(unlift(WindowCountByDate.unapply))
 }
@@ -273,3 +315,5 @@ case object DASHBOARD_CLIENT extends Menu(DASHBOARD)
 case object DASHBOARD_SERVER extends Menu(DASHBOARD)
 case object WINDOW extends Menu(null)
 case object NEW_ORDER_SINGLE extends Menu(WINDOW)
+case object DETAIL extends Menu(null)
+case object WINDOW_DETAIL extends Menu(DETAIL)

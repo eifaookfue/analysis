@@ -145,9 +145,9 @@ lazy val `sender-client` = (project in file("jp.co.nri.nefs.tool.analytics.sende
   .settings(libraryDependencies ++= Dependencies.sender_client)
   .dependsOn(`store-client` % "test -> test; compile -> compile")
 
-lazy val `setup-client` = (project in file("jp.co.nri.nefs.tool.analytics.setup.client"))
+lazy val `generator-client` = (project in file("jp.co.nri.nefs.tool.analytics.generator.client"))
   .settings(commonSettings: _*)
-  .dependsOn(`play-slick`, `model-client`, `common-property`, config)
+  .dependsOn(`play-slick`, `model-client`, `common-property`, `store-common`, `store-client`, config)
 
 lazy val `store-common` = (project in file("jp.co.nri.nefs.tool.analytics.store.common"))
   .settings(commonSettings: _*)

@@ -6,12 +6,12 @@ var chart1 = c3.generate({
     data: {
         json: json1,
         type: 'bar',
-        xFormat: '%H:%M',
+        xFormat: '%H%M',
         keys: {
-            x: 'slice',
-            value: ['NewOrderSingle', 'NewSlice', 'Other']
+            x: 'Slice',
+            value: ['NewOrder', 'NewSplit', 'Other']
         },
-        groups: [['NewOrderSingle', 'NewSlice', 'Other']]
+        groups: [['NewOrder', 'NewSplit', 'Other']]
     },
     axis: {
         x: {
@@ -32,10 +32,10 @@ var chart2 = c3.generate({
         type: 'bar',
         xFormat: '%Y%m%d',
         keys: {
-            x: 'trade_date',
-            value: ['NewOrderSingle', 'NewSlice', 'Other']
+            x: 'TradeDate',
+            value: ['NewOrder', 'NewSplit', 'Other']
         },
-        groups: [['NewOrderSingle', 'NewSlice', 'Other']]
+        groups: [['NewOrder', 'NewSplit', 'Other']]
     },
     axis: {
         x: {

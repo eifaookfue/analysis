@@ -16,6 +16,7 @@ object Dependencies {
   )
   
   val analyze_client: Seq[ModuleID] = Seq(
+    Library.scalaLogging,
     Library.logbackClassic,
     Library.config
   )
@@ -36,6 +37,7 @@ object Dependencies {
   val store_common: Seq[ModuleID] = Seq(
     Library.guice,
     Library.config,
+    Library.scalaLogging,
     Library.logbackClassic
   )
 

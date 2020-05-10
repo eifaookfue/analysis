@@ -16,6 +16,7 @@
       <w>hikari</w>
       <w>hikaricp</w>
       <w>hmmss</w>
+      <w>hori</w>
       <w>ifnull</w>
       <w>istream</w>
       <w>javascripts</w>
@@ -23,7 +24,9 @@
       <w>jnet</w>
       <w>logdir</w>
       <w>materializer</w>
+      <w>miyazaki</w>
       <w>mydb</w>
+      <w>nakamura</w>
       <w>nefs</w>
       <w>nozip</w>
       <w>objs</w>
@@ -35,8 +38,10 @@
       <w>outputdir</w>
       <w>retela</w>
       <w>rownum</w>
+      <w>saiki</w>
       <w>scalaz</w>
       <w>searchdir</w>
+      <w>shimizu</w>
       <w>tost</w>
       <w>typesafe</w>
       <w>websocket</w>

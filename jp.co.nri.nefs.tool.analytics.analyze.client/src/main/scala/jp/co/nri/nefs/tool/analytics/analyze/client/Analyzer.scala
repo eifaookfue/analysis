@@ -5,8 +5,10 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import jp.co.nri.nefs.tool.analytics.model.client.{LogComponent, WindowDetailComponent, WindowSliceComponent}
+import jp.co.nri.nefs.tool.analytics.model.client._
+import jp.co.nri.nefs.tool.analytics.model.common.UserComponent
 import jp.co.nri.nefs.tool.analytics.store.common.ServiceInjector
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider, SlickModule}
 import slick.jdbc.JdbcProfile
@@ -14,9 +16,11 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success}
 
 class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   extends LogComponent with WindowDetailComponent with WindowSliceComponent
+  with UserComponent with WindowUserComponent with LazyLogging
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
@@ -24,7 +28,8 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   val logs = TableQuery[Logs]
   val windowDetails = TableQuery[WindowDetails]
   val windowSlices = TableQuery[WindowSlices]
-
+  val windowUsers = TableQuery[WindowUsers]
+  val users = TableQuery[Users]
 
   /** Returns a sequence of Time String from startTime to endTime by intervalMinutes
    */
@@ -52,12 +57,18 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   def analyzeBySlice(startTime: LocalTime, endTime: LocalTime, intervalMinutes: Int): Unit = {
     val range = timeRange(startTime, endTime, intervalMinutes)
 
-    val setup = DBIO.seq(
-      windowSlices.schema.drop,
-      windowSlices.schema.create,
-    )
-    val f1 = db.run(setup)
-    Await.result(f1, Duration.Inf)
+    val drop = windowSlices.schema.dropIfExists
+    val f1 = db.run(drop)
+    Await.ready(f1, Duration.Inf)
+    f1.value.get match {
+      case Success(_) => logger.info("drop succeeded.")
+      case Failure(e) => logger.error("drop failed", e)
+    }
+
+    val create = windowSlices.schema.createIfNotExists
+    val f2 = db.run(create)
+    Await.ready(f2, Duration.Inf)
+
 
     /*
       INSERT INTO WINDOW_SLICE(
@@ -138,6 +149,51 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     val agg3 = Future.sequence(list3)
     Await.result(agg3, Duration.Inf)
   }
+
+  /** Insert into WINDOW_USER by using results of WINDOW_DETAIL aggregation. <br>
+    * SQL image:
+    * {{{
+    *   INSERT INTO WINDOW_USER(
+    *     SELECT
+    *       l.USER_ID, w.WINDOW_NAME, COUNT(1)
+    *     FROM
+    *       WINDOW_DETAIL w, LOG l
+    *     WHERE
+    *       w.LOG_ID = l.LOG_ID
+    *     GROUP BY
+    *       u.USER_ID, w.WINDOW_NAME
+    *     ORDER BY
+    *       COUNT DESC
+    *   )
+    * }}}
+    */
+  def analyzeByUser(): Unit = {
+
+    val drop = windowUsers.schema.dropIfExists
+    val f1 = db.run(drop)
+    Await.ready(f1, Duration.Inf)
+    f1.value.get match {
+      case Success(_) => logger.info("drop succeeded.")
+      case Failure(e) => logger.error("drop failed", e)
+    }
+
+    val create = windowUsers.schema.createIfNotExists
+    val f2 = db.run(create)
+    Await.ready(f2, Duration.Inf)
+
+    val q = for {
+      (w, l) <- windowDetails join logs on (_.logId === _.logId)
+    } yield (w, l)
+    val q2 = q.groupBy{ case (w, l) => (l.userId, w.windowName.getOrElse(""))}
+    val q3 = q2.map { case ((userId, windowName), uw) => (userId, windowName, uw.length)}
+      .sortBy {case (_, _, count) => count.desc }
+    val fut = db.run(q3.result)
+    val windowCountByUsers = Await.result(fut, Duration.Inf).map { case (userId, windowName, count) =>
+      WindowUser(userId, windowName, count)
+    }
+    val insert = windowUsers ++= windowCountByUsers
+    Await.ready(db.run(insert), Duration.Inf)
+  }
 }
 
 object Analyzer {
@@ -146,5 +202,6 @@ object Analyzer {
 
   def main(args: Array[String]): Unit = {
     analyzer.analyzeBySlice(LocalTime.of(6, 0), LocalTime.of(17, 0), 10)
+    analyzer.analyzeByUser()
   }
 }

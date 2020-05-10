@@ -2,6 +2,10 @@ html {
     background: #eee;
 }
 
+tfoot {
+    display: table-header-group;
+}
+
 header h1 {
     padding: 0.4em 1.1em;
     color: white;

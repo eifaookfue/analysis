@@ -25,9 +25,10 @@ class WindowSliceDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     groupFut.map { fut =>
       (for {
         (slice, seq) <- fut
-        nos = seq.count(_._2.contains("NewOrderSingle"))
-        ns = seq.count(_._2.contains("NewSplit"))
-        ws = WindowCountBySlice(slice, nos, ns, seq.length - nos - ns)
+        total = seq.map(_._3).sum
+        nos = seq.filter(_._2.contains("NewOrder")).map(_._3).sum
+        ns = seq.filter(_._2.contains("NewSplit")).map(_._3).sum
+        ws = WindowCountBySlice(slice, nos, ns, total - nos - ns)
       } yield ws).toSeq
     }
   }

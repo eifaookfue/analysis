@@ -10,13 +10,13 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/common-property.iml" filepath="$PROJECT_DIR$/.idea/modules/common-property.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/config.iml" filepath="$PROJECT_DIR$/.idea/modules/config.iml" />
       <module fileurl="file://$PROJECT_DIR$/elp/elp.iml" filepath="$PROJECT_DIR$/elp/elp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/generator-client.iml" filepath="$PROJECT_DIR$/.idea/modules/generator-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/json/json.iml" filepath="$PROJECT_DIR$/json/json.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/model-client.iml" filepath="$PROJECT_DIR$/.idea/modules/model-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/model-common.iml" filepath="$PROJECT_DIR$/.idea/modules/model-common.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-analytics.iml" filepath="$PROJECT_DIR$/.idea/modules/play-analytics.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-slick.iml" filepath="$PROJECT_DIR$/.idea/modules/play-slick.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sender-client.iml" filepath="$PROJECT_DIR$/.idea/modules/sender-client.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/setup-client.iml" filepath="$PROJECT_DIR$/.idea/modules/setup-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/store-client.iml" filepath="$PROJECT_DIR$/.idea/modules/store-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/store-common.iml" filepath="$PROJECT_DIR$/.idea/modules/store-common.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/transfer.iml" filepath="$PROJECT_DIR$/.idea/modules/transfer.iml" />

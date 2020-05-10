@@ -4,6 +4,7 @@ import java.nio.file.{Files, Path, Paths}
 
 import com.google.inject.ImplementedBy
 import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
 import jp.co.nri.nefs.tool.analytics.model.common.{User, UserComponent}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
@@ -12,6 +13,7 @@ import slick.jdbc.JdbcProfile
 import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success}
 
 @ImplementedBy(classOf[DefaultUserStore])
 trait UserStore {
@@ -21,7 +23,7 @@ trait UserStore {
 }
 
 class DefaultUserStore @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
-  extends UserStore with UserComponent with HasDatabaseConfigProvider[JdbcProfile] {
+  extends UserStore with UserComponent with HasDatabaseConfigProvider[JdbcProfile] with LazyLogging {
 
   import profile.api._
 
@@ -29,12 +31,16 @@ class DefaultUserStore @Inject() (protected val dbConfigProvider: DatabaseConfig
 
   def recreateTable(): Unit = {
     val schema = users.schema
-    val setup = DBIO.seq(
-      schema.dropIfExists,
-      schema.createIfNotExists
-    )
-    val setupFuture = db.run(setup)
-    Await.ready(setupFuture, Duration.Inf)
+    val drop = schema.dropIfExists
+    val f1 = db.run(drop)
+    Await.ready(f1, Duration.Inf)
+    f1.value.get match {
+      case Success(_) => logger.info("drop succeeded.")
+      case Failure(e) => logger.error("drop failed.", e)
+    }
+    val create = schema.createIfNotExists
+    val f2 = db.run(create)
+    Await.ready(f2, Duration.Inf)
   }
 
   def loadFile(file: Path): Seq[User] = {
