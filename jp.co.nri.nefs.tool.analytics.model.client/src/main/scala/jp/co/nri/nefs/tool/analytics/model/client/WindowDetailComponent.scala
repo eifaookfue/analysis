@@ -4,11 +4,12 @@ import java.sql.Timestamp
 
 import play.api.db.slick.HasDatabaseConfigProvider
 import slick.jdbc.JdbcProfile
+import slick.sql.SqlProfile.ColumnOption.SqlType
 
 case class WindowDetail(logId: Int, lineNo: Int,
                         activator: Option[String], windowName: Option[String], destinationType: Option[String],
                         action: Option[String], method: Option[String],
-                        time: Timestamp, startupTime: Option[Long])
+                        time: Timestamp, startupTime: Option[Long], updateTime: Timestamp = null)
 
 trait WindowDetailComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
@@ -25,7 +26,8 @@ trait WindowDetailComponent {
     def method = column[Option[String]]("METHOD")
     def time = column[Timestamp]("TIME")
     def startupTime = column[Option[Long]]("STARTUP_TIME")
-    def * = (logId, lineNo, activator, windowName, destinationType, action, method, time, startupTime) <> (WindowDetail.tupled, WindowDetail.unapply)
+    def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+    def * = (logId, lineNo, activator, windowName, destinationType, action, method, time, startupTime, updateTime) <> (WindowDetail.tupled, WindowDetail.unapply)
     def pk = primaryKey("WINDOW_DETAIL_PK_1", (logId, lineNo))
   }
 

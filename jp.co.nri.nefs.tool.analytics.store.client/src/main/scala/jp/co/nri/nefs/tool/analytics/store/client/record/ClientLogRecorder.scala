@@ -1,8 +1,7 @@
 package jp.co.nri.nefs.tool.analytics.store.client.record
 
-import com.google.inject.ImplementedBy
+import com.google.inject.{ImplementedBy, Inject}
 import com.typesafe.scalalogging.LazyLogging
-import javax.inject.Inject
 import jp.co.nri.nefs.tool.analytics.model.client._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
@@ -60,7 +59,8 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
   }
 
   def record(log: Log): Option[Int] = {
-    val action = (logs returning logs.map(_.logId)) += log
+    val action = (logs.map(l => (l.logId, l.appName, l.computerName, l.userId, l.tradeDate, l.time, l.fileName))
+      returning logs.map(_.logId)) += (log.logId, log.appName, log.computerName, log.userId, log.tradeDate, log.time, log.fileName)
     try {
       val f = db.run(action)
       Some(Await.result(f, Duration.Inf))
@@ -72,12 +72,15 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
   }
 
   def record(logId: Int, detail: WindowDetail): Future[Int] = {
-    val insert = windowDetails += detail.copy(logId)
+    logger.info(s"storing $detail")
+    val insert = windowDetails.map(w => (w.logId, w.lineNo, w.activator, w.windowName, w.destinationType, w.action, w.method, w.time, w.startupTime)) +=
+      (logId, detail.lineNo, detail.activator, detail.windowName, detail.destinationType, detail.action, detail.method, detail.time, detail.startupTime)
     db.run(insert)
   }
 
   def record(preCheck: PreCheck): Future[Int] = {
-    val insert = preChecks += preCheck
+    val insert = preChecks.map(p => (p.logId, p.lineNo, p.windowName, p.code, p.message)) +=
+      (preCheck.logId, preCheck.lineNo, preCheck.windowName, preCheck.code, preCheck.message)
     db.run(insert)
   }
 

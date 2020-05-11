@@ -4,9 +4,10 @@ import java.sql.Timestamp
 
 import play.api.db.slick.HasDatabaseConfigProvider
 import slick.jdbc.JdbcProfile
+import slick.sql.SqlProfile.ColumnOption.SqlType
 
 case class Log(logId: Int, appName: String, computerName: String, userId:String,
-                tradeDate: String, time: Timestamp, fileName: String)
+                tradeDate: String, time: Timestamp, fileName: String, updateTime: Timestamp = null)
 
 trait LogComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
@@ -21,7 +22,8 @@ trait LogComponent {
     def tradeDate = column[String]("TRADE_DATE", O.Length(8))
     def time = column[Timestamp]("TIME")
     def fileName = column[String]("FILE_NAME", O.Length(80))
-    def * = (logId, appName, computerName, userId, tradeDate, time, fileName) <> (Log.tupled, Log.unapply)
+    def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+    def * = (logId, appName, computerName, userId, tradeDate, time, fileName, updateTime) <> (Log.tupled, Log.unapply)
     def uk_1 = index("LOG_UK_1", fileName, unique = true)
   }
 }

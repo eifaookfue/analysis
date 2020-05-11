@@ -24,6 +24,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success}
 import scala.util.matching.Regex
 
 trait ClientLogClassifierFactoryComponent {
@@ -109,6 +110,8 @@ trait ClientLogClassifierFactoryComponent {
                     requestBuffer: Option[ListBuffer[Request]] = None)
     extends Naming with Starting with Ending with StartupTiming {
 
+    lazy val plainName: Option[String] = getWindowName(name)
+
     def toWindowDetail: WindowDetail = {
       WindowDetail(
         logId = 0,
@@ -169,6 +172,8 @@ trait ClientLogClassifierFactoryComponent {
                "ENewOrderAndReservedSliceProperty" =>
             getCrossDestinationType(request.headMarket, request.headCrossCapacity,
               request.headCrossType, request.headCounterParty)
+          case _ =>
+            None
         }
       } yield destinationType
     }
@@ -216,7 +221,7 @@ trait ClientLogClassifierFactoryComponent {
                     case AGENCY            => None
                     case BROKER            => Some(EDestinationType.JNET_BROKER)
                   }
-                case _ => None
+                case _ => Some(EDestinationType.EXCHANGE)
               }
             case _ =>
               crossTypeOp match {
@@ -298,7 +303,7 @@ trait ClientLogClassifierFactoryComponent {
     private def getMessageInFirstBrackets(message: String): Option[String] = {
       val beginIndex = message.indexOf('[')
       val endIndex = message.indexOf(']')
-      if ((beginIndex == 0) && (endIndex > 0) && (endIndex > beginIndex)) {
+      if ((beginIndex == 0) && (endIndex > 0)) {
         Some(message.substring(beginIndex+1, endIndex))
       } else None
     }
@@ -335,7 +340,16 @@ trait ClientLogClassifierFactoryComponent {
       }
     }
 
-    /** メッセージに含まれる波括弧内の文字列を抜き出し、key=value形式に分割し、Mapに変換します。
+    /** Returns the request parameter map of key-value format. <br>
+      * There are tow types of log format.
+      * {{{
+      * Old Format:
+      * PARAMETER, BASKET_NAME=SINGLE, BASKET_TYPE=CASH}
+      * }}}
+      * {{{
+      * NEW Format:
+      * PARAMETER=DefaultEntity:{INQUIRY_NO=5535,...,}
+      * }}}
       */
     private def getRequestParameter(message: String): Option[Map[String, String]] = {
       message match {
@@ -343,7 +357,15 @@ trait ClientLogClassifierFactoryComponent {
           Some(p.split(",").collect{
             case LineInfo.keyValueRegex(key1, value) => (key1.trim, value.trim)
           }.toMap)
-        case _ => None
+        case _ =>
+          if (message.indexOf("PARAMETER, ") == 0 && message.lastIndexOf("}") == message.length - 1) {
+            val newMessage = message.replace("PARAMETER, ", "").dropRight(1)
+            Some(newMessage.split(",").collect{
+              case LineInfo.keyValueRegex(key1, value) => (key1.trim, value.trim)
+            }.toMap)
+          } else {
+            None
+          }
       }
     }
 
@@ -419,9 +441,13 @@ trait ClientLogClassifierFactoryComponent {
 
     def preStop(): Unit = {
       logger.info("preStop starts.")
+      logger.info(futureBuffer.mkString(","))
       val aggFut = Future.sequence(futureBuffer)
-      Await.result(aggFut, Duration.Inf)
-      logger.info("preStop ends.")
+      Await.ready(aggFut, Duration.Inf)
+      aggFut.value.get match {
+        case Success(_) => logger.info("preStop succeeded.")
+        case Failure(e) => logger.warn("preStop failed.", e)
+      }
     }
 
     def classify(line: String, lineNo: Int): Unit = {
@@ -554,7 +580,7 @@ trait ClientLogClassifierFactoryComponent {
         case Some((t, index)) =>
           buffer.update(index, f(t))
         case None =>
-          logger.warn(s"$fileName:$lineNo Couldn't find window from ListBuffer.")
+          logger.info(s"$fileName:$lineNo Couldn't find window from ListBuffer. Maybe $name has already removed from ListBuffer")
       }
     }
 
