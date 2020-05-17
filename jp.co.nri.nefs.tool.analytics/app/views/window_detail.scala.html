@@ -1,5 +1,8 @@
+@(implicit request: play.api.mvc.RequestHeader)
 @main("dashboard-client", WINDOW_DETAIL){
-
+@helper.javascriptRouter("jsRoutes")(
+    routes.javascript.Application.fileDownload
+)
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -66,12 +69,18 @@
         var title = $(this).text();
         $(this).html('<input type="text" style="width:100%;"/>');
     });
+    /*
+    hide the search box without disabling search
+     https://datatables.net/forums/discussion/22511/can-you-hide-the-search-box-without-disabling-searching
+    DOM positioning
+     https://datatables.net/examples/basic_init/dom.html
+    */
     var windowDetailTable = $("#window-detail").DataTable({
+        "dom": '<"top"l>rt<"bottom"ip>',
         "responsive": true,
         "scrollCollapse": false,
-        <!--"scrollX": true,-->
+        "ordering": true,
         "autoWidth": false,
-        "pagingType": "simple",
         "processing": true,
         "serverSide": true,
         "ajax": {
@@ -94,8 +103,19 @@
                 });
             });
         },
+        /*
+        https://stackoverflow.com/questions/30489307/make-column-data-as-hyperlink-datatable-jquery/30489991
+        */
         "columns": [
-            { data: "log-id" },
+            { data: "log-id",
+              render: function(data, type, row, meta) {
+                var r = jsRoutes.controllers.Application.fileDownload(data);
+                if (type == 'display') {
+                    data = '<a href="' + r.url + '">' + data + '</a>';
+                }
+                return data;
+              }
+            },
             { data: "app-name" },
             { data: "user-name" },
             { data: "line-no" },

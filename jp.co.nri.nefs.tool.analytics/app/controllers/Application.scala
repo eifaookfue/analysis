@@ -11,7 +11,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Json
-import play.api.mvc.{AbstractController, ControllerComponents, Result}
+import play.api.mvc._
 import views.html
 
 import scala.concurrent.duration._
@@ -41,12 +41,16 @@ class Application @Inject() (
       "columns[0][search][value]" -> text,
       "columns[1][search][value]" -> text,
       "columns[2][search][value]" -> text,
+      "columns[3][search][value]" -> text,
+      "columns[4][search][value]" -> text,
+      "columns[5][search][value]" -> text,
+      "columns[6][search][value]" -> text,
       "order[0][column]" -> number,
       "order[0][dir]" -> text,
       "start" -> number,
       "length" -> number,
       "search[value]" -> text,
-      "search[regex]" -> boolean)(WindowDetailTableParams.apply)(WindowDetailTableParams.unapply)
+      "search[regex]" -> boolean)(WindowDetailTblRequestParams.apply)(WindowDetailTblRequestParams.unapply)
   )
 
   /** This result directly redirect to the application home.*/
@@ -57,7 +61,7 @@ class Application @Inject() (
   // -- Actions
 
   /** Handle default path requests, redirect to computers list */
-  def index = Action { Home }
+  def index: Action[AnyContent] = Action { Home }
 
   val r: Random = Random
   val userNames: Seq[String] = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
@@ -79,7 +83,7 @@ class Application @Inject() (
     e9n = E9n(e9nId, message, 0, count)
   } yield e9n
 
-  def dashboard_client = Action.async { implicit request =>
+  def dashboard_client: Action[AnyContent] = Action.async { implicit request =>
     val windowCountBySlice = windowSliceDao.list
     val windowCountByDate = windowDetailDao.windowCountByDate
 
@@ -92,28 +96,32 @@ class Application @Inject() (
     } yield Ok(html.dashboard_client(sliceJson, dateJson))
   }
 
-  def dashboard_server = Action {
+  def dashboard_server: Action[AnyContent] = Action {
     NotFound
   }
 
-  def windowDetail = Action { implicit request =>
-    Ok(html.window_detail())
+  def windowDetail: Action[AnyContent] = Action { implicit request =>
+    Ok(html.window_detail(request))
   }
 
-  def windowDetailTable() = Action.async { implicit request =>
+  def windowDetailTable(): Action[AnyContent] = Action.async { implicit request =>
     println(s"request=${request.body}")
     windowDetailTableForm.bindFromRequest.fold(
-      formWithErrors => println(formWithErrors),
-      windowDetail => println(windowDetail)
+      _ =>
+        Future.successful(InternalServerError("Oops")),
+      params =>
+        for {
+          recordsTotal <- windowDetailDao.count
+          recordsFiltered <- windowDetailDao.count(params)
+          seq <- windowDetailDao.list(params)
+          w = WindowDetailTblResponse(params.draw, recordsTotal, recordsFiltered, seq)
+          json = Json.toJson(w)
+        } yield Ok(json)
     )
-    for {
-      seq <- windowDetailDao.list()
-      w = WindowDetailTableData(1, 1000, 1000, seq)
-      json = Json.toJson(w)
-    } yield Ok(json)
+
   }
 
-  def fileDownload(logId: Int) = Action {
+  def fileDownload(logId: Int): Action[AnyContent] = Action {
     val fileName = Await.result(windowDetailDao.fileName(logId), 10.seconds)
     val fileDir = config.underlying.getString("logDir")
     Ok.sendFile(
@@ -122,7 +130,7 @@ class Application @Inject() (
     )
   }
 
-  def windowCountTable(params: WindowCountTableParams) = Action.async { implicit request =>
+  def windowCountTable(params: WindowCountTableParams): Action[AnyContent] = Action.async { implicit request =>
     println(request)
     println(params)
     //val filtered = windowCountByUsers.filter(uw => uw.windowName.contains(params.searchValue) || uw.userName.contains(params.searchValue))
@@ -136,7 +144,7 @@ class Application @Inject() (
     } yield Ok(json)
   }
 
-  def e9nListTable(params: E9nListTableParams) = Action { implicit request =>
+  def e9nListTable(params: E9nListTableParams): Action[AnyContent] = Action { implicit request =>
     println(request)
     println(params)
     val filtered = e9nList.filter(_.e9nHeadMessage.contains(params.searchValue))

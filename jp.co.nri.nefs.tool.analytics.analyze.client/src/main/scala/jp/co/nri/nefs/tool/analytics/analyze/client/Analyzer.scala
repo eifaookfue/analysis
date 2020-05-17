@@ -48,11 +48,11 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     "." + config.getString(SlickModule.DefaultDbName)
 
   val conf: Config = config.getConfig(dbName)
-  val fname: String = conf.getString("dateToChar.function")
-  val format: String = conf.getString("dateToChar.format")
+  val convertFunction: String = conf.getString("dateToChar.function")
+  val format: String = conf.getString("dateToChar.hourMinutesFormat")
 
   val toChar: (Rep[Timestamp], Rep[String]) => Rep[String] =
-    SimpleFunction.binary[java.sql.Timestamp, String, String](fname)
+    SimpleFunction.binary[java.sql.Timestamp, String, String](convertFunction)
 
   def analyzeBySlice(startTime: LocalTime, endTime: LocalTime, intervalMinutes: Int): Unit = {
     val range = timeRange(startTime, endTime, intervalMinutes)

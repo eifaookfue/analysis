@@ -13,11 +13,15 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
   lazy val next: Option[Int] = Option(page + 1).filter(_ => (offset + items.size) < total)
 }
 
-case class WindowDetailTableParams(draw: Int,
-                                   col0SearchValue: String,
-                                   col1SearchValue: String,
-                                   col2SearchValue: String,
-                                   order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
+case class WindowDetailTblRequestParams(draw: Int,
+                                        col0SearchValue: String,
+                                        col1SearchValue: String,
+                                        col2SearchValue: String,
+                                        col3SearchValue: String,
+                                        col4SearchValue: String,
+                                        col5SearchValue: String,
+                                        col6SearchValue: String,
+                                        order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                   )
 
 case class WindowCountTableParams(draw: Int,
@@ -199,12 +203,12 @@ object Params {
   }
 }
 
-case class WindowDetailTable(logId: Int, appName: String, computerName: String, userName: String, tradeDate: String,
-                            lineNo: Int, activator: String, windowName: String, destinationType: String, action: String,
-                            method: String, time: Timestamp, startupTime: Option[Long])
+case class WindowDetailTbl(logId: Int, appName: String, computerName: String, userName: String, tradeDate: String,
+                           lineNo: Int, activator: String, windowName: String, destinationType: String, action: String,
+                           method: String, time: String, startupTime: Option[Long])
 
-object WindowDetailTable {
-  implicit val windowDetailTableWrites: Writes[WindowDetailTable] = (
+object WindowDetailTbl {
+  implicit val windowDetailTableWrites: Writes[WindowDetailTbl] = (
     (JsPath \ "log-id").write[Int] and
       (JsPath \ "app-name").write[String] and
       (JsPath \ "computer-name").write[String] and
@@ -216,20 +220,20 @@ object WindowDetailTable {
       (JsPath \ "destination-type").write[String] and
       (JsPath \ "action").write[String] and
       (JsPath \ "method").write[String] and
-      (JsPath \ "time").write[Timestamp] and
+      (JsPath \ "time").write[String] and
       (JsPath \ "startup-time").writeNullable[Long]
-    )(unlift(WindowDetailTable.unapply))
+    )(unlift(WindowDetailTbl.unapply))
 }
 
-case class WindowDetailTableData(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[WindowDetailTable])
+case class WindowDetailTblResponse(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[WindowDetailTbl])
 
-object WindowDetailTableData {
-  implicit val windowDetailTableDataWrites: Writes[WindowDetailTableData] = (
+object WindowDetailTblResponse {
+  implicit val windowDetailTableDataWrites: Writes[WindowDetailTblResponse] = (
     (JsPath \ "draw").write[Int] and
       (JsPath \ "recordsTotal").write[Int] and
       (JsPath \ "recordsFiltered").write[Int] and
-      (JsPath \ "data").write[Seq[WindowDetailTable]]
-    )(unlift(WindowDetailTableData.unapply))
+      (JsPath \ "data").write[Seq[WindowDetailTbl]]
+    )(unlift(WindowDetailTblResponse.unapply))
 }
 
 

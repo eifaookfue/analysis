@@ -1,15 +1,19 @@
 package dao
 
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+
+import com.typesafe.config.Config
 import javax.inject.{Inject, Singleton}
 import jp.co.nri.nefs.tool.analytics.model.client.{Log, LogComponent, WindowDetail, WindowDetailComponent}
 import jp.co.nri.nefs.tool.analytics.model.common.{User, UserComponent}
 import models._
 import play.api.Configuration
-import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import play.api.libs.json.Json
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider, SlickModule}
 import slick.jdbc.JdbcProfile
-
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Success, Try}
 
 @Singleton()
 class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider, config: Configuration)(implicit executionContext: ExecutionContext)
@@ -21,32 +25,81 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
   val windowDetails = TableQuery[WindowDetails]
   val users = TableQuery[Users]
 
+  // slick.dbs.default
+  val dbName: String = config.underlying.getString(SlickModule.DbKeyConfig) +
+    "." + config.underlying.getString(SlickModule.DefaultDbName)
+
+  val conf: Config = config.underlying.getConfig(dbName)
+  val convertFunction: String = conf.getString("dateToChar.function")
+  val toChar: (Rep[Timestamp], Rep[String]) => Rep[String] =
+    SimpleFunction.binary[Timestamp, String, String](convertFunction)
+  //scala> val list = config.getObjectList("slick.dbs.default.dateFormatters").asScala.map(_.unwrapped).map(_.asScala)
+  val dateFormatters: Seq[Map[String, AnyRef]] = conf.getObjectList("dateFormatters").asScala
+    .map(_.unwrapped()).map(_.asScala.toMap)
+
   /** Count all computers. */
-  def count(): Future[Int] = {
-    // this should be changed to
-    // db.run(computers.length.result)
-    // when https://github.com/slick/slick/issues/1237 is fixed
-    db.run(windowDetails.map(_.windowName).length.result)
+  def count: Future[Int] = {
+    db.run(windowDetails.length.result)
   }
-  /** Count computers with a filter. */
-  def count(filterHandler: Option[String], filterWindowName: Option[String]): Future[Int] = {
-    db.run(windowDetails.filter { windowDetail => windowDetail.windowName.toLowerCase like filterHandler.map(_.toLowerCase).getOrElse("") }.length.result)
+
+  def count(params: WindowDetailTblRequestParams): Future[Int] = {
+    db.run(filterQuery(params).length.result)
+  }
+
+  private def filterQuery(params: WindowDetailTblRequestParams): Query[(WindowDetailDAO.this.Logs, WindowDetailDAO.this.WindowDetails, Rep[Option[WindowDetailDAO.this.Users]]), (Log, WindowDetail, Option[User]), scala.Seq]
+  = {
+
+    val timeStr = params.col6SearchValue
+    val formatter = (for {
+      o <- dateFormatters
+      (simpleFmt, rdbFmt) <- o
+      format = new SimpleDateFormat(simpleFmt)
+      fmt = Try {
+        format.parse(timeStr)
+        rdbFmt.toString
+      }
+    } yield fmt).collectFirst{case Success(v) => v}
+
+    println(s"formatter=$formatter")
+
+    for {
+      ((l, w), u) <- logs join windowDetails on (_.logId === _.logId) joinLeft users on (_._1.userId === _.userId)
+      if List(
+        Option(params.col0SearchValue).filter(_.trim.nonEmpty).map(l.logId === _.toInt),
+        Option(params.col1SearchValue).filter(_.trim.nonEmpty).map(l.appName like "%" + _ + "%"),
+        Option(params.col2SearchValue).filter(_.trim.nonEmpty).map(u.map(_.userName).getOrElse("") like "%" + _ + "%"),
+        Option(params.col3SearchValue).filter(_.trim.nonEmpty).map(w.lineNo === _.toInt),
+        Option(params.col4SearchValue).filter(_.trim.nonEmpty).map(w.activator.getOrElse("") like "%" + _ + "%"),
+        Option(params.col5SearchValue).filter(_.trim.nonEmpty).map(w.windowName.getOrElse("") like "%" + _ + "%"),
+        formatter.map(toChar(w.time, _) === timeStr)
+      ).collect ({case Some(criteria) => criteria}).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
+    } yield (l, w, u)
   }
 
 
-  /** Return a page of WindowDetail */
-  def list(): Future[Seq[WindowDetailTable]] = {
-    val q1 = logs join windowDetails on (_.logId === _.logId) joinLeft users on (_._1.userId === _.userId)
-    val q2 = q1.take(10)
-    val f = db.run(q2.result)
-    f.map{ seq =>
-      for {
-        ((l, w), u) <- seq
-        windowDetailTable = WindowDetailTable(l.logId, l.appName, l.computerName, u.map(_.userName).getOrElse(""),
-          l.tradeDate, w.lineNo, w.activator.getOrElse(""), w.windowName.getOrElse(""), w.destinationType.getOrElse(""),
-          w.action.getOrElse(""), w.method.getOrElse(""), w.time, w.startupTime)
-      } yield windowDetailTable
+  /** Returns a page of WindowDetail */
+  def list(params: WindowDetailTblRequestParams): Future[Seq[WindowDetailTbl]] = {
+    val formatter = new SimpleDateFormat("yy/MM/dd HH:mm")
+    val q1 = filterQuery(params)
+    val q2 = q1.sortBy { case (l, w, u) =>
+      params.order0Column match {
+        case 0 => if (params.order0Dir == "desc") l.logId.desc else l.logId.asc
+        case 1 => if (params.order0Dir == "desc") l.appName.desc else l.appName.asc
+        case 2 => if (params.order0Dir == "desc") u.map(_.userName).desc.nullsLast else u.map(_.userName).asc.nullsFirst
+        case 3 => if (params.order0Dir == "desc") w.lineNo.desc else w.lineNo.asc
+        case 4 => if (params.order0Dir == "desc") w.activator.desc.nullsLast else w.activator.asc.nullsFirst
+        case 5 => if (params.order0Dir == "desc") w.windowName.desc.nullsLast else w.windowName.asc.nullsFirst
+        case 6 => if (params.order0Dir == "desc") w.time.desc.nullsLast else w.time.asc.nullsFirst
+        case _ => if (params.order0Dir == "desc") l.logId.desc else l.logId.asc
+      }
     }
+    val q3 = q2.drop(params.start).take(params.length)
+    val f = db.run(q3.result)
+    f.map(seq => seq.map{case (l, w, u) =>
+      WindowDetailTbl(l.logId, l.appName, l.computerName, u.map(_.userName).getOrElse(""),
+        l.tradeDate, w.lineNo, w.activator.getOrElse(""), w.windowName.getOrElse(""), w.destinationType.getOrElse(""),
+        w.action.getOrElse(""), w.method.getOrElse(""), formatter.format(w.time), w.startupTime)
+    })
   }
 
   /** Returns the sequence of WindowCountByDate object <br>
