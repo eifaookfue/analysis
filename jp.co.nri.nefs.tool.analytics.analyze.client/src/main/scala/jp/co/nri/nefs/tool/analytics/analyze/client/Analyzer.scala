@@ -19,15 +19,17 @@ import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
 class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
-  extends LogComponent with WindowDetailComponent with WindowSliceComponent
-  with UserComponent with WindowUserComponent with LazyLogging
+  extends LogComponent with WindowDetailComponent with WindowUserSliceComponent
+  with UserComponent with WindowDateComponent with WindowSliceComponent with WindowUserComponent with LazyLogging
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
 
   val logs = TableQuery[Logs]
   val windowDetails = TableQuery[WindowDetails]
+  val windowDates = TableQuery[WindowDates]
   val windowSlices = TableQuery[WindowSlices]
+  val windowUserSlices = TableQuery[WindowUserSlices]
   val windowUsers = TableQuery[WindowUsers]
   val users = TableQuery[Users]
 
@@ -54,10 +56,77 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   val toChar: (Rep[Timestamp], Rep[String]) => Rep[String] =
     SimpleFunction.binary[java.sql.Timestamp, String, String](convertFunction)
 
+  /** Returns the sequence of WindowCountByDate object <br>
+    * SQL image:
+    * {{{
+    * INSERT INTO WINDOW_NAME, COUNT(1) (
+    *   SELECT
+    *     l.TRADE_DATE, w.WINDOW_NAME, COUNT(1)
+    *   FROM
+    *     LOG l, WINDOW_DETAIL w
+    *   WHERE
+    *     l.LOG_ID = w.LOG_ID
+    *   GROUP BY
+    *     l.TRADE_DATE, w.WINDOW_NAME
+    *   ORDER BY
+    *     l.TRADE_DATE, w.WINDOW_NAME
+    * )
+    * }}}
+    * @return Sequence of WindowCountByDate
+    */
+  def analyzeByDate(): Unit = {
+    val drop = windowDates.schema.dropIfExists
+    val f1 = db.run(drop)
+    Await.ready(f1, Duration.Inf)
+    f1.value.get match {
+      case Success(_) => logger.info("drop succeeded.")
+      case Failure(e) => logger.error("drop failed.", e)
+    }
+
+    val create = windowDates.schema.createIfNotExists
+    val f2 = db.run(create)
+    Await.ready(f2, Duration.Inf)
+
+    val q = (for {
+      (l, w) <- logs join windowDetails on (_.logId === _.logId)
+    } yield (l, w)).groupBy { case (l, w) => (l.tradeDate, w.windowName)}
+    val q2 = q.map { case ((tradeDate, windowName), lw) =>
+      (tradeDate, windowName, lw.length)
+    }.sortBy { case (tradeDate, windowName, _) => (tradeDate, windowName)}
+    val tradeWindowCountListFut = db.run(q2.result)
+    val tradeWindowNameListFut = tradeWindowCountListFut.map(fut => fut.map{ case (tradeDate, windowNameOp, count) =>
+      (tradeDate, windowNameOp.map { windowName =>
+        if (windowName.contains("NewOrder")) "NewOrder"
+        else if (windowName.contains("NewSplit")) "NewSplit"
+        else "Other"
+      }.getOrElse("Other"), count)
+    })
+    val windowDateListFut = tradeWindowNameListFut.map { fut =>
+      fut.groupBy{ case (tradeDate, windowName, _) =>
+        (tradeDate, windowName)
+      }
+    }.map { fut =>
+      fut.map{ case ((tradeDate, windowName), seq) =>
+        WindowDate(tradeDate, windowName, seq.map(_._3).sum)
+      }
+    }
+
+    val future = windowDateListFut.flatMap { windowDateList =>
+      val insert = windowDates ++= windowDateList
+      db.run(insert)
+    }
+
+    Await.ready(future, Duration.Inf)
+    future.value.get match {
+      case Success(_) => logger.info("insert completed.")
+      case Failure(e) => logger.error("insert failed.", e)
+    }
+  }
+
   def analyzeBySlice(startTime: LocalTime, endTime: LocalTime, intervalMinutes: Int): Unit = {
     val range = timeRange(startTime, endTime, intervalMinutes)
 
-    val drop = windowSlices.schema.dropIfExists
+    val drop = windowUserSlices.schema.dropIfExists
     val f1 = db.run(drop)
     Await.ready(f1, Duration.Inf)
     f1.value.get match {
@@ -65,7 +134,57 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
       case Failure(e) => logger.error("drop failed", e)
     }
 
-    val create = windowSlices.schema.createIfNotExists
+    val create = windowUserSlices.schema.createIfNotExists
+    val f2 = db.run(create)
+    Await.ready(f2, Duration.Inf)
+
+    val list1 = for {
+      i <- 0 until range.length - 1
+      q = windowDetails.filter(w => toChar(w.time, format) > range(i) && toChar(w.time, format) <= range(i+1))
+        .groupBy(_.windowName).map{ case (windowName, windowAgg) => (range(i), windowName, windowAgg.length)}
+      f = db.run(q.result)
+    } yield f
+    val futures1 = Future.sequence(list1)
+    val sliceWindowCountList = Await.result(futures1, Duration.Inf).flatten
+    val sliceNameCountList = sliceWindowCountList.map { case (slice, op, count) =>
+      (slice, op.map { windowName =>
+        if (windowName.contains("NewOrder")) "NewOrder"
+        else if (windowName.contains("NewSplit")) "NewSplit"
+        else "Other"
+      }.getOrElse("Other"), count)
+    }.groupBy{ case (slice, windowName, _) =>
+      (slice, windowName)
+    }
+    val sliceNameCount = sliceNameCountList.map { case ((slice, windowName), seq) =>
+      ((slice, windowName), seq.map(_._3).sum)
+    }
+    val list2 = for {
+      ((slice, windowName), count) <- sliceNameCount
+      windowSlice = WindowSlice(slice, windowName, count)
+      insert = windowSlices += windowSlice
+      f = db.run(insert)
+    } yield f
+    val futures2 = Future.sequence(list2)
+    Await.ready(futures2, Duration.Inf)
+    futures2.value.get match {
+      case Success(_) => logger.info("insert completed.")
+      case Failure(e) => logger.error("insert failed.", e)
+    }
+
+  }
+
+  def analyzeByUserSlice(startTime: LocalTime, endTime: LocalTime, intervalMinutes: Int): Unit = {
+    val range = timeRange(startTime, endTime, intervalMinutes)
+
+    val drop = windowUserSlices.schema.dropIfExists
+    val f1 = db.run(drop)
+    Await.ready(f1, Duration.Inf)
+    f1.value.get match {
+      case Success(_) => logger.info("drop succeeded.")
+      case Failure(e) => logger.error("drop failed", e)
+    }
+
+    val create = windowUserSlices.schema.createIfNotExists
     val f2 = db.run(create)
     Await.ready(f2, Duration.Inf)
 
@@ -91,7 +210,7 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
       q2 = q.map { case ((userId, windowName), lw) =>
         (range(i), userId, windowName.getOrElse("OTHER"), lw.length, 0, 0l)
       }
-      selectInsert = windowSlices forceInsertQuery q2
+      selectInsert = windowUserSlices forceInsertQuery q2
       f = db.run(selectInsert)
     } yield f
     val aggregated: Future[Seq[Int]] = Future.sequence(list)
@@ -141,7 +260,7 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     val list3 = for {
       tmpSlice <- sliceList
       (slice, userId, windowName, count, avgStartupOp) <- tmpSlice
-      q = windowSlices.filter(_.slice === slice).filter(_.userId === userId).filter(_.windowName === windowName)
+      q = windowUserSlices.filter(_.slice === slice).filter(_.userId === userId).filter(_.windowName === windowName)
         .map(s => (s.startupCount, s.avgStartup))
       updateAction = q.update((count, avgStartupOp.getOrElse(0l)))
       f = db.run(updateAction)
@@ -201,7 +320,9 @@ object Analyzer {
   val analyzer: Analyzer = ServiceInjector.getComponent(classOf[Analyzer])
 
   def main(args: Array[String]): Unit = {
-    analyzer.analyzeBySlice(LocalTime.of(6, 0), LocalTime.of(17, 0), 10)
+    analyzer.analyzeBySlice(LocalTime.of(5, 0), LocalTime.of(17, 0), 10)
+    analyzer.analyzeByUserSlice(LocalTime.of(5, 0), LocalTime.of(17, 0), 10)
     analyzer.analyzeByUser()
+    analyzer.analyzeByDate()
   }
 }

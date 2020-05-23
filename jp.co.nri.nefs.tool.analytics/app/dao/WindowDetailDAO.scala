@@ -172,8 +172,8 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
 
   }
 
-  def fileName(logId: Int): Future[String] = {
-    val query = logs.filter(_.logId === logId).map(_.fileName)
+  def fileName(logId: Int): Future[(String, String)] = {
+    val query = logs.filter(_.logId === logId).map(l => (l.tradeDate, l.fileName))
     val action = query.result.head
     db.run(action)
   }

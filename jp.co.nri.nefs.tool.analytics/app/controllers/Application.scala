@@ -1,6 +1,7 @@
 package controllers
 
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
+import java.sql.Timestamp
 
 import dao.{WindowDetailDAO, WindowSliceDAO, WindowUserDAO}
 import javax.inject.Inject
@@ -122,10 +123,14 @@ class Application @Inject() (
   }
 
   def fileDownload(logId: Int): Action[AnyContent] = Action {
-    val fileName = Await.result(windowDetailDao.fileName(logId), 10.seconds)
+    val (tradeDate, fileName) = Await.result(windowDetailDao.fileName(logId), 10.seconds)
     val fileDir = config.underlying.getString("logDir")
+    val parent = Paths.get(fileDir).resolve(tradeDate)
+    val file1 = parent.resolve(fileName)
+    val file2 = parent.resolve(fileName.replace("log", "zip"))
+    val target = if (Files.exists(file1)) file1 else file2
     Ok.sendFile(
-      content = Paths.get(fileDir).resolve(fileName).toFile,
+      content = target.toFile,
       inline = false
     )
   }

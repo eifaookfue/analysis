@@ -17,17 +17,14 @@ class WindowSliceDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPro
   val windowSlices = TableQuery[WindowSlices]
 
   def list: Future[Seq[WindowCountBySlice]] = {
-    val q = windowSlices.groupBy(s => (s.slice, s.windowName)).map { case ((slice, windowName), agg) =>
-      (slice, windowName, agg.length)
-    }.sortBy(_._1)
-    val fut = db.run(q.result)
-    val groupFut = fut.map(_.groupBy(_._1))
-    groupFut.map { fut =>
+    val fut = db.run(windowSlices.sortBy(_.slice).result)
+    val groupFut = fut.map(seq => seq.groupBy(_.slice))
+    groupFut.map{groupMap =>
       (for {
-        (slice, seq) <- fut
-        total = seq.map(_._3).sum
-        nos = seq.filter(_._2.contains("NewOrder")).map(_._3).sum
-        ns = seq.filter(_._2.contains("NewSplit")).map(_._3).sum
+        (slice, seq) <- groupMap
+        total = seq.map(_.count).sum
+        nos = seq.filter(_.windowName == "NewOrder").map(_.count).sum
+        ns = seq.filter(_.windowName == "NewSplit").map(_.count).sum
         ws = WindowCountBySlice(slice, nos, ns, total - nos - ns)
       } yield ws).toSeq
     }
