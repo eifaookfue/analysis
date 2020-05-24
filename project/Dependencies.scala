@@ -111,6 +111,10 @@ object Dependencies {
     Library.guice
   )
 
+  val training: Seq[ModuleID] = Seq(
+    Library.scala_xml
+  )
+
   val transport: Seq[ModuleID] = Seq(
     Library.logback,
     Library.scalaLogging,
@@ -136,6 +140,7 @@ object Version {
   val akka_actor  =  "2.5.19"
   val scalaz       = "7.2.14"
   val guice        = "4.2.2"
+  val scala_xml    = "1.1.0"
 }
 
 object Library {
@@ -162,5 +167,6 @@ object Library {
   val akka_slf4j          = "com.typesafe.akka"          %% "akka-slf4j"               % Version.akka_actor
   val scalaz              = "org.scalaz"                 %% "scalaz-core"              % Version.scalaz
   val guice               = "com.google.inject"          % "guice"                     % Version.guice
+  val scala_xml           = "org.scala-lang.modules"     %% "scala-xml"                % Version.scala_xml
 }
 

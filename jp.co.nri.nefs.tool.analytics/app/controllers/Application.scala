@@ -1,9 +1,7 @@
 package controllers
 
 import java.nio.file.{Files, Paths}
-import java.sql.Timestamp
-
-import dao.{WindowDetailDAO, WindowSliceDAO, WindowUserDAO}
+import dao.{E9nDAO, WindowDetailDAO, WindowSliceDAO, WindowUserDAO}
 import javax.inject.Inject
 import jp.co.nri.nefs.tool.analytics.model.client.E9n
 import models._
@@ -23,20 +21,12 @@ class Application @Inject() (
     windowDetailDao: WindowDetailDAO,
     windowSliceDao: WindowSliceDAO,
     windowUserDao: WindowUserDAO,
+    e9nDao: E9nDAO,
     controllerComponents: ControllerComponents,
     config: Configuration
 )(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents) with I18nSupport {
-/*
-      val order0Column = intBinder.bind("order[0][column]", params)
-      val order0Dir = strBinder.bind("order[0][dir]", params)
-      val start = intBinder.bind("start", params)
-      val length = intBinder.bind("length", params)
-      val searchValue = strBinder.bind("search[value]", params)
-      val searchRegex = boolBinder.bind("search[regex]", params)
-      println(s"bind called. draw=$draw")
- */
 
-  val windowDetailTableForm = Form(
+  val windowDetailTblRequestForm = Form(
     mapping(
       "draw" -> number,
       "columns[0][search][value]" -> text,
@@ -52,6 +42,34 @@ class Application @Inject() (
       "length" -> number,
       "search[value]" -> text,
       "search[regex]" -> boolean)(WindowDetailTblRequestParams.apply)(WindowDetailTblRequestParams.unapply)
+  )
+
+  val windowSliceTblRequestForm = Form(
+    mapping(
+      "draw" -> number,
+      "columns[0][search][value]" -> text,
+      "columns[1][search][value]" -> text,
+      "columns[2][search][value]" -> text,
+      "order[0][column]" -> number,
+      "order[0][dir]" -> text,
+      "start" -> number,
+      "length" -> number,
+      "search[value]" -> text,
+      "search[regex]" -> boolean)(WindowSliceTblRequestParams.apply)(WindowSliceTblRequestParams.unapply)
+  )
+
+  val e9nTblRequestForm = Form(
+    mapping(
+      "draw" -> number,
+      "columns[0][search][value]" -> text,
+      "columns[1][search][value]" -> text,
+      "columns[2][search][value]" -> text,
+      "order[0][column]" -> number,
+      "order[0][dir]" -> text,
+      "start" -> number,
+      "length" -> number,
+      "search[value]" -> text,
+      "search[regex]" -> boolean)(E9nTblRequestParams.apply)(E9nTblRequestParams.unapply)
   )
 
   /** This result directly redirect to the application home.*/
@@ -107,7 +125,7 @@ class Application @Inject() (
 
   def windowDetailTable(): Action[AnyContent] = Action.async { implicit request =>
     println(s"request=${request.body}")
-    windowDetailTableForm.bindFromRequest.fold(
+    windowDetailTblRequestForm.bindFromRequest.fold(
       _ =>
         Future.successful(InternalServerError("Oops")),
       params =>
@@ -135,29 +153,40 @@ class Application @Inject() (
     )
   }
 
-  def windowCountTable(params: WindowCountTableParams): Action[AnyContent] = Action.async { implicit request =>
-    println(request)
-    println(params)
-    //val filtered = windowCountByUsers.filter(uw => uw.windowName.contains(params.searchValue) || uw.userName.contains(params.searchValue))
-    //val sorted  = WindowCountByUser.sort(filtered, params.order0Column, params.order0Dir)
-    for {
-      recordsTotal <- windowUserDao.count
-      recordsFiltered <- windowUserDao.count(params)
-      seq <- windowUserDao.list(params)
-      w = WindowCountByUserData(params.draw, recordsTotal, recordsFiltered, seq)
-      json = Json.toJson(w)
-    } yield Ok(json)
+  def windowCountTable(): Action[AnyContent] = Action.async { implicit request =>
+    println(s"request=${request.body}")
+    windowSliceTblRequestForm.bindFromRequest.fold(
+      _ =>
+        Future.successful(InternalServerError("Oops")),
+      params =>
+        for {
+          recordsTotal <- windowUserDao.count
+          recordsFiltered <- windowUserDao.count(params)
+          seq <- windowUserDao.list(params)
+          w = WindowCountByUserData(params.draw, recordsTotal, recordsFiltered, seq)
+          json = Json.toJson(w)
+        } yield Ok(json)
+    )
   }
 
-  def e9nListTable(params: E9nListTableParams): Action[AnyContent] = Action { implicit request =>
-    println(request)
-    println(params)
-    val filtered = e9nList.filter(_.e9nHeadMessage.contains(params.searchValue))
-    val sorted  = E9n.sort(filtered, params.order0Column, params.order0Dir)
-    val data = E9nListData(params.draw, 100, sorted.length, sorted.slice(params.start, params.start + params.length))
-    println(Json.toJson(data).toString())
-    Ok(Json.toJson(data))
+  def e9nListTable(): Action[AnyContent] = Action.async { implicit request =>
+    e9nTblRequestForm.bindFromRequest.fold(
+      _ =>
+        Future.successful(InternalServerError("Oops")),
+      params =>
+        for {
+          recordsTotal <- e9nDao.count
+          recordsFiltered <- e9nDao.count(params)
+          seq <- e9nDao.e9nList(params)
+          response = E9nTblResponse(params.draw, recordsTotal, recordsFiltered, seq)
+          json = Json.toJson(response)
+        } yield Ok(json)
+    )
   }
 
+  def e9nDownload(e9nId: Int): Action[AnyContent] = Action {
+    println(s"$e9nId request accepted.")
+    Ok(s"got $e9nId")
+  }
 
 }

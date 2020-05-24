@@ -1,6 +1,11 @@
 @import _root_.play.api.libs.json.JsValue
 @(d1: JsValue, d2: JsValue)(implicit request: play.api.mvc.RequestHeader)
 @main("dashboard-client", DASHBOARD_CLIENT){
+@helper.javascriptRouter("jsRoutes")(
+    routes.javascript.Application.windowCountTable,
+    routes.javascript.Application.e9nListTable,
+    routes.javascript.Application.e9nDownload
+)
 <div id="root" data-jsondata1="@d1", data-jsondata2="@d2"></div>
 <!--<script>
     var data2 = document.getElementById("root").dataset.jsondata
@@ -149,7 +154,7 @@
         "pagingType": "simple",
         "processing": true,
         "serverSide": true,
-        "ajax": "@routes.Application.windowCountTable()",
+        "ajax": jsRoutes.controllers.Application.windowCountTable(),
         "order": [[ 2, "desc" ]],
         "columns": [
             { data: "user_name" },
@@ -165,14 +170,37 @@
         "pagingType": "simple",
         "processing": true,
         "serverSide": true,
-        "ajax": "@routes.Application.e9nListTable()",
+        "ajax": jsRoutes.controllers.Application.e9nListTable(),
         "order": [[ 2, "desc" ]],
         "columns": [
-            { data: "e9n-id" },
+            { data: "e9n-id",
+              render: function(data, type, row, meta) {
+                if (type == 'display') {
+                    data = '<button value=' + data + '>' + data + '</button>'
+                }
+                return data;
+              }
+            },
             { data: "message" },
             { data: "count" }
         ]
     });
+
+    $(function() {
+        $('#e9n-count-body tbody').on('click', 'td button', function(e) {
+            //var e9nId = $(this).attr("id");
+            var e9nId = $(this).val();
+            console.log(e9nId);
+            $.ajax(jsRoutes.controllers.Application.e9nDownload(e9nId))
+            .done(function(data) {
+                console.log(data);
+            })
+            .fail(function() {
+                console.log("error");
+            });
+        });
+    });
+
 </script>
 <script src="@routes.Assets.at("javascripts/client.js")"></script>
 }

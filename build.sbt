@@ -164,11 +164,13 @@ lazy val `store-client` = (project in file("jp.co.nri.nefs.tool.analytics.store.
   )
   .dependsOn(`play-slick`, `store-common`, `model-client`, `common-property`, util, config)
 
+lazy val training = (project in file("jp.co.nri.nefs.tool.analytics.training"))
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.training)
 
 lazy val util = (project in file("jp.co.nri.nefs.tool.util"))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.util)
-
 
 lazy val websocket = (project in file("co-jp-nri-nefs-tool-websocket"))
   .settings(

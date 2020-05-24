@@ -24,6 +24,20 @@ case class WindowDetailTblRequestParams(draw: Int,
                                         order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                   )
 
+case class WindowSliceTblRequestParams(draw: Int,
+                                        col0SearchValue: String,
+                                        col1SearchValue: String,
+                                        col2SearchValue: String,
+                                        order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
+                                       )
+
+case class E9nTblRequestParams(draw: Int,
+                                       col0SearchValue: String,
+                                       col1SearchValue: String,
+                                       col2SearchValue: String,
+                                       order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
+                                      )
+
 case class WindowCountTableParams(draw: Int,
                                   col0Data: String, col0Name: String, col0Searchable: Boolean, col0Orderable: Boolean, col0SearchValue: String, col0SearchRegex: Boolean,
                                   col1Data: String, col1Name: String, col1Searchable: Boolean, col1Orderable: Boolean, col1SearchValue: String, col1SearchRegex: Boolean,
@@ -300,15 +314,15 @@ object WindowCountByUserData {
   )
 }
 
-case class E9nListData(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[E9n])
+case class E9nTblResponse(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[E9n])
 
-object E9nListData {
-  implicit val e9nListDataWrites: Writes[E9nListData] = (
+object E9nTblResponse {
+  implicit val e9nListDataWrites: Writes[E9nTblResponse] = (
     (JsPath \ "draw").write[Int] and
       (JsPath \ "recordsTotal").write[Int] and
       (JsPath \ "recordsFiltered").write[Int] and
       (JsPath \ "data").write[Seq[E9n]]
-    )(unlift(E9nListData.unapply)
+    )(unlift(E9nTblResponse.unapply)
   )
 }
 

@@ -7,15 +7,50 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 
 import com.typesafe.config.ConfigFactory
+import javax.inject.Inject
 import jp.co.nri.nefs.tool.analytics.common.property.EDestinationType
 import jp.co.nri.nefs.tool.analytics.model.client._
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
 import jp.co.nri.nefs.tool.analytics.store.common.ServiceInjector
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
+import slick.jdbc.JdbcProfile
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConverters._
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Random, Success, Try}
+
+class Generator @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
+  extends E9nComponent with E9nStackTraceComponent with HasDatabaseConfigProvider[JdbcProfile] {
+
+  import profile.api._
+
+  val e9ns = TableQuery[E9ns]
+  val e9nStackTraces = TableQuery[E9nStackTraces]
+
+/*  def insertE9n(e9nSeq: Seq[E9n]): Unit = {
+    val futures = for {
+      e9n <- e9nSeq
+      insert1 = e9ns returning e9ns.map(_.e9nId) += e9n
+      f1 = db.run(insert1)
+      e9nId = Await.result(f1, Duration.Inf)
+      for {
+
+    }
+      stackTrace = E9nStackTrace(e9nId, i, s"at $i")
+      insert2 = e9nStackTraces += stackTrace
+      f2 = db.run(insert2)
+    } yield f2
+    val aggFuture = Future.sequence(futures)
+    Await.ready(aggFuture, Duration.Inf)
+    aggFuture.value.get match {
+      case Success(_) => println("insert succeeded.")
+      case Failure(_) => println("insert failed.")
+    }
+  }*/
+
+}
 
 object Generator {
   val r: Random = Random
@@ -31,6 +66,7 @@ object Generator {
     ServiceInjector.initialize()
     val recorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
     recorder.recreate()
+    val generator = ServiceInjector.getComponent(classOf[Generator])
     for {
       log <- Generator.logs("2019-01-01", "2019-01-31", 10)
       logId = recorder.record(log)
@@ -38,6 +74,7 @@ object Generator {
       f = recorder.record(logId.get, windowDetail)
       _ = Await.result(f, Duration.Inf)
     } {}
+
   }
 
   def fileName(appName: String, env: String, computer: String, userId: String, startTime: Date): String = {

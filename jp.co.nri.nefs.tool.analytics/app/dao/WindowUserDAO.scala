@@ -3,7 +3,7 @@ package dao
 import javax.inject.{Inject, Singleton}
 import jp.co.nri.nefs.tool.analytics.model.client.WindowUserComponent
 import jp.co.nri.nefs.tool.analytics.model.common.UserComponent
-import models.{WindowCountByUser, WindowCountTableParams}
+import models.{WindowCountByUser, WindowSliceTblRequestParams}
 import play.api.Configuration
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
@@ -23,43 +23,32 @@ class WindowUserDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProv
     db.run(windowUsers.length.result)
   }
 
-  def count(params: WindowCountTableParams): Future[Int] = {
-    val q = for {
-      (w, u) <- windowUsers joinLeft users on (_.userId === _.userId)
-    } yield (u.map(_.userName).getOrElse(""), w.windowName, w.count)
-    val q2 = q.filter { case (userName, windowName, _) =>
-      (userName like "%" + params.searchValue + "%") || (windowName like "%" + params.searchValue + "%")
-    }
-    db.run(q2.length.result)
+  def count(params: WindowSliceTblRequestParams): Future[Int] = {
+    db.run(filterQuery(params).length.result)
   }
 
-  def list(params: WindowCountTableParams): Future[Seq[WindowCountByUser]] = {
-    val q = for {
+  private def filterQuery(params: WindowSliceTblRequestParams) = {
+    for {
       (w, u) <- windowUsers joinLeft users on (_.userId === _.userId)
-    } yield (u.map(_.userName).getOrElse(""), w.windowName, w.count)
-    val q2 = q.filter { case (userName, windowName, _) =>
-      (userName like "%" + params.searchValue + "%") || (windowName like "%" + params.searchValue + "%")
-    }
-    val q3 = if (params.order0Column == 0 && params.order0Dir == "desc") {
-      q2.sortBy{case (u, _, _) => u.desc}
-    } else if (params.order0Column == 0 && params.order0Dir == "asc") {
-      q2.sortBy{case (u, _, _) => u.asc}
-    } else if (params.order0Column == 1 && params.order0Dir == "desc") {
-      q2.sortBy{case (_, w, _) => w.desc}
-    } else if (params.order0Column == 1 && params.order0Dir == "asc") {
-      q2.sortBy{case (_, w, _) => w.asc}
-    } else if (params.order0Column == 2 && params.order0Dir == "desc") {
-      q2.sortBy{case (_, _, c) => c.desc}
-    } else {
-      q2.sortBy{case (_, _, c) => c.asc}
-    }
-    val q4 = q3.drop(params.start).take(params.length)
-    val fut = db.run(q4.result)
-    fut.map{ seq =>
-      for {
-        (userName, windowName, count) <- seq
-        w = WindowCountByUser(userName, windowName, count)
-      } yield w
+      if Option(params.searchValue).filter(_.trim.nonEmpty).map{v =>
+        (u.map(_.userName).getOrElse(w.userId) like "%" + v + "%") || (w.windowName like "%" + v + "%")}.getOrElse(true: Rep[Boolean])
+    } yield (u.map(_.userName).getOrElse(w.userId), w.windowName, w.count )
+  }
+
+  def list(params: WindowSliceTblRequestParams): Future[Seq[WindowCountByUser]] = {
+    val q1 = filterQuery(params)
+    val q2 = q1.sortBy(v =>
+      params.order0Column match {
+        case 0 => if (params.order0Dir == "desc") v._1.desc else v._1.asc
+        case 1 => if (params.order0Dir == "desc") v._2.desc else v._2.asc
+        case 2 => if (params.order0Dir == "desc") v._3.desc else v._3.asc
+        case _ => if (params.order0Dir == "desc") v._1.desc else v._1.asc
+      }
+    )
+    val q3 = q2.drop(params.start).take(params.length)
+    val f = db.run(q3.result)
+    f.map { seq => seq.map{case (userName, windowName, count) =>
+      WindowCountByUser(userName, windowName, count)}
     }
   }
 

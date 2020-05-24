@@ -37,7 +37,6 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
   val dateFormatters: Seq[Map[String, AnyRef]] = conf.getObjectList("dateFormatters").asScala
     .map(_.unwrapped()).map(_.asScala.toMap)
 
-  /** Count all computers. */
   def count: Future[Int] = {
     db.run(windowDetails.length.result)
   }

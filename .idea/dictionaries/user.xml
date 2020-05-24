@@ -12,6 +12,7 @@
       <w>excelfile</w>
       <w>fname</w>
       <w>formatters</w>
+      <w>gettingonandoff</w>
       <w>guice</w>
       <w>hhmm</w>
       <w>hikari</w>
@@ -23,20 +24,28 @@
       <w>javascripts</w>
       <w>jdbc</w>
       <w>jnet</w>
+      <w>latit</w>
+      <w>latits</w>
       <w>logdir</w>
+      <w>longit</w>
+      <w>longits</w>
       <w>materializer</w>
       <w>miyazaki</w>
       <w>mydb</w>
       <w>nakamura</w>
       <w>nefs</w>
       <w>nozip</w>
+      <w>numberof</w>
       <w>objs</w>
       <w>ooxml</w>
+      <w>opengis</w>
       <w>ordable</w>
       <w>orderable</w>
       <w>ostream</w>
       <w>outpath</w>
       <w>outputdir</w>
+      <w>passgrs</w>
+      <w>raico</w>
       <w>retela</w>
       <w>rownum</w>
       <w>saiki</w>
@@ -46,6 +55,7 @@
       <w>tost</w>
       <w>typesafe</w>
       <w>websocket</w>
+      <w>xlink</w>
     </words>
   </dictionary>
 </component>

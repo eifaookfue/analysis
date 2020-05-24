@@ -1,6 +1,7 @@
 @(implicit request: play.api.mvc.RequestHeader)
 @main("dashboard-client", WINDOW_DETAIL){
 @helper.javascriptRouter("jsRoutes")(
+    routes.javascript.Application.windowDetailTable,
     routes.javascript.Application.fileDownload
 )
 <!-- Content Wrapper. Contains page content -->
@@ -83,10 +84,7 @@
         "autoWidth": false,
         "processing": true,
         "serverSide": true,
-        "ajax": {
-            "url": "@routes.Application.windowDetailTable()",
-            "type": "POST"
-        },
+        "ajax": jsRoutes.controllers.Application.windowDetailTable(),
         initComplete: function() {
             var api = this.api();
 

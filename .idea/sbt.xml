@@ -22,6 +22,7 @@
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.sender.client" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.store.client" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.store.common" />
+            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.training" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.transfer" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.util" />
             <option value="$PROJECT_DIR$/json" />

@@ -29,7 +29,6 @@ var chart2 = c3.generate({
     },
     data: {
         json: json2,
-        type: 'bar',
         xFormat: '%Y%m%d',
         keys: {
             x: 'TradeDate',
