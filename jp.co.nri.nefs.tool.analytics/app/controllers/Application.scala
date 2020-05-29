@@ -1,6 +1,8 @@
 package controllers
 
 import java.nio.file.{Files, Paths}
+import java.sql.Timestamp
+
 import dao.{E9nDAO, WindowDetailDAO, WindowSliceDAO, WindowUserDAO}
 import javax.inject.Inject
 import jp.co.nri.nefs.tool.analytics.model.client.E9n
@@ -15,7 +17,7 @@ import views.html
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.Random
+import scala.util.{Properties, Random}
 
 class Application @Inject() (
     windowDetailDao: WindowDetailDAO,
@@ -99,7 +101,7 @@ class Application @Inject() (
     e9nId <- 1 to 100
     message = e9ns(r.nextInt(e9ns.length))
     count = r.nextInt(1000)
-    e9n = E9n(e9nId, message, 0, count)
+    e9n = E9n(e9nId, message, 0, count, new Timestamp(new java.util.Date().getTime))
   } yield e9n
 
   def dashboard_client: Action[AnyContent] = Action.async { implicit request =>
@@ -184,9 +186,13 @@ class Application @Inject() (
     )
   }
 
-  def e9nDownload(e9nId: Int): Action[AnyContent] = Action {
+  def e9nStackTrace(e9nId: Int): Action[AnyContent] = Action.async {
     println(s"$e9nId request accepted.")
-    Ok(s"got $e9nId")
+    for {
+      seq <- e9nDao.e9nStackTraceList(e9nId)
+      traces = seq.map(_.message).mkString("<br>" + Properties.lineSeparator)
+      _ = println(traces)
+    } yield Ok(traces)
   }
 
 }

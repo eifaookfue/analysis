@@ -1,6 +1,9 @@
 package jp.co.nri.nefs.tool.analytics.training
 
 import java.io.File
+import java.nio.file.{Files, Paths, StandardOpenOption}
+
+import scala.collection.JavaConverters._
 import scala.xml.XML
 import scala.language.implicitConversions
 
@@ -9,6 +12,14 @@ case class Station(name: String, passgrs: Int, latit: Double, longit: Double, ra
 object Station {
 
   import RichSeq._
+
+  implicit class CSVWrapper(val prod: Product) extends AnyVal {
+    def toCSV: String = prod.productIterator.map {
+      case Some(value) => value
+      case None => ""
+      case rest => rest
+    }.mkString(",")
+  }
 
   def main(args: Array[String]): Unit = {
     val str = "C:/Users/user/Documents/20200519_Presentation/S12-13/S12-13.xml"
@@ -43,14 +54,17 @@ object Station {
       Station(stationName, passenger, latit, longit, railCo, routeName)
     }
     val (tokyoLatit, tokyoLongit) = stations.filter(_.name == "東京").map(s => (s.latit, s.longit)).head
-    stations.map{station =>
+    val strs = stations.map{station =>
       val diffLatit = scala.math.abs(station.latit - tokyoLatit)
       val diffLongit = scala.math.abs(station.longit - tokyoLongit)
       val diff = diffLatit + diffLongit
       (diff, station)
-    }.toSeq.sortBy(_._1).take(1000).foreach(println)
+    }.toSeq.sortBy(_._1).take(869).sortBy(_._2.name).map(_._2.toCSV)
+    val strs2 = for ((str, index) <- strs.zipWithIndex) yield (index + 1).toString + "," + str
+    val out = Paths.get("C:/Users/user/Documents/20200519_Presentation/data/TokyoSTATION.csv")
+    Files.write(out, Seq("StNo,Station,Passgrs.Latit.Longit,RailCo,Line").asJava, StandardOpenOption.TRUNCATE_EXISTING)
+    Files.write(out, strs2.asJava, StandardOpenOption.APPEND)
   }
-
 }
 
 object RichSeq {
@@ -66,3 +80,4 @@ class RichTupleSeq(seq: Seq[(Double, Double)]) {
   import RichSeq.seqToRichSeq
   def avg: (Double, Double) = (seq.map(_._1).avg, seq.map(_._2).avg)
 }
+

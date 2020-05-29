@@ -107,6 +107,7 @@
                                 <tr>
                                     <th>ExceptionId</th>
                                     <th>Message</th>
+                                    <th></th>
                                     <th>Count</th>
                                 </tr>
                                 </thead>
@@ -122,6 +123,25 @@
     </div>
     <!-- /.content -->
 </div>
+
+<div class="modal fade" id="modal-xl">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Stack trace</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id=""modalHtml">
+        </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- /.content-wrapper -->
 }{
 <!-- mainに渡すjava script -->
@@ -183,20 +203,24 @@
             },
             { data: "message" },
             { data: "count" }
+        ],
+        "columnDefs": [
+            {targets: 0, width: 20},
+            {targets: 2, width: 20},
+            {targets: 3, width: 80}
         ]
     });
 
     $(function() {
         $('#e9n-count-body tbody').on('click', 'td button', function(e) {
-            //var e9nId = $(this).attr("id");
             var e9nId = $(this).val();
             console.log(e9nId);
-            $.ajax(jsRoutes.controllers.Application.e9nDownload(e9nId))
+            $.ajax(jsRoutes.controllers.Application.e9nStackTrace(e9nId))
             .done(function(data) {
-                console.log(data);
-            })
-            .fail(function() {
-                console.log("error");
+                $("#modalHtml").html(data);
+                $("#modalxl").modal("show");
+            }).fail(function(XMLHttpRequest, textStatus, error) {
+                alert("error");
             });
         });
     });

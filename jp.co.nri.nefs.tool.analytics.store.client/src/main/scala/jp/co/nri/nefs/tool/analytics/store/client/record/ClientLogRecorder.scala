@@ -99,14 +99,13 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
             val insertE9nDetail = e9nDetails += E9nDetail(logId, lineNo, e9nId)
             db.run(DBIO.seq(updateE9n, insertE9nDetail))
           case None =>
-            val e9n = E9n(0, headMessage, length, 1)
-            val insertE9n = e9ns returning e9ns.map(_.e9nId) += e9n
+            val insertE9n = e9ns.map(e => (e.e9nId, e.e9nHeadMessage, e.e9nLength, e.count)) returning e9ns.map(_.e9nId) += (0, headMessage, length, 1)
             val f2 = db.run(insertE9n)
             Await.ready(f2, Duration.Inf)
             f2.value.get match {
               case Success(e9nId) =>
-                val insertE9nStackTrace = e9nStackTraces ++= e9nStackTraceSeq.map(_.copy(e9nId = e9nId))
-                val insertE9nDetail = e9nDetails += E9nDetail(logId, lineNo, e9nId)
+                val insertE9nStackTrace = e9nStackTraces.map(e => (e.e9nId, e.number, e.message)) ++= e9nStackTraceSeq.map(e => (e9nId, e.number, e.message))
+                val insertE9nDetail = e9nDetails.map(e => (e.logId, e.lineNo, e.e9nId)) += (logId, lineNo, e9nId)
                 db.run(DBIO.seq(insertE9nStackTrace, insertE9nDetail))
               case Failure(e) =>
                 Future.failed(e)

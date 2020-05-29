@@ -1,10 +1,13 @@
 package jp.co.nri.nefs.tool.analytics.model.client
+import java.sql.Timestamp
+
 import play.api.db.slick.HasDatabaseConfigProvider
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Writes}
 import slick.jdbc.JdbcProfile
+import slick.sql.SqlProfile.ColumnOption.SqlType
 
-case class E9n(e9nId: Int, e9nHeadMessage: String, e9nLength: Int, count: Int)
+case class E9n(e9nId: Int, e9nHeadMessage: String, e9nLength: Int, count: Int, updateTime: Timestamp = null)
 
 object E9n {
   implicit val e9nWrites: Writes[E9n] = (
@@ -44,8 +47,9 @@ trait E9nComponent {
     def e9nHeadMessage = column[String]("E9N_HEAD_MESSAGE")
     def e9nLength = column[Int]("E9N_LENGTH")
     def count = column[Int]("COUNT")
+    def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
     // https://stackoverflow.com/questions/22367092/using-tupled-method-when-companion-object-is-in-class
-    def * = (e9nId, e9nHeadMessage, e9nLength, count) <> ((E9n.apply _).tupled, E9n.unapply)
+    def * = (e9nId, e9nHeadMessage, e9nLength, count, updateTime) <> ((E9n.apply _).tupled, E9n.unapply)
     def uk_1 = index("E9N_UK_1", (e9nHeadMessage, e9nLength), unique = true)
   }
 }
@@ -66,7 +70,7 @@ trait E9nDetailComponent {
   }
 }
 
-case class E9nStackTrace (e9nId: Int, number: Int, message: String)
+case class E9nStackTrace (e9nId: Int, number: Int, message: String, updateTime: Timestamp = null)
 
 trait E9nStackTraceComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
@@ -77,6 +81,8 @@ trait E9nStackTraceComponent {
     def e9nId = column[Int]("E9N_ID")
     def number = column[Int]("NUMBER")
     def message = column[String]("MESSAGE")
-    def * = (e9nId, number, message) <> (E9nStackTrace.tupled, E9nStackTrace.unapply)
+    def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+    def * = (e9nId, number, message, updateTime) <> (E9nStackTrace.tupled, E9nStackTrace.unapply)
+    def pk = primaryKey("E9N_STACKTRACE_PK_1", (e9nId, number))
   }
 }

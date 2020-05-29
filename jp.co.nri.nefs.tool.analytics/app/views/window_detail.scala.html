@@ -120,7 +120,12 @@
             { data: "activator" },
             { data: "window-name" },
             { data: "time" }
-        ]
+        ],
+        "deferLoading": true
     });
+    var column = windowDetailTable.columns(0);
+    windowDetailTable.columns(0).val(function(data){return 2;});
+    windowDetailTable.columns(0).search('2');
+    windowDetailTable.draw();
 </script>
 }

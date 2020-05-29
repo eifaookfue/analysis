@@ -225,17 +225,11 @@ object WindowDetailTbl {
   implicit val windowDetailTableWrites: Writes[WindowDetailTbl] = (
     (JsPath \ "log-id").write[Int] and
       (JsPath \ "app-name").write[String] and
-      (JsPath \ "computer-name").write[String] and
       (JsPath \ "user-name").write[String] and
-      (JsPath \ "trade-date").write[String] and
       (JsPath \ "line-no").write[Int] and
       (JsPath \ "activator").write[String] and
       (JsPath \ "window-name").write[String] and
-      (JsPath \ "destination-type").write[String] and
-      (JsPath \ "action").write[String] and
-      (JsPath \ "method").write[String] and
-      (JsPath \ "time").write[String] and
-      (JsPath \ "startup-time").writeNullable[Long]
+      (JsPath \ "time").write[String]
     )(unlift(WindowDetailTbl.unapply))
 }
 
