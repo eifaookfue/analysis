@@ -1,9 +1,10 @@
-@(implicit request: play.api.mvc.RequestHeader)
+@(e9nValue: String)(implicit request: play.api.mvc.RequestHeader)
 @main("dashboard-client", WINDOW_DETAIL){
 @helper.javascriptRouter("jsRoutes")(
     routes.javascript.Application.windowDetailTable,
     routes.javascript.Application.fileDownload
 )
+<div id="e9n-store" data-e9ndata="@e9nValue"></div>
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -48,7 +49,7 @@
                         </thead>
                         <tfoot>
                         <tr>
-                            <th>LogId</th>
+                            <th id="window-detail-id">LogId</th>
                             <th>AppName</th>
                             <th>UserName</th>
                             <th>LineNo</th>
@@ -66,10 +67,22 @@
 </div> <!--content-wrapper-->
 }{
 <script>
-    $('#window-detail tfoot th').each(function() {
+    var e9nId = $('#e9n-store').attr('data-e9ndata');
+    console.log(e9nId);
+    $('#window-detail tfoot th').each(function(index) {
         var title = $(this).text();
-        $(this).html('<input type="text" style="width:100%;"/>');
+        //$(this).html('<input type="text" style="width:100%;" />');
+        if (index == 0) {
+            var aaa = $(this).attr('id')
+            console.log(aaa);
+            $(this).html('<input type="text" style="width:100%;" value=' + e9nId + ' />');
+        } else {
+            $(this).html('<input type="text" style="width:100%;" />');
+        }
     });
+    var abc = $('#window-detail tfoot th');
+    console.log(abc);
+
     /*
     hide the search box without disabling search
      https://datatables.net/forums/discussion/22511/can-you-hide-the-search-box-without-disabling-searching
@@ -112,7 +125,8 @@
                     data = '<a href="' + r.url + '">' + data + '</a>';
                 }
                 return data;
-              }
+              },
+              name: "log-id"
             },
             { data: "app-name" },
             { data: "user-name" },
@@ -123,9 +137,11 @@
         ],
         "deferLoading": true
     });
-    var column = windowDetailTable.columns(0);
-    windowDetailTable.columns(0).val(function(data){return 2;});
-    windowDetailTable.columns(0).search('2');
+    windowDetailTable.columns(0).search(e9nId);
+    //var eee = $('#window-detail-id');
+    //console.log(eee);
+    //windowDetailTable.columns(eee).search(2);
+    //eee.dataTable().api().columns().search(2);
     windowDetailTable.draw();
 </script>
 }

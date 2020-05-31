@@ -29,15 +29,13 @@ class Generator @Inject()(protected val dbConfigProvider: DatabaseConfigProvider
   val e9ns = TableQuery[E9ns]
   val e9nStackTraces = TableQuery[E9nStackTraces]
 
-/*  def insertE9n(e9nSeq: Seq[E9n]): Unit = {
+  def insertE9n(e9nSeq: Seq[E9n]): Unit = {
     val futures = for {
       e9n <- e9nSeq
-      insert1 = e9ns returning e9ns.map(_.e9nId) += e9n
+      insert1 = e9ns.map(e => (e.e9nHeadMessage, e.e9nLength, e.count)) returning e9ns.map(_.e9nId) += (e9n.e9nHeadMessage, e9n.e9nLength, e9n.count)
       f1 = db.run(insert1)
       e9nId = Await.result(f1, Duration.Inf)
-      for {
-
-    }
+      i <- 0 to 9
       stackTrace = E9nStackTrace(e9nId, i, s"at $i")
       insert2 = e9nStackTraces += stackTrace
       f2 = db.run(insert2)
@@ -48,7 +46,7 @@ class Generator @Inject()(protected val dbConfigProvider: DatabaseConfigProvider
       case Success(_) => println("insert succeeded.")
       case Failure(_) => println("insert failed.")
     }
-  }*/
+  }
 
 }
 
@@ -67,6 +65,7 @@ object Generator {
     val recorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
     recorder.recreate()
     val generator = ServiceInjector.getComponent(classOf[Generator])
+    generator.insertE9n(e9nLists(100))
     for {
       log <- Generator.logs("2019-01-01", "2019-01-31", 10)
       logId = recorder.record(log)
@@ -75,6 +74,14 @@ object Generator {
       _ = Await.result(f, Duration.Inf)
     } {}
 
+  }
+
+  def e9nLists(count: Int): Seq[E9n] = {
+    for {
+      _ <- 0 until count
+      message = randomValue(e9ns)
+      e9n = E9n(0, message, r.nextInt(10), r.nextInt(100))
+    } yield e9n
   }
 
   def fileName(appName: String, env: String, computer: String, userId: String, startTime: Date): String = {

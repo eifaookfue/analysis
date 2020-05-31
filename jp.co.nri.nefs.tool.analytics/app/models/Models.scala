@@ -217,9 +217,9 @@ object Params {
   }
 }
 
-case class WindowDetailTbl(logId: Int, appName: String, computerName: String, userName: String, tradeDate: String,
-                           lineNo: Int, activator: String, windowName: String, destinationType: String, action: String,
-                           method: String, time: String, startupTime: Option[Long])
+case class WindowDetailTbl(logId: Int, appName: String, userName: String,
+                           lineNo: Int, activator: String, windowName: String,
+                           time: String)
 
 object WindowDetailTbl {
   implicit val windowDetailTableWrites: Writes[WindowDetailTbl] = (

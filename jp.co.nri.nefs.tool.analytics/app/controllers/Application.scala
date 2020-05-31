@@ -122,7 +122,7 @@ class Application @Inject() (
   }
 
   def windowDetail: Action[AnyContent] = Action { implicit request =>
-    Ok(html.window_detail(request))
+    Ok(html.window_detail("")(request))
   }
 
   def windowDetailTable(): Action[AnyContent] = Action.async { implicit request =>

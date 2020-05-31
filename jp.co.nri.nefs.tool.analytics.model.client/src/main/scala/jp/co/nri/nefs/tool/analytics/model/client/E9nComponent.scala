@@ -14,7 +14,8 @@ object E9n {
     (JsPath \ "e9n-id").write[Int] and
       (JsPath \ "message").write[String] and
       (JsPath \ "e9n-length").write[Int] and
-      (JsPath \ "count").write[Int]
+      (JsPath \ "count").write[Int] and
+      (JsPath \ "update-time").write[Timestamp]
     )(unlift(E9n.unapply)
   )
 

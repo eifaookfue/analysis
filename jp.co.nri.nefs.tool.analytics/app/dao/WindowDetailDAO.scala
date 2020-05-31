@@ -5,8 +5,8 @@ import java.text.SimpleDateFormat
 
 import com.typesafe.config.Config
 import javax.inject.{Inject, Singleton}
-import jp.co.nri.nefs.tool.analytics.model.client.{Log, LogComponent, WindowDetail, WindowDetailComponent}
-import jp.co.nri.nefs.tool.analytics.model.common.{User, UserComponent}
+import jp.co.nri.nefs.tool.analytics.model.client.{LogComponent, WindowDetailComponent}
+import jp.co.nri.nefs.tool.analytics.model.common.UserComponent
 import models._
 import play.api.Configuration
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider, SlickModule}
@@ -45,7 +45,7 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
     db.run(filterQuery(params).length.result)
   }
 
-  private def filterQuery(params: WindowDetailTblRequestParams): Query[(WindowDetailDAO.this.Logs, WindowDetailDAO.this.WindowDetails, Rep[Option[WindowDetailDAO.this.Users]]), (Log, WindowDetail, Option[User]), scala.Seq]
+  private def filterQuery(params: WindowDetailTblRequestParams): Query[(Rep[Int], Rep[String], Rep[String], Rep[Int], Rep[String], Rep[String], Rep[Timestamp]), (Int, String, String, Int, String, String, Timestamp), scala.Seq]
   = {
 
     val timeStr = params.col6SearchValue
@@ -72,7 +72,9 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
         Option(params.col5SearchValue).filter(_.trim.nonEmpty).map(w.windowName.getOrElse("") like "%" + _ + "%"),
         formatter.map(toChar(w.time, _) === timeStr)
       ).collect ({case Some(criteria) => criteria}).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
-    } yield (l, w, u)
+    } yield (l.logId, l.appName, u.map(_.userName).getOrElse(l.userId), w.lineNo,
+      w.activator.getOrElse(""), w.windowName.getOrElse(""),
+    w.time)
   }
 
 
@@ -80,24 +82,22 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
   def list(params: WindowDetailTblRequestParams): Future[Seq[WindowDetailTbl]] = {
     val formatter = new SimpleDateFormat("yy/MM/dd HH:mm")
     val q1 = filterQuery(params)
-    val q2 = q1.sortBy { case (l, w, u) =>
+    val q2 = q1.sortBy { case (logId, appName, userName, lineNo, activator, windowName, time) =>
       params.order0Column match {
-        case 0 => if (params.order0Dir == "desc") l.logId.desc else l.logId.asc
-        case 1 => if (params.order0Dir == "desc") l.appName.desc else l.appName.asc
-        case 2 => if (params.order0Dir == "desc") u.map(_.userName).desc.nullsLast else u.map(_.userName).asc.nullsFirst
-        case 3 => if (params.order0Dir == "desc") w.lineNo.desc else w.lineNo.asc
-        case 4 => if (params.order0Dir == "desc") w.activator.desc.nullsLast else w.activator.asc.nullsFirst
-        case 5 => if (params.order0Dir == "desc") w.windowName.desc.nullsLast else w.windowName.asc.nullsFirst
-        case 6 => if (params.order0Dir == "desc") w.time.desc.nullsLast else w.time.asc.nullsFirst
-        case _ => if (params.order0Dir == "desc") l.logId.desc else l.logId.asc
+        case 0 => if (params.order0Dir == "desc") logId.desc else logId.asc
+        case 1 => if (params.order0Dir == "desc") appName.desc else appName.asc
+        case 2 => if (params.order0Dir == "desc") userName.desc else userName.asc
+        case 3 => if (params.order0Dir == "desc") lineNo.desc else lineNo.asc
+        case 4 => if (params.order0Dir == "desc") activator.desc else activator.asc
+        case 5 => if (params.order0Dir == "desc") windowName.desc else windowName.asc
+        case 6 => if (params.order0Dir == "desc") time.desc else time.asc
+        case _ => if (params.order0Dir == "desc") logId.desc else logId.asc
       }
     }
     val q3 = q2.drop(params.start).take(params.length)
     val f = db.run(q3.result)
-    f.map(seq => seq.map{case (l, w, u) =>
-      WindowDetailTbl(l.logId, l.appName, l.computerName, u.map(_.userName).getOrElse(""),
-        l.tradeDate, w.lineNo, w.activator.getOrElse(""), w.windowName.getOrElse(""), w.destinationType.getOrElse(""),
-        w.action.getOrElse(""), w.method.getOrElse(""), formatter.format(w.time), w.startupTime)
+    f.map(seq => seq.map{case (logId, appName, userName, lineNo, activator, windowName, time) =>
+      WindowDetailTbl(logId, appName, userName, lineNo, activator, windowName, formatter.format(time))
     })
   }
 

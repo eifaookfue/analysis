@@ -4,7 +4,7 @@
 @helper.javascriptRouter("jsRoutes")(
     routes.javascript.Application.windowCountTable,
     routes.javascript.Application.e9nListTable,
-    routes.javascript.Application.e9nDownload
+    routes.javascript.Application.e9nStackTrace
 )
 <div id="root" data-jsondata1="@d1", data-jsondata2="@d2"></div>
 <!--<script>
@@ -105,7 +105,7 @@
                             <table id="e9n-count-body" class="table table-bordered table-hover table-sm">
                                 <thead>
                                 <tr>
-                                    <th>ExceptionId</th>
+                                    <th>Id</th>
                                     <th>Message</th>
                                     <th></th>
                                     <th>Count</th>
@@ -191,17 +191,18 @@
         "processing": true,
         "serverSide": true,
         "ajax": jsRoutes.controllers.Application.e9nListTable(),
-        "order": [[ 2, "desc" ]],
+        "order": [[ 3, "desc" ]],
         "columns": [
+            { data: "e9n-id"},
+            { data: "message" },
             { data: "e9n-id",
               render: function(data, type, row, meta) {
                 if (type == 'display') {
-                    data = '<button value=' + data + '>' + data + '</button>'
+                    data = '<button type="button" value="' + data + '" class="btn btn-default btn-sm">&hellip;</button>'
                 }
                 return data;
               }
             },
-            { data: "message" },
             { data: "count" }
         ],
         "columnDefs": [
@@ -214,7 +215,6 @@
     $(function() {
         $('#e9n-count-body tbody').on('click', 'td button', function(e) {
             var e9nId = $(this).val();
-            console.log(e9nId);
             $.ajax(jsRoutes.controllers.Application.e9nStackTrace(e9nId))
             .done(function(data) {
                 $("#modalHtml").html(data);
