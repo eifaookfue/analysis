@@ -18,6 +18,10 @@ GET  /fileDownload               controllers.Application.fileDownload(logId: Int
 
 POST     /window-count-table             controllers.Application.windowCountTable()
 
+GET      /e9nDetail                      controllers.Application.e9nDetail
+
+POST     /e9nDetailTable                 controllers.Application.e9nDetailTable()
+
 POST     /e9n-list-table                 controllers.Application.e9nListTable()
 
 GET  /e9nStackTrace               controllers.Application.e9nStackTrace(e9nId: Int)

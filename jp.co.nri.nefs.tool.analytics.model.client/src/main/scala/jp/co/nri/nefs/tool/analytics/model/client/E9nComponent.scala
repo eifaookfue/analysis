@@ -45,7 +45,7 @@ trait E9nComponent {
 
   class E9ns(tag: Tag) extends Table[E9n](tag, "E9N") {
     def e9nId = column[Int]("E9N_ID", O.PrimaryKey, O.AutoInc)
-    def e9nHeadMessage = column[String]("E9N_HEAD_MESSAGE")
+    def e9nHeadMessage = column[String]("E9N_HEAD_MESSAGE", O.Length(200))
     def e9nLength = column[Int]("E9N_LENGTH")
     def count = column[Int]("COUNT")
     def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))

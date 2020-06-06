@@ -127,8 +127,13 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="nav-item has-treeview">
-                            <a href="#" class="nav-link">
+                        @if(menu.parent == DETAIL) {
+                            <li class="nav-item has-treeview menu-open">
+                                <a href="#" class="nav-link active">
+                        } else {
+                            <li class="nav-item has-treeview">
+                                <a href="#" class="nav-link">
+                        }
                                 <i class="nav-icon fas fa-table"></i>
                                 <p>
                                     Detail
@@ -137,7 +142,11 @@
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
+                                @if(menu == WINDOW_DETAIL) {
+                                    <a href="@routes.Application.windowDetail" class="nav-link active">
+                                } else {
                                     <a href="@routes.Application.windowDetail" class="nav-link">
+                                }
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>WindowDetail</p>
                                     </a>
@@ -155,7 +164,11 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="./exception.html" class="nav-link">
+                                @if(menu == E9N_DETAIL) {
+                                    <a href="@routes.Application.e9nDetail" class="nav-link active">
+                                } else {
+                                    <a href="@routes.Application.e9nDetail" class="nav-link">
+                                }
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Exception</p>
                                     </a>

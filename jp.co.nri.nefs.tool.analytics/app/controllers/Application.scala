@@ -74,6 +74,23 @@ class Application @Inject() (
       "search[regex]" -> boolean)(E9nTblRequestParams.apply)(E9nTblRequestParams.unapply)
   )
 
+  val e9nDetailTblRequestForm = Form(
+    mapping(
+      "draw" -> number,
+      "columns[0][search][value]" -> text,
+      "columns[1][search][value]" -> text,
+      "columns[2][search][value]" -> text,
+      "columns[3][search][value]" -> text,
+      "columns[4][search][value]" -> text,
+      "columns[5][search][value]" -> text,
+      "order[0][column]" -> number,
+      "order[0][dir]" -> text,
+      "start" -> number,
+      "length" -> number,
+      "search[value]" -> text,
+      "search[regex]" -> boolean)(E9nDetailTblRequestParams.apply)(E9nDetailTblRequestParams.unapply)
+  )
+
   /** This result directly redirect to the application home.*/
   val Home: Result = Redirect(routes.Application.dashboard_client())
 
@@ -167,6 +184,26 @@ class Application @Inject() (
           seq <- windowUserDao.list(params)
           w = WindowCountByUserData(params.draw, recordsTotal, recordsFiltered, seq)
           json = Json.toJson(w)
+        } yield Ok(json)
+    )
+  }
+
+  def e9nDetail: Action[AnyContent] = Action { implicit request =>
+    Ok(html.e9n_detail(request))
+  }
+
+  def e9nDetailTable(): Action[AnyContent] = Action.async { implicit request =>
+    println(s"request=${request.body}")
+    e9nDetailTblRequestForm.bindFromRequest.fold(
+      _ =>
+        Future.successful(InternalServerError("Oops")),
+      params =>
+        for {
+          recordsTotal <- e9nDao.count
+          recordsFiltered <- e9nDao.count(params)
+          seq <- e9nDao.e9nDetailList(params)
+          response = E9nDetailTblResponse(params.draw, recordsTotal, recordsFiltered, seq)
+          json = Json.toJson(response)
         } yield Ok(json)
     )
   }

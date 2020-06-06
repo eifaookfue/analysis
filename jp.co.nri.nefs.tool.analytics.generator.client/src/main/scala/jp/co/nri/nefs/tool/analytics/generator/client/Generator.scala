@@ -22,29 +22,32 @@ import scala.concurrent.duration.Duration
 import scala.util.{Failure, Random, Success, Try}
 
 class Generator @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
-  extends E9nComponent with E9nStackTraceComponent with HasDatabaseConfigProvider[JdbcProfile] {
+  extends E9nComponent with E9nStackTraceComponent with E9nDetailComponent with HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
 
   val e9ns = TableQuery[E9ns]
   val e9nStackTraces = TableQuery[E9nStackTraces]
+  val e9nDetails = TableQuery[E9nDetails]
 
   def insertE9n(e9nSeq: Seq[E9n]): Unit = {
     val futures = for {
-      e9n <- e9nSeq
+      (e9n, index) <- e9nSeq.zipWithIndex
       insert1 = e9ns.map(e => (e.e9nHeadMessage, e.e9nLength, e.count)) returning e9ns.map(_.e9nId) += (e9n.e9nHeadMessage, e9n.e9nLength, e9n.count)
       f1 = db.run(insert1)
       e9nId = Await.result(f1, Duration.Inf)
       i <- 0 to 9
-      stackTrace = E9nStackTrace(e9nId, i, s"at $i")
-      insert2 = e9nStackTraces += stackTrace
+      insert2 = e9nStackTraces.map(e => (e.e9nId, e.number, e.message)) += (e9nId, i, s"at $i")
       f2 = db.run(insert2)
-    } yield f2
+      _ = Await.ready(f2, Duration.Inf)
+      insert3 = e9nDetails += E9nDetail(e9nId, i, index * 10 + i)
+      f3 = db.run(insert3)
+    } yield f3
     val aggFuture = Future.sequence(futures)
     Await.ready(aggFuture, Duration.Inf)
     aggFuture.value.get match {
       case Success(_) => println("insert succeeded.")
-      case Failure(_) => println("insert failed.")
+      case Failure(e) => println(s"insert failed. $e")
     }
   }
 
@@ -78,9 +81,9 @@ object Generator {
 
   def e9nLists(count: Int): Seq[E9n] = {
     for {
-      _ <- 0 until count
+      i <- 0 until count
       message = randomValue(e9ns)
-      e9n = E9n(0, message, r.nextInt(10), r.nextInt(100))
+      e9n = E9n(0, message, i, r.nextInt(100))
     } yield e9n
   }
 

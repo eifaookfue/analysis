@@ -320,6 +320,41 @@ object E9nTblResponse {
   )
 }
 
+case class E9nDetailTbl(e9nId: Int, logId: Int, lineNo: Int, appName: String, userName: String, e9nHeadMessage: String)
+
+object E9nDetailTbl {
+  implicit val e9nDetailTableWrites: Writes[E9nDetailTbl] = (
+    (JsPath \ "e9n-id").write[Int] and
+      (JsPath \ "log-id").write[Int] and
+      (JsPath \ "line-no").write[Int] and
+      (JsPath \ "app-name").write[String] and
+      (JsPath \ "user-name").write[String] and
+      (JsPath \ "message").write[String]
+  )(unlift(E9nDetailTbl.unapply))
+}
+
+case class E9nDetailTblResponse(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[E9nDetailTbl])
+
+object E9nDetailTblResponse {
+  implicit val e9nDetailTableDataWrites: Writes[E9nDetailTblResponse] = (
+    (JsPath \ "draw").write[Int] and
+      (JsPath \ "recordsTotal").write[Int] and
+      (JsPath \ "recordsFiltered").write[Int] and
+      (JsPath \ "data").write[Seq[E9nDetailTbl]]
+  )(unlift(E9nDetailTblResponse.unapply))
+}
+
+case class E9nDetailTblRequestParams(draw: Int,
+                                        col0SearchValue: String,
+                                        col1SearchValue: String,
+                                        col2SearchValue: String,
+                                        col3SearchValue: String,
+                                        col4SearchValue: String,
+                                        col5SearchValue: String,
+                                        order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
+                                    )
+
+
 sealed abstract class Menu(val parent: Menu)
 
 case object DASHBOARD extends Menu(null)
@@ -329,3 +364,4 @@ case object WINDOW extends Menu(null)
 case object NEW_ORDER_SINGLE extends Menu(WINDOW)
 case object DETAIL extends Menu(null)
 case object WINDOW_DETAIL extends Menu(DETAIL)
+case object E9N_DETAIL extends Menu(DETAIL)
