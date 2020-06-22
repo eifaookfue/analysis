@@ -188,8 +188,8 @@ class Application @Inject() (
     )
   }
 
-  def e9nDetail: Action[AnyContent] = Action { implicit request =>
-    Ok(html.e9n_detail(request))
+  def e9nDetail(e9nId: Option[Int]): Action[AnyContent] = Action { implicit request =>
+    Ok(html.e9n_detail(e9nId)(request))
   }
 
   def e9nDetailTable(): Action[AnyContent] = Action.async { implicit request =>

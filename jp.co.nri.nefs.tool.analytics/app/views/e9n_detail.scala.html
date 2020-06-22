@@ -1,9 +1,10 @@
-@(implicit request: play.api.mvc.RequestHeader)
+@(e9nId: Option[Int])(implicit request: play.api.mvc.RequestHeader)
 @main("Exception Detail", E9N_DETAIL){
 @helper.javascriptRouter("jsRoutes")(
     routes.javascript.Application.e9nDetailTable,
     routes.javascript.Application.fileDownload
 )
+<div id="e9n-store" data-e9ndata="@e9nId"></div>
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -67,7 +68,11 @@
     var e9nId = $('#e9n-store').attr('data-e9ndata');
     $('#e9n-detail tfoot th').each(function(index) {
         var title = $(this).text();
-        $(this).html('<input type="text" style="width:100%;" />');
+        if (index == 0 && e9nId != '') {
+            $(this).html('<input type="text" style="width:100%;" value= ' + e9nId + ' />');
+        } else {
+            $(this).html('<input type="text" style="width:100%;" />');
+        }
     });
     /*
     hide the search box without disabling search
@@ -117,7 +122,11 @@
             {targets: 2, width: 60},
             {targets: 3, width: 80},
             {targets: 4, width: 80}
-        ]
+        ],
+        "lengthMenu": [[100, 500, 1000], [100, 500, 1000]],
+        "deferLoading": true
     });
+    e9nDetailTable.columns(0).search(e9nId);
+    e9nDetailTable.draw();
 </script>
 }

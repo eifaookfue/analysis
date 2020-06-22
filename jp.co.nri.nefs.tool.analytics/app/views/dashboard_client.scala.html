@@ -4,7 +4,8 @@
 @helper.javascriptRouter("jsRoutes")(
     routes.javascript.Application.windowCountTable,
     routes.javascript.Application.e9nListTable,
-    routes.javascript.Application.e9nStackTrace
+    routes.javascript.Application.e9nStackTrace,
+    routes.javascript.Application.e9nDetail
 )
 <div id="root" data-jsondata1="@d1", data-jsondata2="@d2"></div>
 <!--<script>
@@ -133,7 +134,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" id=""modalHtml">
+            <div class="modal-body" id="modalHtml">
         </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -193,7 +194,15 @@
         "ajax": jsRoutes.controllers.Application.e9nListTable(),
         "order": [[ 3, "desc" ]],
         "columns": [
-            { data: "e9n-id"},
+            { data: "e9n-id",
+              render: function(data, type, row, meata) {
+                var r = jsRoutes.controllers.Application.e9nDetail(data);
+                if (type == 'display') {
+                    data = '<a href="' + r.url + '">' + data + '</a>';
+                }
+                return data;
+              }
+            },
             { data: "message" },
             { data: "e9n-id",
               render: function(data, type, row, meta) {
@@ -218,7 +227,7 @@
             $.ajax(jsRoutes.controllers.Application.e9nStackTrace(e9nId))
             .done(function(data) {
                 $("#modalHtml").html(data);
-                $("#modalxl").modal("show");
+                $("#modal-xl").modal("show");
             }).fail(function(XMLHttpRequest, textStatus, error) {
                 alert("error");
             });

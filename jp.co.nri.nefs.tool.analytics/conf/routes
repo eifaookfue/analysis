@@ -18,7 +18,7 @@ GET  /fileDownload               controllers.Application.fileDownload(logId: Int
 
 POST     /window-count-table             controllers.Application.windowCountTable()
 
-GET      /e9nDetail                      controllers.Application.e9nDetail
+GET      /e9nDetail                      controllers.Application.e9nDetail(e9nId: Option[Int] ?= None)
 
 POST     /e9nDetailTable                 controllers.Application.e9nDetailTable()
 

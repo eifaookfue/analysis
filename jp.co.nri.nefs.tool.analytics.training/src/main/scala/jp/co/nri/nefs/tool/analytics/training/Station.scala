@@ -62,7 +62,7 @@ object Station {
     }.toSeq.sortBy(_._1).take(869).sortBy(_._2.name).map(_._2.toCSV)
     val strs2 = for ((str, index) <- strs.zipWithIndex) yield (index + 1).toString + "," + str
     val out = Paths.get("C:/Users/user/Documents/20200519_Presentation/data/TokyoSTATION.csv")
-    Files.write(out, Seq("StNo,Station,Passgrs.Latit.Longit,RailCo,Line").asJava, StandardOpenOption.TRUNCATE_EXISTING)
+    Files.write(out, Seq("StNo,Station,Passgrs,Latit,Longit,RailCo,Line").asJava, StandardOpenOption.TRUNCATE_EXISTING)
     Files.write(out, strs2.asJava, StandardOpenOption.APPEND)
   }
 }
