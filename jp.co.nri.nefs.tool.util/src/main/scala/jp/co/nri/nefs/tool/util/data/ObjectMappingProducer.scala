@@ -17,7 +17,7 @@ object ObjectMappingProducer {
     for (i <- 1 to 22){
       print(s"class ObjectMapping$i[R, ${aSeq(i)}](apply: ${aTuple(i)} => R, unapply: R => Option[${aTuple(i)}], ")
       print(fMappingSeq(i))
-      print(", index: Int = 0)")
+      print(", val key: String = \"\")")
       println
       println("\textends Mapping[R] with ObjectMapping {")
       println
@@ -35,9 +35,9 @@ object ObjectMappingProducer {
       println(fieldUnbindSeq(i))
       println("\t}")
       println
-      println(s"\toverride def withPrefix(prefix: Int): ObjectMapping$i[R, ${aSeq(i)}] = {")
-      println(s"\t\tnew ObjectMapping$i(apply, unapply, ${fSeq(i)}, prefix)")
-      println("\t}")
+      println(s"\toverride def withIndex(index: String): ObjectMapping$i[R, ${aSeq(i)}] = addIndex(index).map(newKey =>")
+      println(s"\t\tnew ObjectMapping$i(apply, unapply, ${fSeq(i)}, newKey)")
+      println(s"\t).getOrElse(this)")
       println
       println("}")
       println
@@ -45,7 +45,7 @@ object ObjectMappingProducer {
   }
 
   def fieldSeq(number: Int): String = {
-    (1 to number).map(i => s"\tval field$i: Mapping[A$i] = f$i._2.withPrefix(f$i._1)").mkString(Properties.lineSeparator)
+    (1 to number).map(i => s"\tval field$i: Mapping[A$i] = f$i._2.withIndex(f$i._1)").mkString(Properties.lineSeparator)
   }
 
   def mergeSeq(number: Int): String = {
@@ -65,7 +65,7 @@ object ObjectMappingProducer {
   }
 
   def fMappingSeq(number: Int): String = {
-    (1 to number).map(i => s"f$i: (Int, Mapping[A$i])").mkString(", ")
+    (1 to number).map(i => s"f$i: (String, Mapping[A$i])").mkString(", ")
   }
 
   def fSeq(number: Int): String = {

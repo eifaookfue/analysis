@@ -21,7 +21,7 @@ object LinesProducer {
   def aTuple(number: Int): String = if (number > 1) "(" + aSeq(number) + ")" else aSeq(number)
 
   def mappingSeq(number: Int): String = {
-    (1 to number).map(i => s"a$i: (Int, Mapping[A$i])").mkString(", ")
+    (1 to number).map(i => s"a$i: (String, Mapping[A$i])").mkString(", ")
   }
 
 }

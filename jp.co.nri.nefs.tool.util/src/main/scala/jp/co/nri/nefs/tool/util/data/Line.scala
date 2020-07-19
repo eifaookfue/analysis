@@ -26,7 +26,14 @@ object Line {
 trait Mapping[T] {
   def bind(row: Row): Either[Seq[LineError], T]
   def unbind(value: T, row: Row): Unit
-  def withPrefix(prefix: Int): Mapping[T]
+  def withIndex(index: String): Mapping[T]
+  val key: String
+
+  protected def addIndex(index: String): Option[String] = {
+    Option(index).filterNot(_.isEmpty).map(p => p.toInt + Option(key).filterNot(_.isEmpty).map(_.toInt).getOrElse(0)).map(_.toString)
+  }
+
+
 }
 
 
@@ -46,17 +53,67 @@ trait ObjectMapping {
   }
 }
 
-case class FieldMapping[T](index: Int = 0)(implicit val binder: Formatter[T]) extends Mapping[T] {
+case class FieldMapping[T](key: String = "")(implicit val binder: Formatter[T]) extends Mapping[T] {
 
   override def bind(row: Row): Either[Seq[LineError], T] = {
-    binder.bind(index, row)
+    binder.bind(key.toInt, row)
   }
 
   override def unbind(value: T, row: Row): Unit = {
-    binder.unbind(index, value, row)
+    binder.unbind(key.toInt, value, row)
   }
 
-  override def withPrefix(prefix: Int): Mapping[T] = this.copy(index = prefix)
+  //override def withIndex(index: String): Mapping[T] = addIndex(index).map(newKey => this.copy(key = newKey)).getOrElse(this)
+  override def withIndex(index: String): Mapping[T] = addIndex(index).map{ newKey =>
+    this.copy(key = newKey)
+  }.getOrElse(this)
+
+}
+
+case class RepeatedMapping[T](
+                               wrapped: Mapping[T],
+                               key: String = "",
+                             ) extends Mapping[List[T]] {
+
+  lazy val (start, end, step): (Int, Int, Int) = range(key)
+
+  private def range(str: String): (Int, Int, Int) = {
+    require(str.contains("x") && str.contains("@"), s"$str must be contained x and @")
+    str.split("@") match {
+      case Array(mat, pos) =>
+        mat.split("x") match {
+          case Array(row, col) =>  // 2x1@4  row=2 col=1 step=2
+            val start = pos.toInt
+            val step = row.toInt
+            val end = start + (col.toInt - 1) * step
+            (start, end, step)
+        }
+    }
+  }
+
+  override def bind(row: Row): Either[Seq[LineError], List[T]] = {
+    val allErrorsOrItems: Seq[Either[Seq[LineError], T]] =
+      //(0 to size).map(i => wrapped.withIndex((position + i).toString).bind(row))
+      (start to end by step).map{i =>
+        wrapped.withIndex(i.toString).bind(row)
+      }
+
+    if (allErrorsOrItems.forall(_.isLeft))
+      Left(allErrorsOrItems.flatMap(_.left.get))
+    else
+      Right(allErrorsOrItems.collect { case Right(right) => right }.toList)
+  }
+
+  override def unbind(value: List[T], row: Row): Unit = {
+    //value.foreach(v => wrapped.withIndex(key).unbind(v, row))
+    value.zipWithIndex.foreach{ case (v, i) =>
+      wrapped.withIndex((start + i * step).toString).unbind(v, row)
+    }
+
+    //wrapped.withIndex(key).unbind(value, row)
+  }
+
+  override def withIndex(index: String): Mapping[List[T]] = this.copy(key = index)
 
 }
 
