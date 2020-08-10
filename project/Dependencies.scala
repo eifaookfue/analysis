@@ -45,7 +45,8 @@ object Dependencies {
     Library.scalaLogging,
     Library.logbackClassic,
     Library.poi,
-    Library.poi_ooxml
+    Library.poi_ooxml,
+    Library.config
   )
 
   val websocket: Seq[ModuleID] = Seq(

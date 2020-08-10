@@ -3,6 +3,9 @@ package jp.co.nri.nefs.tool.util.data
 import jp.co.nri.nefs.tool.util.data.format.Formatter
 import org.apache.poi.ss.usermodel.Row
 
+import scala.reflect.runtime.{universe => ru}
+import ru._
+
 case class Line[T](mapping: Mapping[T], row: Row, errors: Seq[LineError], value: Option[T]) {
 
   def bind(row: Row): Line[T] = mapping.bind(row).fold(
@@ -26,17 +29,22 @@ object Line {
 trait Mapping[T] {
   def bind(row: Row): Either[Seq[LineError], T]
   def unbind(value: T, row: Row): Unit
-  def withIndex(index: String): Mapping[T]
-  val key: String
+  def withKey(key: Key): Mapping[T]
+  val key: Key
 
-  protected def addIndex(index: String): Option[String] = {
-    Option(index).filterNot(_.isEmpty).map(p => p.toInt + Option(key).filterNot(_.isEmpty).map(_.toInt).getOrElse(0)).map(_.toString)
+  protected def addKey(newKey: Key): Option[Key] = {
+    Option(key).map { key1 =>
+      Key(key1.index + Option(newKey).map(_.index).getOrElse(0), Option(newKey).map(_.count).getOrElse(key1.count))
+    }.orElse(Some(newKey))
   }
 
+  def repeatingCount: Int = 1
+
+  def paramNames: Option[Seq[String]] = None
 
 }
 
-
+protected case class Key(index: Int, count: Int)
 
 trait ObjectMapping {
 
@@ -51,20 +59,36 @@ trait ObjectMapping {
     val all: Seq[Either[Seq[LineError], Seq[Any]]] = results.map(_.right.map(Seq(_)))
     all.fold(Right(Nil)){ (s, i) => merge2(s, i)}
   }
+
+  def paramNames[T](mappings: Mapping[_]*)(implicit evidence: TypeTag[T]): Option[Seq[String]] = {
+    val constructor = evidence.tpe.decl(termNames.CONSTRUCTOR).asMethod
+    val paramList = constructor.paramLists.head.map(_.name.toString)
+    val l = for {
+      ((childCount, childNames), parentName) <- mappings.map(m => (m.repeatingCount, m.paramNames)) zip paramList
+    } yield {
+      childNames.map{cNames =>
+        for {
+          i <- 0 until childCount
+          cName <- cNames
+        } yield s"$parentName[$i].$cName"
+      }.getOrElse(Seq(parentName))
+    }
+    Option(l.flatten).filter(_.nonEmpty)
+  }
 }
 
-case class FieldMapping[T](key: String = "")(implicit val binder: Formatter[T]) extends Mapping[T] {
+case class FieldMapping[T](key: Key = null)(implicit val binder: Formatter[T]) extends Mapping[T] {
 
   override def bind(row: Row): Either[Seq[LineError], T] = {
-    binder.bind(key.toInt, row)
+    binder.bind(key.index, row)
   }
 
   override def unbind(value: T, row: Row): Unit = {
-    binder.unbind(key.toInt, value, row)
+    binder.unbind(key.index, value, row)
   }
 
   //override def withIndex(index: String): Mapping[T] = addIndex(index).map(newKey => this.copy(key = newKey)).getOrElse(this)
-  override def withIndex(index: String): Mapping[T] = addIndex(index).map{ newKey =>
+  override def withKey(key: Key): Mapping[T] = addKey(key).map{ newKey =>
     this.copy(key = newKey)
   }.getOrElse(this)
 
@@ -72,30 +96,22 @@ case class FieldMapping[T](key: String = "")(implicit val binder: Formatter[T]) 
 
 case class RepeatedMapping[T](
                                wrapped: Mapping[T],
-                               key: String = "",
-                             ) extends Mapping[List[T]] {
+                               key: Key = null,
+                             )(implicit evidence: TypeTag[T]) extends Mapping[List[T]] {
 
-  lazy val (start, end, step): (Int, Int, Int) = range(key)
 
-  private def range(str: String): (Int, Int, Int) = {
-    require(str.contains("x") && str.contains("@"), s"$str must be contained x and @")
-    str.split("@") match {
-      case Array(mat, pos) =>
-        mat.split("x") match {
-          case Array(row, col) =>  // 2x1@4  row=2 col=1 step=2
-            val start = pos.toInt
-            val step = row.toInt
-            val end = start + (col.toInt - 1) * step
-            (start, end, step)
-        }
-    }
-  }
+  lazy val constructor: MethodSymbol = evidence.tpe.decl(termNames.CONSTRUCTOR).asMethod
+  // Get arguments of of the first constructor
+  lazy val paramList: List[Symbol] = constructor.paramLists.head
+  lazy val paramSize: Int = paramList.size
 
   override def bind(row: Row): Either[Seq[LineError], List[T]] = {
+    val start = key.index
+    val step = paramSize
+    val end = start + step * repeatingCount
     val allErrorsOrItems: Seq[Either[Seq[LineError], T]] =
-      //(0 to size).map(i => wrapped.withIndex((position + i).toString).bind(row))
       (start to end by step).map{i =>
-        wrapped.withIndex(i.toString).bind(row)
+        wrapped.withKey(Key(i, repeatingCount)).bind(row)
       }
 
     if (allErrorsOrItems.forall(_.isLeft))
@@ -105,15 +121,26 @@ case class RepeatedMapping[T](
   }
 
   override def unbind(value: List[T], row: Row): Unit = {
-    //value.foreach(v => wrapped.withIndex(key).unbind(v, row))
+    val start = key.index
+    val step = paramSize
     value.zipWithIndex.foreach{ case (v, i) =>
-      wrapped.withIndex((start + i * step).toString).unbind(v, row)
+      wrapped.withKey(Key(start + i * step, repeatingCount)).unbind(v, row)
     }
 
     //wrapped.withIndex(key).unbind(value, row)
   }
 
-  override def withIndex(index: String): Mapping[List[T]] = this.copy(key = index)
+  override def withKey(key: Key): Mapping[List[T]] = addKey(key).map { newKey =>
+    this.copy(key = newKey)
+  }.getOrElse(this)
+
+  override def paramNames: Option[Seq[String]] = {
+    Option(paramList.map(_.name.toString)).filter(_.nonEmpty)
+  }
+
+  override def repeatingCount: Int = key.count
+
+  //def getTypeTag[S: ru.TypeTag](obj: S): ru.TypeTag[S] = ru.typeTag[S]
 
 }
 
