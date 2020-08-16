@@ -172,6 +172,10 @@ lazy val util = (project in file("jp.co.nri.nefs.tool.util"))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.util)
 
+lazy val producer = (project in file("jp.co.nri.nefs.tool.producer"))
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= Dependencies.producer)
+
 lazy val websocket = (project in file("co-jp-nri-nefs-tool-websocket"))
   .settings(
     libraryDependencies ++= Dependencies.websocket

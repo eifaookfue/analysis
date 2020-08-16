@@ -21,6 +21,10 @@ object Dependencies {
     Library.config
   )
   
+  val producer: Seq[ModuleID] = Seq(
+    Library.config
+  )
+  
   val sender_client: Seq[ModuleID] = Seq(
     Library.akka_actor,
     Library.akka_slf4j

@@ -30,7 +30,9 @@ trait Mapping[T] {
   def bind(row: Row): Either[Seq[LineError], T]
   def unbind(value: T, row: Row): Unit
   def withKey(key: Key): Mapping[T]
+  def withParamName(paramName: String): Mapping[T]
   val key: Key
+  val paramName: String
 
   protected def addKey(newKey: Key): Option[Key] = {
     Option(key).map { key1 =>
@@ -40,7 +42,10 @@ trait Mapping[T] {
 
   def repeatingCount: Int = 1
 
-  def paramNames: Option[Seq[String]] = None
+  /*
+    Get the list of parameter names which this class have including child parameter names.
+   */
+  def paramNames: Seq[String]
 
 }
 
@@ -60,7 +65,12 @@ trait ObjectMapping {
     all.fold(Right(Nil)){ (s, i) => merge2(s, i)}
   }
 
-  def paramNames[T](mappings: Mapping[_]*)(implicit evidence: TypeTag[T]): Option[Seq[String]] = {
+  def paramNames(tpe: Type): Seq[String] = {
+    val constructor = tpe.decl(termNames.CONSTRUCTOR).asMethod
+    constructor.paramLists.head.map(_.name.toString)
+  }
+
+  /*def paramNames[T](mappings: Mapping[_]*)(implicit evidence: TypeTag[T]): Option[Seq[String]] = {
     val constructor = evidence.tpe.decl(termNames.CONSTRUCTOR).asMethod
     val paramList = constructor.paramLists.head.map(_.name.toString)
     val l = for {
@@ -74,10 +84,10 @@ trait ObjectMapping {
       }.getOrElse(Seq(parentName))
     }
     Option(l.flatten).filter(_.nonEmpty)
-  }
+  }*/
 }
 
-case class FieldMapping[T](key: Key = null)(implicit val binder: Formatter[T]) extends Mapping[T] {
+case class FieldMapping[T](key: Key = null, paramName: String = null)(implicit val binder: Formatter[T]) extends Mapping[T] {
 
   override def bind(row: Row): Either[Seq[LineError], T] = {
     binder.bind(key.index, row)
@@ -87,28 +97,32 @@ case class FieldMapping[T](key: Key = null)(implicit val binder: Formatter[T]) e
     binder.unbind(key.index, value, row)
   }
 
-  //override def withIndex(index: String): Mapping[T] = addIndex(index).map(newKey => this.copy(key = newKey)).getOrElse(this)
   override def withKey(key: Key): Mapping[T] = addKey(key).map{ newKey =>
     this.copy(key = newKey)
   }.getOrElse(this)
+
+  override def withParamName(paramName: String): Mapping[T] = this.copy(paramName = paramName)
+
+  override def paramNames: Seq[String] = Seq(paramName)
 
 }
 
 case class RepeatedMapping[T](
                                wrapped: Mapping[T],
                                key: Key = null,
+                               paramName: String = null
                              )(implicit evidence: TypeTag[T]) extends Mapping[List[T]] {
 
 
   lazy val constructor: MethodSymbol = evidence.tpe.decl(termNames.CONSTRUCTOR).asMethod
   // Get arguments of of the first constructor
   lazy val paramList: List[Symbol] = constructor.paramLists.head
-  lazy val paramSize: Int = paramList.size
+  lazy val paramSize: Int = wrapped.paramNames.size
 
   override def bind(row: Row): Either[Seq[LineError], List[T]] = {
     val start = key.index
     val step = paramSize
-    val end = start + step * repeatingCount
+    val end = start + step * (repeatingCount - 1)
     val allErrorsOrItems: Seq[Either[Seq[LineError], T]] =
       (start to end by step).map{i =>
         wrapped.withKey(Key(i, repeatingCount)).bind(row)
@@ -134,13 +148,16 @@ case class RepeatedMapping[T](
     this.copy(key = newKey)
   }.getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    Option(paramList.map(_.name.toString)).filter(_.nonEmpty)
+  override def withParamName(paramName: String): Mapping[List[T]] = this.copy(paramName = paramName)
+
+  override def paramNames: Seq[String] = {
+    for {
+      i <- 0 until repeatingCount
+      childParam <- wrapped.paramNames
+    } yield s"$paramName[$i].$childParam"
   }
 
   override def repeatingCount: Int = key.count
-
-  //def getTypeTag[S: ru.TypeTag](obj: S): ru.TypeTag[S] = ru.typeTag[S]
 
 }
 

@@ -116,8 +116,6 @@ object Lines {
 
     assert(path.toString.extension == "xlsx", s"path should have xlsx extension.")
 
-    val newHeaders = if (header) line.mapping.paramNames else None
-
     val (book, in) = if (Files.exists(path)) {
       val in = Files.newInputStream(path)
       (WorkbookFactory.create(in), Some(in))
@@ -126,15 +124,17 @@ object Lines {
     }
     val out = Files.newOutputStream(path)
     val sheet = Option(book.getSheet(sheetName)).getOrElse(book.createSheet(sheetName))
-    val start2 = newHeaders.map { h =>
-      val row2 = sheet.createRow(start)
-      for ( (name, index) <- h.zipWithIndex ) row2.createCell(index).setCellValue(name)
+    val start2 = if (header) {
+      val row = sheet.createRow(start)
+      for ((param, index) <- line.mapping.paramNames.zipWithIndex) row.createCell(index).setCellValue(param)
       1
-    }.getOrElse(0)
+    } else 0
     for {
       (value, index) <- values.zipWithIndex
       row = sheet.createRow(index + start2)
     } line.mapping.unbind(value, row)
+    // auto width
+    line.mapping.paramNames.indices.foreach(sheet.autoSizeColumn)
     try {
       book.write(out)
     } catch {

@@ -12,7 +12,7 @@
         <parameter value="utf8" />
       </parameters>
     </profile>
-    <profile name="sbt 2" modules="actor,analysis,analyze-client,apllog,arrange,co-jp-nri-nefs-tool-websocket,collect,collect-client,common-property,common-util,config,core,elp,generator-client,imptest,json,log,log2Case,model,model-client,model-common,play-slick,scalalang,sender-client,setup-client,store,store-client,store-common,training,transfer,transport,util,websocket">
+    <profile name="sbt 2" modules="actor,analysis,analyze-client,apllog,arrange,co-jp-nri-nefs-tool-websocket,collect,collect-client,common-property,common-util,config,core,elp,generator-client,imptest,json,log,log2Case,model,model-client,model-common,play-slick,producer,scalalang,sender-client,setup-client,store,store-client,store-common,training,transfer,transport,util,websocket">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />

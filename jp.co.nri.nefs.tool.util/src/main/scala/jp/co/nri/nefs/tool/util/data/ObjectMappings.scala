@@ -3,10 +3,11 @@ import org.apache.poi.ss.usermodel.Row
 import scala.reflect.runtime.{universe => ru}
 import ru._
 
-class ObjectMapping1[R, A1](apply: A1 => R, unapply: R => Option[A1], f1: (Key, Mapping[A1]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping1[R, A1](apply: A1 => R, unapply: R => Option[A1], f1: (Key, Mapping[A1]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row)) match {
@@ -24,16 +25,20 @@ class ObjectMapping1[R, A1](apply: A1 => R, unapply: R => Option[A1], f1: (Key, 
     new ObjectMapping1(apply, unapply, f1, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping1(apply, unapply, f1, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping2[R, A1, A2](apply: (A1, A2) => R, unapply: R => Option[(A1, A2)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping2[R, A1, A2](apply: (A1, A2) => R, unapply: R => Option[(A1, A2)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row)) match {
@@ -52,17 +57,21 @@ class ObjectMapping2[R, A1, A2](apply: (A1, A2) => R, unapply: R => Option[(A1, 
     new ObjectMapping2(apply, unapply, f1, f2, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping2(apply, unapply, f1, f2, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping3[R, A1, A2, A3](apply: (A1, A2, A3) => R, unapply: R => Option[(A1, A2, A3)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping3[R, A1, A2, A3](apply: (A1, A2, A3) => R, unapply: R => Option[(A1, A2, A3)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row)) match {
@@ -82,18 +91,22 @@ class ObjectMapping3[R, A1, A2, A3](apply: (A1, A2, A3) => R, unapply: R => Opti
     new ObjectMapping3(apply, unapply, f1, f2, f3, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping3(apply, unapply, f1, f2, f3, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping4[R, A1, A2, A3, A4](apply: (A1, A2, A3, A4) => R, unapply: R => Option[(A1, A2, A3, A4)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping4[R, A1, A2, A3, A4](apply: (A1, A2, A3, A4) => R, unapply: R => Option[(A1, A2, A3, A4)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row)) match {
@@ -114,19 +127,23 @@ class ObjectMapping4[R, A1, A2, A3, A4](apply: (A1, A2, A3, A4) => R, unapply: R
     new ObjectMapping4(apply, unapply, f1, f2, f3, f4, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping4(apply, unapply, f1, f2, f3, f4, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping5[R, A1, A2, A3, A4, A5](apply: (A1, A2, A3, A4, A5) => R, unapply: R => Option[(A1, A2, A3, A4, A5)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping5[R, A1, A2, A3, A4, A5](apply: (A1, A2, A3, A4, A5) => R, unapply: R => Option[(A1, A2, A3, A4, A5)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row)) match {
@@ -148,20 +165,24 @@ class ObjectMapping5[R, A1, A2, A3, A4, A5](apply: (A1, A2, A3, A4, A5) => R, un
     new ObjectMapping5(apply, unapply, f1, f2, f3, f4, f5, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping5(apply, unapply, f1, f2, f3, f4, f5, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping6[R, A1, A2, A3, A4, A5, A6](apply: (A1, A2, A3, A4, A5, A6) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping6[R, A1, A2, A3, A4, A5, A6](apply: (A1, A2, A3, A4, A5, A6) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row)) match {
@@ -184,21 +205,25 @@ class ObjectMapping6[R, A1, A2, A3, A4, A5, A6](apply: (A1, A2, A3, A4, A5, A6) 
     new ObjectMapping6(apply, unapply, f1, f2, f3, f4, f5, f6, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping6(apply, unapply, f1, f2, f3, f4, f5, f6, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping7[R, A1, A2, A3, A4, A5, A6, A7](apply: (A1, A2, A3, A4, A5, A6, A7) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping7[R, A1, A2, A3, A4, A5, A6, A7](apply: (A1, A2, A3, A4, A5, A6, A7) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row)) match {
@@ -222,22 +247,26 @@ class ObjectMapping7[R, A1, A2, A3, A4, A5, A6, A7](apply: (A1, A2, A3, A4, A5, 
     new ObjectMapping7(apply, unapply, f1, f2, f3, f4, f5, f6, f7, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping7(apply, unapply, f1, f2, f3, f4, f5, f6, f7, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping8[R, A1, A2, A3, A4, A5, A6, A7, A8](apply: (A1, A2, A3, A4, A5, A6, A7, A8) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping8[R, A1, A2, A3, A4, A5, A6, A7, A8](apply: (A1, A2, A3, A4, A5, A6, A7, A8) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row)) match {
@@ -262,23 +291,27 @@ class ObjectMapping8[R, A1, A2, A3, A4, A5, A6, A7, A8](apply: (A1, A2, A3, A4, 
     new ObjectMapping8(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping8(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping9[R, A1, A2, A3, A4, A5, A6, A7, A8, A9](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping9[R, A1, A2, A3, A4, A5, A6, A7, A8, A9](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row)) match {
@@ -304,24 +337,28 @@ class ObjectMapping9[R, A1, A2, A3, A4, A5, A6, A7, A8, A9](apply: (A1, A2, A3, 
     new ObjectMapping9(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping9(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping10[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping10[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row)) match {
@@ -348,25 +385,29 @@ class ObjectMapping10[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10](apply: (A1, A2
     new ObjectMapping10(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping10(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping11[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping11[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row)) match {
@@ -394,26 +435,30 @@ class ObjectMapping11[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11](apply: (A
     new ObjectMapping11(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping11(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping12[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping12[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row)) match {
@@ -442,27 +487,31 @@ class ObjectMapping12[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12](appl
     new ObjectMapping12(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping12(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping13[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping13[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row)) match {
@@ -492,28 +541,32 @@ class ObjectMapping13[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13]
     new ObjectMapping13(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping13(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping14[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping14[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
-  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
+  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key).withParamName(params(13))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row), field14.bind(row)) match {
@@ -544,29 +597,33 @@ class ObjectMapping14[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13,
     new ObjectMapping14(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping14(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping15[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping15[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
-  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key)
-  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
+  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key).withParamName(params(13))
+  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key).withParamName(params(14))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row), field14.bind(row), field15.bind(row)) match {
@@ -598,30 +655,34 @@ class ObjectMapping15[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13,
     new ObjectMapping15(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping15(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping16[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping16[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
-  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key)
-  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key)
-  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
+  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key).withParamName(params(13))
+  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key).withParamName(params(14))
+  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key).withParamName(params(15))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row), field14.bind(row), field15.bind(row), field16.bind(row)) match {
@@ -654,31 +715,35 @@ class ObjectMapping16[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13,
     new ObjectMapping16(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping16(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping17[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping17[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
-  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key)
-  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key)
-  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key)
-  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
+  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key).withParamName(params(13))
+  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key).withParamName(params(14))
+  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key).withParamName(params(15))
+  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key).withParamName(params(16))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row), field14.bind(row), field15.bind(row), field16.bind(row), field17.bind(row)) match {
@@ -712,32 +777,36 @@ class ObjectMapping17[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13,
     new ObjectMapping17(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping17(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping18[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping18[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
-  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key)
-  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key)
-  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key)
-  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key)
-  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
+  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key).withParamName(params(13))
+  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key).withParamName(params(14))
+  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key).withParamName(params(15))
+  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key).withParamName(params(16))
+  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key).withParamName(params(17))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row), field14.bind(row), field15.bind(row), field16.bind(row), field17.bind(row), field18.bind(row)) match {
@@ -772,33 +841,37 @@ class ObjectMapping18[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13,
     new ObjectMapping18(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping18(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping19[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), f19: (Key, Mapping[A19]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping19[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), f19: (Key, Mapping[A19]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
-  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key)
-  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key)
-  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key)
-  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key)
-  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key)
-  val field19: Mapping[A19] = f19._2.withKey(f19._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
+  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key).withParamName(params(13))
+  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key).withParamName(params(14))
+  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key).withParamName(params(15))
+  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key).withParamName(params(16))
+  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key).withParamName(params(17))
+  val field19: Mapping[A19] = f19._2.withKey(f19._1).withKey(key).withParamName(params(18))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row), field14.bind(row), field15.bind(row), field16.bind(row), field17.bind(row), field18.bind(row), field19.bind(row)) match {
@@ -834,34 +907,38 @@ class ObjectMapping19[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13,
     new ObjectMapping19(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping19(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping20[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), f19: (Key, Mapping[A19]), f20: (Key, Mapping[A20]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping20[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), f19: (Key, Mapping[A19]), f20: (Key, Mapping[A20]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
-  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key)
-  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key)
-  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key)
-  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key)
-  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key)
-  val field19: Mapping[A19] = f19._2.withKey(f19._1).withKey(key)
-  val field20: Mapping[A20] = f20._2.withKey(f20._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
+  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key).withParamName(params(13))
+  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key).withParamName(params(14))
+  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key).withParamName(params(15))
+  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key).withParamName(params(16))
+  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key).withParamName(params(17))
+  val field19: Mapping[A19] = f19._2.withKey(f19._1).withKey(key).withParamName(params(18))
+  val field20: Mapping[A20] = f20._2.withKey(f20._1).withKey(key).withParamName(params(19))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row), field14.bind(row), field15.bind(row), field16.bind(row), field17.bind(row), field18.bind(row), field19.bind(row), field20.bind(row)) match {
@@ -898,35 +975,39 @@ class ObjectMapping20[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13,
     new ObjectMapping20(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping20(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping21[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), f19: (Key, Mapping[A19]), f20: (Key, Mapping[A20]), f21: (Key, Mapping[A21]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping21[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), f19: (Key, Mapping[A19]), f20: (Key, Mapping[A20]), f21: (Key, Mapping[A21]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
-  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key)
-  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key)
-  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key)
-  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key)
-  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key)
-  val field19: Mapping[A19] = f19._2.withKey(f19._1).withKey(key)
-  val field20: Mapping[A20] = f20._2.withKey(f20._1).withKey(key)
-  val field21: Mapping[A21] = f21._2.withKey(f21._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
+  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key).withParamName(params(13))
+  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key).withParamName(params(14))
+  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key).withParamName(params(15))
+  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key).withParamName(params(16))
+  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key).withParamName(params(17))
+  val field19: Mapping[A19] = f19._2.withKey(f19._1).withKey(key).withParamName(params(18))
+  val field20: Mapping[A20] = f20._2.withKey(f20._1).withKey(key).withParamName(params(19))
+  val field21: Mapping[A21] = f21._2.withKey(f21._1).withKey(key).withParamName(params(20))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row), field14.bind(row), field15.bind(row), field16.bind(row), field17.bind(row), field18.bind(row), field19.bind(row), field20.bind(row), field21.bind(row)) match {
@@ -964,36 +1045,40 @@ class ObjectMapping21[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13,
     new ObjectMapping21(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping21(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21).flatMap(_.paramNames)
+
 }
 
-class ObjectMapping22[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), f19: (Key, Mapping[A19]), f20: (Key, Mapping[A20]), f21: (Key, Mapping[A21]), f22: (Key, Mapping[A22]), val key: Key = null)(implicit evidence: TypeTag[R])
+class ObjectMapping22[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22](apply: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22) => R, unapply: R => Option[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22)], f1: (Key, Mapping[A1]), f2: (Key, Mapping[A2]), f3: (Key, Mapping[A3]), f4: (Key, Mapping[A4]), f5: (Key, Mapping[A5]), f6: (Key, Mapping[A6]), f7: (Key, Mapping[A7]), f8: (Key, Mapping[A8]), f9: (Key, Mapping[A9]), f10: (Key, Mapping[A10]), f11: (Key, Mapping[A11]), f12: (Key, Mapping[A12]), f13: (Key, Mapping[A13]), f14: (Key, Mapping[A14]), f15: (Key, Mapping[A15]), f16: (Key, Mapping[A16]), f17: (Key, Mapping[A17]), f18: (Key, Mapping[A18]), f19: (Key, Mapping[A19]), f20: (Key, Mapping[A20]), f21: (Key, Mapping[A21]), f22: (Key, Mapping[A22]), val key: Key = null, val paramName: String = null)(implicit evidence: TypeTag[R])
   extends Mapping[R] with ObjectMapping {
 
-  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key)
-  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key)
-  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key)
-  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key)
-  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key)
-  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key)
-  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key)
-  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key)
-  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key)
-  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key)
-  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key)
-  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key)
-  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key)
-  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key)
-  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key)
-  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key)
-  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key)
-  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key)
-  val field19: Mapping[A19] = f19._2.withKey(f19._1).withKey(key)
-  val field20: Mapping[A20] = f20._2.withKey(f20._1).withKey(key)
-  val field21: Mapping[A21] = f21._2.withKey(f21._1).withKey(key)
-  val field22: Mapping[A22] = f22._2.withKey(f22._1).withKey(key)
+  private val params = paramNames(evidence.tpe)
+  val field1: Mapping[A1] = f1._2.withKey(f1._1).withKey(key).withParamName(params.head)
+  val field2: Mapping[A2] = f2._2.withKey(f2._1).withKey(key).withParamName(params(1))
+  val field3: Mapping[A3] = f3._2.withKey(f3._1).withKey(key).withParamName(params(2))
+  val field4: Mapping[A4] = f4._2.withKey(f4._1).withKey(key).withParamName(params(3))
+  val field5: Mapping[A5] = f5._2.withKey(f5._1).withKey(key).withParamName(params(4))
+  val field6: Mapping[A6] = f6._2.withKey(f6._1).withKey(key).withParamName(params(5))
+  val field7: Mapping[A7] = f7._2.withKey(f7._1).withKey(key).withParamName(params(6))
+  val field8: Mapping[A8] = f8._2.withKey(f8._1).withKey(key).withParamName(params(7))
+  val field9: Mapping[A9] = f9._2.withKey(f9._1).withKey(key).withParamName(params(8))
+  val field10: Mapping[A10] = f10._2.withKey(f10._1).withKey(key).withParamName(params(9))
+  val field11: Mapping[A11] = f11._2.withKey(f11._1).withKey(key).withParamName(params(10))
+  val field12: Mapping[A12] = f12._2.withKey(f12._1).withKey(key).withParamName(params(11))
+  val field13: Mapping[A13] = f13._2.withKey(f13._1).withKey(key).withParamName(params(12))
+  val field14: Mapping[A14] = f14._2.withKey(f14._1).withKey(key).withParamName(params(13))
+  val field15: Mapping[A15] = f15._2.withKey(f15._1).withKey(key).withParamName(params(14))
+  val field16: Mapping[A16] = f16._2.withKey(f16._1).withKey(key).withParamName(params(15))
+  val field17: Mapping[A17] = f17._2.withKey(f17._1).withKey(key).withParamName(params(16))
+  val field18: Mapping[A18] = f18._2.withKey(f18._1).withKey(key).withParamName(params(17))
+  val field19: Mapping[A19] = f19._2.withKey(f19._1).withKey(key).withParamName(params(18))
+  val field20: Mapping[A20] = f20._2.withKey(f20._1).withKey(key).withParamName(params(19))
+  val field21: Mapping[A21] = f21._2.withKey(f21._1).withKey(key).withParamName(params(20))
+  val field22: Mapping[A22] = f22._2.withKey(f22._1).withKey(key).withParamName(params(21))
 
   override def bind(row: Row): Either[Seq[LineError], R] = {
     merge(field1.bind(row), field2.bind(row), field3.bind(row), field4.bind(row), field5.bind(row), field6.bind(row), field7.bind(row), field8.bind(row), field9.bind(row), field10.bind(row), field11.bind(row), field12.bind(row), field13.bind(row), field14.bind(row), field15.bind(row), field16.bind(row), field17.bind(row), field18.bind(row), field19.bind(row), field20.bind(row), field21.bind(row), field22.bind(row)) match {
@@ -1032,7 +1117,10 @@ class ObjectMapping22[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13,
     new ObjectMapping22(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, newKey)
   ).getOrElse(this)
 
-  override def paramNames: Option[Seq[String]] = {
-    paramNames(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22)
+  override def withParamName(paramName: String): Mapping[R] = {
+    new ObjectMapping22(apply, unapply, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, key, paramName)
   }
+
+  override def paramNames: Seq[String] = Seq(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22).flatMap(_.paramNames)
+
 }
