@@ -22,7 +22,15 @@ object Dependencies {
   )
   
   val producer: Seq[ModuleID] = Seq(
-    Library.config
+    Library.config,
+    Library.common_util,
+    Library.oms_order_service,
+    Library.scalaLogging,
+    Library.logbackClassic,
+    Library.oms_entity_property,
+    Library.order_service_proxy,
+    Library.common_model,
+    Library.common_di
   )
   
   val sender_client: Seq[ModuleID] = Seq(
@@ -146,6 +154,12 @@ object Version {
   val scalaz       = "7.2.14"
   val guice        = "4.2.2"
   val scala_xml    = "1.1.0"
+  val common_util  = "1.0.0"
+  val oms_entity_property = "1.0.0"
+  val oms_order_service = "1.0.0"
+  val order_service_proxy = "1.0.0"
+  val common_model = "1.0.0"
+  val common_di    = "1.0.0"
 }
 
 object Library {
@@ -173,5 +187,11 @@ object Library {
   val scalaz              = "org.scalaz"                 %% "scalaz-core"              % Version.scalaz
   val guice               = "com.google.inject"          % "guice"                     % Version.guice
   val scala_xml           = "org.scala-lang.modules"     %% "scala-xml"                % Version.scala_xml
+  val common_util         = "jp.co.nri.nefs.common"      % "nefs-common-util"          % Version.common_util
+  val oms_entity_property = "jp.co.nri.nefs.oms"         % "nefs-oms-entity-property"  % Version.oms_entity_property
+  val oms_order_service   = "jp.co.nri.nefs.oms"         % "nefs-oms-order-serivce-entity-property" % Version.oms_order_service
+  val order_service_proxy = "jp.co.nri.nefs.oms"         % "nefs-oms-order-serivce-proxy" % Version.order_service_proxy
+  val common_model        = "jp.co.nri.nefs.common"      % "nefs-common-model"         % Version.common_model
+  val common_di           = "jp.co.nri.nefs.common"      % "nefs-common-di"            % Version.common_di
 }
 

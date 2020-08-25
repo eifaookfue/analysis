@@ -14,6 +14,12 @@
       <module fileurl="file://$PROJECT_DIR$/json/json.iml" filepath="$PROJECT_DIR$/json/json.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/model-client.iml" filepath="$PROJECT_DIR$/.idea/modules/model-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/model-common.iml" filepath="$PROJECT_DIR$/.idea/modules/model-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jp.co.nri.nefs.common.di/nefs-common-di.iml" filepath="$PROJECT_DIR$/jp.co.nri.nefs.common.di/nefs-common-di.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jp.co.nri.nefs.common.model/nefs-common-model.iml" filepath="$PROJECT_DIR$/jp.co.nri.nefs.common.model/nefs-common-model.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jp.co.nri.nefs.common.util/nefs-common-util.iml" filepath="$PROJECT_DIR$/jp.co.nri.nefs.common.util/nefs-common-util.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jp.co.nri.nefs.oms.entity.property/nefs-oms-entity-property.iml" filepath="$PROJECT_DIR$/jp.co.nri.nefs.oms.entity.property/nefs-oms-entity-property.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jp.co.nri.nefs.oms.order.service.entity.property/nefs-oms-order-serivce-entity-property.iml" filepath="$PROJECT_DIR$/jp.co.nri.nefs.oms.order.service.entity.property/nefs-oms-order-serivce-entity-property.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jp.co.nri.nefs.oms.order.service.proxy/nefs-oms-order-serivce-proxy.iml" filepath="$PROJECT_DIR$/jp.co.nri.nefs.oms.order.service.proxy/nefs-oms-order-serivce-proxy.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-analytics.iml" filepath="$PROJECT_DIR$/.idea/modules/play-analytics.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-slick.iml" filepath="$PROJECT_DIR$/.idea/modules/play-slick.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/producer.iml" filepath="$PROJECT_DIR$/.idea/modules/producer.iml" />

@@ -1,6 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="nefs-common-di" />
+        <module name="nefs-common-model" />
+        <module name="nefs-oms-entity-property" />
+        <module name="nefs-oms-order-serivce-entity-property" />
+        <module name="nefs-oms-order-serivce-proxy" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="jp.co.nri.nefs.common.util" target="1.5" />
+      <module name="nefs-common-di" target="1.5" />
+      <module name="nefs-common-model" target="1.5" />
+      <module name="nefs-oms-entity-property" target="1.5" />
+      <module name="nefs-oms-order-serivce-entity-property" target="1.5" />
+      <module name="nefs-oms-order-serivce-proxy" target="1.5" />
+    </bytecodeTargetLevel>
+  </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_STRING" value="-encoding UTF-8 -Xlint:-options" />
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="jp.co.nri.nefs.common.util" options="" />
+      <module name="nefs-common-di" options="" />
+      <module name="nefs-common-model" options="" />
+      <module name="nefs-oms-entity-property" options="" />
+      <module name="nefs-oms-order-serivce-entity-property" options="" />
+      <module name="nefs-oms-order-serivce-proxy" options="" />
+    </option>
   </component>
 </project>

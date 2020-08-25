@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: javax.persistence:persistence-api:1.0.2:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/javax.persistence/persistence-api/jars/persistence-api-1.0.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/javax.persistence/persistence-api/srcs/persistence-api-1.0.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

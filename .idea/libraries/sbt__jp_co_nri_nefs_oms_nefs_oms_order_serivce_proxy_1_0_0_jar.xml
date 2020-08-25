@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="sbt: jp.co.nri.nefs.oms:nefs-oms-order-serivce-proxy:1.0.0:jar">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/jp/co/nri/nefs/oms/nefs-oms-order-serivce-proxy/1.0.0/nefs-oms-order-serivce-proxy-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

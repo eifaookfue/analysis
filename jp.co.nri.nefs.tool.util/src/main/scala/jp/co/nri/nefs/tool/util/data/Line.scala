@@ -107,6 +107,32 @@ case class FieldMapping[T](key: Key = null, paramName: String = null)(implicit v
 
 }
 
+case class OptionalMapping[T](wrapped: Mapping[T]) extends Mapping[Option[T]] {
+
+  override val key: Key = wrapped.key
+
+  override def bind(row: Row): Either[Seq[LineError], Option[T]] = {
+    Option(row.getCell(key.index)).map{_ => wrapped.bind(row).right.map(Some(_))}.getOrElse(Right(None))
+  }
+
+  override def unbind(value: Option[T], row: Row): Unit = {
+    value.foreach(wrapped.unbind(_, row))
+  }
+
+  override def withKey(key: Key): Mapping[Option[T]] = {
+    this.copy(wrapped = wrapped.withKey(key))
+  }
+
+  override def withParamName(paramName: String): Mapping[Option[T]] = {
+    this.copy(wrapped = wrapped.withParamName(paramName))
+  }
+
+  override val paramName: String = wrapped.paramName
+
+  override def paramNames: Seq[String] = wrapped.paramNames
+
+}
+
 case class RepeatedMapping[T](
                                wrapped: Mapping[T],
                                key: Key = null,

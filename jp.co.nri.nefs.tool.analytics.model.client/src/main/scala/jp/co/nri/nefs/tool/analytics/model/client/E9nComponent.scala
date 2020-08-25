@@ -87,3 +87,89 @@ trait E9nStackTraceComponent {
     def pk = primaryKey("E9N_STACKTRACE_PK_1", (e9nId, number))
   }
 }
+
+case class E9nAudit(e9nId: Int, status: STATUS, comment: Option[String], updatedBy: String, updateTime: Timestamp = null)
+
+sealed trait STATUS
+object STATUS {
+
+  case object NOT_YET extends STATUS
+  case object DONE extends STATUS
+  case object PENDING extends STATUS
+
+  def valueOf(name: String): STATUS = {
+    name match {
+      case "NOT_YET" => NOT_YET
+      case "DONE" => DONE
+      case "PENDING" => PENDING
+      case _ => throw new IllegalArgumentException(s"$name is not a member of STATUS")
+    }
+  }
+}
+
+trait E9nAuditComponent {
+  self: HasDatabaseConfigProvider[JdbcProfile] =>
+
+  import profile.api._
+
+  class E9nAudits(tag: Tag) extends Table[E9nAudit](tag, "E9N_AUDIT") {
+
+    implicit val statusType: BaseColumnType[STATUS] = MappedColumnType.base[STATUS, String](
+      _.toString,
+      STATUS.valueOf
+    )
+
+    def e9nId = column[Int]("E9N_ID", O.PrimaryKey)
+    def status = column[STATUS]("STATUS")
+    def comment = column[Option[String]]("COMMENT")
+    def updatedBy = column[String]("UPDATED_BY")
+    def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+    def * = (e9nId, status, comment, updatedBy, updateTime) <> (E9nAudit.tupled, E9nAudit.unapply)
+  }
+}
+
+case class E9nAuditHistory(e9nHistoryId: Int, e9nId: Int, status: Option[STATUS],
+                           comment: Option[String], updatedBy: String, updateTime: Timestamp = null)
+
+trait E9nAuditHistoryComponent {
+
+  self: HasDatabaseConfigProvider[JdbcProfile] =>
+
+  import profile.api._
+
+  class E9nAuditHistories(tag: Tag) extends Table[E9nAuditHistory](tag, "E9N_AUDIT_HISTORY") {
+
+    implicit val statusType: BaseColumnType[STATUS] = MappedColumnType.base[STATUS, String](
+      _.toString,
+      STATUS.valueOf
+    )
+
+    def e9nHistoryId = column[Int]("E9N_HISTORY_ID", O.PrimaryKey, O.AutoInc)
+    def e9nId = column[Int]("E9N_ID")
+    def status = column[Option[STATUS]]("STATUS")
+    def comment = column[Option[String]]("COMMENT")
+    def updatedBy = column[String]("UPDATED_BY")
+    def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+    def * = (e9nHistoryId, e9nId, status, comment, updatedBy, updateTime) <> (E9nAuditHistory.tupled, E9nAuditHistory.unapply)
+
+  }
+}
+
+case class E9nCount(e9nId: Int, count: Int, updateTime: Timestamp = null)
+
+trait E9nCountComponent {
+
+  self: HasDatabaseConfigProvider[JdbcProfile] =>
+
+  import profile.api._
+
+  class E9nCounts(tag: Tag) extends Table[E9nCount](tag, "E9N_COUNT") {
+
+    def e9nId = column[Int]("E9N_ID", O.PrimaryKey)
+    def count = column[Int]("COUNT")
+    def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+    def * = (e9nId, count, updateTime) <> (E9nCount.tupled, E9nCount.unapply)
+
+  }
+
+}

@@ -21,7 +21,7 @@ trait ClientLogRecorder {
 
 class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   extends ClientLogRecorder with LogComponent with WindowDetailComponent with PreCheckComponent
-  with E9nComponent with E9nStackTraceComponent with E9nDetailComponent
+  with E9nComponent with E9nStackTraceComponent with E9nDetailComponent with E9nCountComponent
     with LazyLogging
     with HasDatabaseConfigProvider[JdbcProfile]{
 
@@ -33,6 +33,7 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
   val e9ns = TableQuery[E9ns]
   val e9nStackTraces = TableQuery[E9nStackTraces]
   val e9nDetails = TableQuery[E9nDetails]
+  val e9nCounts = TableQuery[E9nCounts]
 
   def recreate(): Unit = {
     for {tableQuery <- Seq(logs, windowDetails, preChecks, e9ns, e9nStackTraces, e9nDetails)}{
@@ -88,34 +89,48 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
 
     val headMessage = e9nStackTraceSeq.head.message
     val length = e9nStackTraceSeq.map(_.message).mkString.length
-    val q1 = e9ns.filter(e => e.e9nHeadMessage === headMessage && e.e9nLength === length).map(e => (e.e9nId, e.count))
+    val q1 = for {
+      (e, c) <- e9ns joinLeft e9nCounts on (_.e9nId === _.e9nId)
+      if e.e9nHeadMessage === headMessage && e.e9nLength === length
+    } yield (e.e9nId, c.map(_.count))
+
     val f1 = db.run(q1.result.headOption)
     Await.ready(f1, Duration.Inf)
     f1.value.get match {
-      case Success(op) =>
-        op match {
-          case Some((e9nId, count)) =>
-            val updateE9n = e9ns.filter(_.e9nId === e9nId).map(_.count).update(count + 1)
+      case Success(e9nIdAndCount) =>
+        e9nIdAndCount match {
+          // If found from E9N table, use e9nId from the table
+          case Some((e9nId, countOp)) =>
             val insertE9nDetail = e9nDetails += E9nDetail(logId, lineNo, e9nId)
-            db.run(DBIO.seq(updateE9n, insertE9nDetail))
+            val insertOrUpdateE9nCount = countOp match {
+              // If found from E9N_COUNT table, count up
+              case Some(count) =>
+                e9nCounts.filter(_.e9nId === e9nId).map(_.count).update(count + 1)
+              // If no records found from E9N_COUNT table, insert with count = 1
+              case None =>
+                e9nCounts += E9nCount(e9nId, 1)
+            }
+            db.run(DBIO.seq(insertE9nDetail, insertOrUpdateE9nCount))
+          // If not found from E9N table, insert to E9N_TABLE first
           case None =>
-            val insertE9n = e9ns.map(e => (e.e9nId, e.e9nHeadMessage, e.e9nLength, e.count)) returning e9ns.map(_.e9nId) += (0, headMessage, length, 1)
+            val insertE9n = e9ns.map(e => (e.e9nId, e.e9nHeadMessage, e.e9nLength)) returning e9ns.map(_.e9nId) +=
+              (0, headMessage, length)
             val f2 = db.run(insertE9n)
             Await.ready(f2, Duration.Inf)
             f2.value.get match {
               case Success(e9nId) =>
-                val insertE9nStackTrace = e9nStackTraces.map(e => (e.e9nId, e.number, e.message)) ++= e9nStackTraceSeq.map(e => (e9nId, e.number, e.message))
                 val insertE9nDetail = e9nDetails.map(e => (e.logId, e.lineNo, e.e9nId)) += (logId, lineNo, e9nId)
-                db.run(DBIO.seq(insertE9nStackTrace, insertE9nDetail))
+                val insertE9nStackTrace = e9nStackTraces.map(e => (e.e9nId, e.number, e.message)) ++=
+                  e9nStackTraceSeq.map(e => (e9nId, e.number, e.message))
+                val insertE9nCount = e9nCounts += E9nCount(e9nId, 1)
+                db.run(DBIO.seq(insertE9nDetail, insertE9nStackTrace, insertE9nCount))
               case Failure(e) =>
                 Future.failed(e)
             }
-
         }
       case Failure(e) =>
         Future.failed(e)
     }
-
   }
 
 }
