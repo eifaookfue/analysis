@@ -1,9 +1,7 @@
-package jp.co.nri.nefs.common.model;
+package jp.co.nri.nefs.common.model.entity;
 
 public interface IEntity<E extends Enum<E>> {
 
     <T> T getValue();
-
-    void putValue(E property);
 
 }
