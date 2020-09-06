@@ -169,7 +169,7 @@ object ProxyProducer extends LazyLogging {
     for {
       e <- entityType.getEnumConstants.map(_.asInstanceOf[Enum[_]])
       field = e.getDeclaringClass.getDeclaredField(e.name())
-      nullable = field.getAnnotation(classOf[Column]).nullable()
+      nullable = Option(field.getAnnotation(classOf[Column])).exists(_.nullable())
       entityType = field.getAnnotation(classOf[cp.Type]).value()
       property = Property(e.name(), entityType, nullable)
     } yield  property

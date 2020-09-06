@@ -2,7 +2,7 @@ package jp.co.nri.nefs.tool.util.data
 
 import java.nio.file.{Files, Paths}
 
-import org.scalatest.{BeforeAndAfterAll, FeatureSpec, GivenWhenThen, Matchers}
+import org.scalatest.{BeforeAndAfterAll, FeatureSpec, GivenWhenThen}
 import Lines._
 import com.typesafe.config.ConfigFactory
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -232,14 +232,10 @@ class LineSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
       val row7 = inSheet7.getRow(0)
 
       When("a bind method is called")
-      Then("NumberFormatException will be thrown.")
-      try {
-        parentLine7.bind(row7)
-        fail("Exception has not thrown.")
-      } catch {
-        case e: Exception => assert(e.getClass === classOf[NumberFormatException])
-        case _: Throwable => fail("Unexpected exception has thrown.")
-      }
+      val parendLine7Binded = parentLine7.bind(row7)
+      Then("value will return None, and LineError will return  NumberFormatException.")
+      assert(parendLine7Binded.value === None)
+      assert(parendLine7Binded.errors.head === LineError(1, "java.lang.NumberFormatException: For input string: \"s2\""))
     }
 
   }

@@ -1,7 +1,7 @@
 package jp.co.nri.nefs.tool.util.data
 
 import jp.co.nri.nefs.tool.util.data.format.Formatter
-import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.{Cell, Row}
 
 import scala.reflect.runtime.{universe => ru}
 import ru._
@@ -112,7 +112,12 @@ case class OptionalMapping[T](wrapped: Mapping[T]) extends Mapping[Option[T]] {
   override val key: Key = wrapped.key
 
   override def bind(row: Row): Either[Seq[LineError], Option[T]] = {
-    Option(row.getCell(key.index)).map{_ => wrapped.bind(row).right.map(Some(_))}.getOrElse(Right(None))
+    Option(row.getCell(key.index)).flatMap{cell =>
+      if (cell.getCellType == Cell.CELL_TYPE_BLANK)
+        None
+      else
+        Option(cell)
+    }.map{_ => wrapped.bind(row).right.map(Some(_))}.getOrElse(Right(None))
   }
 
   override def unbind(value: Option[T], row: Row): Unit = {

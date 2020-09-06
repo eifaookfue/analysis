@@ -8,5 +8,14 @@
     <artifactId>nefs-common-model</artifactId>
     <version>1.0.0</version>
 
+<!--
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.Apache</groupId>
+            </plugin>
+        </plugins>
+    </build>
+-->
 
 </project>

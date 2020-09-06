@@ -32,7 +32,7 @@ object PropertyProducers extends LazyLogging {
   }
 
   def createEntitySetting(propertyClass: Class[_], p: Property): String = {
-    val baseName = packageShortName(propertyClass).getOrElse(propertyClass)
+    val baseName = packageShortName(propertyClass).getOrElse(propertyClass.getSimpleName)
     if (p.nullable)
       s"\t${p.entityName}.foreach($ENTITY_PUT_VALUE($baseName.${p.entityName}, ${entityValueAndPackage(p)._1.replace(p.entityName, "_")}))"
     else
@@ -44,7 +44,7 @@ object PropertyProducers extends LazyLogging {
   }
 
   def paramValueAndPackage(propertyClass: Class[_], p: Property): (String, Option[String]) = {
-    val baseName = packageShortName(propertyClass).getOrElse(propertyClass)
+    val baseName = packageShortName(propertyClass).getOrElse(propertyClass.getSimpleName)
     p.convertMode match {
       case SYMBOL =>
         (s"\t\t$ENTITY_GET_VALUE[${p.entityType.getSimpleName}]($baseName.${p.entityName}).toSymbol($ENTITY_GET_VALUE[String]($baseName.MARKET))",Some("jp.co.nri.nefs.tool.ViewCodeWrapper._"))
