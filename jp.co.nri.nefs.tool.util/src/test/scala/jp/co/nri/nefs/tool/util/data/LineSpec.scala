@@ -5,7 +5,9 @@ import java.nio.file.{Files, Paths}
 import org.scalatest.{BeforeAndAfterAll, FeatureSpec, GivenWhenThen}
 import Lines._
 import com.typesafe.config.ConfigFactory
-import org.apache.poi.ss.usermodel.{Sheet, WorkbookFactory}
+import jp.co.nri.nefs.oms.entity.property.definition.EBSType
+import jp.co.nri.nefs.tool.util.data.format.Formatter
+import org.apache.poi.ss.usermodel.{Row, Sheet, WorkbookFactory}
 
 class LineSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
 
@@ -17,6 +19,7 @@ class LineSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
   private val inBook = WorkbookFactory.create(in)
   val inSheet: Sheet = inBook.getSheet(LineSpec.SHEET_NAME)
   private var rownum = 0
+  private var row: Row = _
 
   override def afterAll(): Unit = {
     in.close()
@@ -89,7 +92,7 @@ class LineSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
       When("a bind and get method is called")
       val parent3 = parentLine3.bind(row3).get
 
-      Then("an object can be get.")
+      Then("big1.bind(row).get")
       assert(
         parent3
           ===
@@ -231,7 +234,7 @@ class LineSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
       val parendLine7Binded = parentLine7.bind(row7)
       Then("value will return None, and LineError will return  NumberFormatException.")
       assert(parendLine7Binded.value === None)
-      assert(parendLine7Binded.errors.head === LineError(1, "java.lang.NumberFormatException: For input string: \"s2\""))
+      assert(parendLine7Binded.errors.head === LineError(1, "error.number"))
     }
 
   }
@@ -336,6 +339,70 @@ class LineSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
       )
     }
 
+  }
+
+  feature("The user can define bigdecimal method in mapping.") {
+    scenario("bigdecimal with no argument") {
+      val big1 = Line(mapping(
+        key(0) -> bigDecimal
+      )(Big1.apply)(Big1.unapply))
+      Given(s"integer : [1]")
+
+      rownum += 4
+      row = inSheet.getRow(rownum)
+
+      When("a bind and get method is called")
+      Then(s"the object got from Line is ${Big1(1)}.")
+      assert(
+        big1.bind(row).get
+          ===
+        Big1(1)
+      )
+      Given("integer with decimal : [1.2]")
+
+      rownum += 2
+      row = inSheet.getRow(rownum)
+
+      When("a bind and get method is called")
+      Then(s"the object got from Line is ${Big1(1.2)}.")
+      assert(
+        big1.bind(row).get
+          ===
+          Big1(1.2)
+      )
+
+    }
+
+    scenario("bigdecimal with argument"){
+      val big1 = Line(mapping(
+        key(0) -> bigDecimal(6, 4)
+      )(Big1.apply)(Big1.unapply))
+      Given("integer : [12.3456]")
+
+      rownum += 3
+      row = inSheet.getRow(rownum)
+      big1.bind(row).errors.foreach(println)
+
+      assert(
+        big1.bind(row).get
+          ===
+          Big1(12.3456)
+      )
+    }
+  }
+
+  feature ("aa") {
+    scenario("bb") {
+      /*implicit object bsTypeFormatter extends Formatter[EBSType] {
+        override def bind(index: Int, row: Row): Either[Seq[LineError], Any] = {
+
+        }
+
+        override def unbind(index: Int, value: Any, row: Row): Unit = {
+
+        }
+      }*/
+    }
   }
 
 

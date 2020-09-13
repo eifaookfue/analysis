@@ -171,6 +171,12 @@ lazy val training = (project in file("jp.co.nri.nefs.tool.analytics.training"))
 lazy val util = (project in file("jp.co.nri.nefs.tool.util"))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.util)
+/*
+  .settings(
+    scalacOptions in (Compile, doc) ++=
+      Opts.doc.sourceUrl(s"https://github.com/eifaookfue/analysis/tree/development/jp.co.nri.nefs.tool.util/src/main/scala/${€{TPL_OWNER}.}/€{TPL_NAME}.scala")
+  )
+*/
 
 lazy val producer = (project in file("jp.co.nri.nefs.tool.producer"))
   .settings(commonSettings: _*)

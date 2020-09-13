@@ -105,6 +105,17 @@ case class FieldMapping[T](key: Key = null, paramName: String = null)(implicit v
 
   override def paramNames: Seq[String] = Seq(paramName)
 
+  /**
+    * Changes the binder used to handle this field.
+    *
+    * @param binder the new binder to use
+    * @return the same mapping with a new binder
+    */
+  def as(binder: Formatter[T]): Mapping[T] = {
+    this.copy()(binder)
+  }
+
+
 }
 
 case class OptionalMapping[T](wrapped: Mapping[T]) extends Mapping[Option[T]] {

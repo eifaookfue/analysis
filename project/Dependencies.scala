@@ -58,7 +58,8 @@ object Dependencies {
     Library.logbackClassic,
     Library.poi,
     Library.poi_ooxml,
-    Library.config
+    Library.config,
+    Library.oms_entity_property
   )
 
   val websocket: Seq[ModuleID] = Seq(

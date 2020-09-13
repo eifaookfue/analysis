@@ -111,6 +111,20 @@ object Lines {
 
   def of[T](implicit binder: Formatter[T]): FieldMapping[T] = FieldMapping[T]()(binder)
 
+  val bigDecimal: Mapping[BigDecimal] = of[BigDecimal]
+
+  /**
+    * Constructs a mapping for a BigDecimal field.
+    *
+    * For example:
+    * {{{
+    * Form("montant" -> bigDecimal(10, 2))
+    * }}}
+    * @param precision The maximum total number of digits (including decimals)
+    * @param scale The maximum number of decimals
+    */
+  def bigDecimal(precision: Int, scale: Int): Mapping[BigDecimal] = of[BigDecimal] as bigDecimalFormat(Some((precision, scale)))
+
   def write[T: TypeTag](line: Line[T], values: Seq[T], path: Path, sheetName: String = "sheet1",
                start: Int = 0, header: Boolean = true, headers: Option[Seq[String]] = None): Unit ={
 
