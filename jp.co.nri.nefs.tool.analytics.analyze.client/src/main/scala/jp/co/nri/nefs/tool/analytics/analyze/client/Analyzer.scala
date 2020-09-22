@@ -20,7 +20,8 @@ import scala.util.{Failure, Success}
 
 class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   extends LogComponent with WindowDetailComponent with WindowUserSliceComponent
-  with UserComponent with WindowDateComponent with WindowSliceComponent with WindowUserComponent with LazyLogging
+  with UserComponent with WindowDateComponent with WindowSliceComponent
+    with WindowUserComponent with PreCheckComponent with PreCheckSummaryComponent with LazyLogging
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
@@ -32,6 +33,8 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   val windowUserSlices = TableQuery[WindowUserSlices]
   val windowUsers = TableQuery[WindowUsers]
   val users = TableQuery[Users]
+  val preChecks = TableQuery[PreChecks]
+  val preCheckSummaries = TableQuery[PreCheckSummaries]
 
   /** Returns a sequence of Time String from startTime to endTime by intervalMinutes
    */
@@ -313,7 +316,45 @@ class Analyzer @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     val insert = windowUsers ++= windowCountByUsers
     Await.ready(db.run(insert), Duration.Inf)
   }
-}
+
+  def analyzePreCheck(): Unit = {
+
+    val drop = preCheckSummaries.schema.dropIfExists
+    val f1 = db.run(drop)
+    Await.ready(f1, Duration.Inf)
+    f1.value.get match {
+      case Success(_) => logger.info(s"Drop PRE_CHECK_SUMMARY succeeded.")
+      case Failure(e) => logger.error(s"Drop PRE_CHECK_SUMMARY failed", e)
+    }
+
+    val create = preCheckSummaries.schema.createIfNotExists
+    val f2 = db.run(create)
+    Await.ready(f2, Duration.Inf)
+
+    val q = preChecks.groupBy { p => (p.message, p.windowName.getOrElse(""))}
+      .map{case ((message, windowName), mw) => (message , windowName, mw.length)}
+      .sortBy{case (message, windowName, _) => (message, windowName)}
+
+    val f3 = db.run(q.result)
+    Await.ready(f3, Duration.Inf)
+    val preCheckSummariesSeq = f3.value.get match {
+      case Success(v) => v.map{ case (message, windowName, count) => PreCheckSummary(message, windowName, count)}
+      case Failure(e) => throw e
+    }
+
+    val insertPreCheckSummary = preCheckSummaries ++= preCheckSummariesSeq
+
+    val f4 = db.run(insertPreCheckSummary)
+    Await.ready(f4, Duration.Inf)
+    f4.value.get match {
+      case Success(_) => logger.info(s"Insert PRE_CHECK_SUMMARY succeeded.")
+      case Failure(e) => logger.error(s"Insert PRE_CHECK_SUMMARY failed.", e)
+    }
+
+  }
+
+
+  }
 
 object Analyzer {
   ServiceInjector.initialize()
@@ -324,5 +365,6 @@ object Analyzer {
     analyzer.analyzeByUserSlice(LocalTime.of(5, 0), LocalTime.of(17, 0), 10)
     analyzer.analyzeByUser()
     analyzer.analyzeByDate()
+    analyzer.analyzePreCheck()
   }
 }
