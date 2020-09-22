@@ -7,14 +7,13 @@ import play.api.libs.json.{JsPath, Writes}
 import slick.jdbc.JdbcProfile
 import slick.sql.SqlProfile.ColumnOption.SqlType
 
-case class E9n(e9nId: Int, e9nHeadMessage: String, e9nLength: Int, count: Int, updateTime: Timestamp = null)
+case class E9n(e9nId: Int, e9nHeadMessage: String, e9nLength: Int, updateTime: Timestamp = null)
 
 object E9n {
   implicit val e9nWrites: Writes[E9n] = (
     (JsPath \ "e9n-id").write[Int] and
       (JsPath \ "message").write[String] and
       (JsPath \ "e9n-length").write[Int] and
-      (JsPath \ "count").write[Int] and
       (JsPath \ "update-time").write[Timestamp]
     )(unlift(E9n.unapply)
   )
@@ -30,10 +29,8 @@ object E9n {
       e9ns.sortBy(_.e9nHeadMessage)(Ordering[String].reverse)
     } else if (index == 1 && !isDesc) {
       e9ns.sortBy(_.e9nHeadMessage)
-    } else if (index == 2 && isDesc) {
-      e9ns.sortBy(_.count)(Ordering[Int].reverse)
     } else  {
-      e9ns.sortBy(_.count)
+      e9ns.sortBy(_.e9nId)
     }
   }
 }
@@ -47,10 +44,9 @@ trait E9nComponent {
     def e9nId = column[Int]("E9N_ID", O.PrimaryKey, O.AutoInc)
     def e9nHeadMessage = column[String]("E9N_HEAD_MESSAGE", O.Length(200))
     def e9nLength = column[Int]("E9N_LENGTH")
-    def count = column[Int]("COUNT")
     def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
     // https://stackoverflow.com/questions/22367092/using-tupled-method-when-companion-object-is-in-class
-    def * = (e9nId, e9nHeadMessage, e9nLength, count, updateTime) <> ((E9n.apply _).tupled, E9n.unapply)
+    def * = (e9nId, e9nHeadMessage, e9nLength, updateTime) <> ((E9n.apply _).tupled, E9n.unapply)
     def uk_1 = index("E9N_UK_1", (e9nHeadMessage, e9nLength), unique = true)
   }
 }

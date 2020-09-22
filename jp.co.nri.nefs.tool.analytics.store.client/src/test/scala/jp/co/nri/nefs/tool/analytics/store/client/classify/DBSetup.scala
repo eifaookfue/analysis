@@ -36,7 +36,7 @@ class DefaultDBSetup @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     val e9nStackTraceSeq =
       for {(msg, number) <- Seq(slickE9nLog.slice(1,4), slickE9nLog.slice(7, slickE9nLog.length - 1)).flatten.zipWithIndex}
       yield E9nStackTrace(1, number, msg)
-    val e9nInsert = e9ns += E9n(1, headMessage, e9nStackTraceSeq.map(_.message.trim).mkString.length, 1)
+    val e9nInsert = e9ns += E9n(1, headMessage, e9nStackTraceSeq.map(_.message.trim).mkString.length)
     val e9nStackTraceInsert = e9nStackTraces ++= e9nStackTraceSeq
     val f2 = db.run(DBIO.seq(e9nInsert, e9nStackTraceInsert))
     Await.result(f2, Duration.Inf)

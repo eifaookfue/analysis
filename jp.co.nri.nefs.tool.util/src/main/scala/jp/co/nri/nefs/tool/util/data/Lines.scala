@@ -5,9 +5,15 @@ import java.nio.file.{Files, Path}
 import jp.co.nri.nefs.tool.util.data.format._
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime.universe._
+import scala.util.Properties
 
 object Lines {
+
+  final val ALPHA_NUMERIC = "^[A-Za-z0-9]+$"
+  final val DEFAULT_CLASS_NAME = "Foo"
 
   def mapping[R, A1](a1: (Key, Mapping[A1]))(apply: A1 => R)(unapply: R => Option[A1])(implicit evidence: TypeTag[R]): Mapping[R] = {
     new ObjectMapping1(apply, unapply, a1)
@@ -99,7 +105,43 @@ object Lines {
 
   def optional[A](mapping: Mapping[A])(implicit evidence: TypeTag[A]): Mapping[Option[A]] = OptionalMapping(mapping)
 
+  /**
+    * Defines a repeated mapping.
+    * {{{
+    * Form(
+    *   key(0) -> list(text)
+    * )
+    * }}}
+    *
+    * @param mapping The mapping to make repeated.
+    */
   def list[A](mapping: Mapping[A])(implicit evidence: TypeTag[A]): Mapping[List[A]] = RepeatedMapping(mapping)
+
+  /**
+    * Defines a repeated mapping with the Set semantic.
+    * {{{
+    * Form(
+    *   key(0) -> seq(text)
+    * )
+    * }}}
+    *
+    * @param mapping The mapping to make repeated.
+    */
+  def seq[A](mapping: Mapping[A])(implicit evidence: TypeTag[A]): Mapping[Seq[A]] =
+    RepeatedMapping(mapping).transform(_.toSeq, _.toList)
+
+  /**
+    * Defines a repeated mapping with the Set semantic.
+    * {{{
+    * Form(
+    *   key(0) -> set(text)
+    * )
+    * }}}
+    *
+    * @param mapping The mapping to make repeated.
+    */
+  def set[A](mapping: Mapping[A])(implicit evidence: TypeTag[A]): Mapping[Set[A]] =
+    RepeatedMapping(mapping).transform(_.toSet, _.toList)
 
   def key(index: Int, count: Int = 1): Key = Key(index, count)
 
@@ -124,6 +166,58 @@ object Lines {
     * @param scale The maximum number of decimals
     */
   def bigDecimal(precision: Int, scale: Int): Mapping[BigDecimal] = of[BigDecimal] as bigDecimalFormat(Some((precision, scale)))
+
+  def generate(path: Path, sheetName: String, rownum: Int): Unit = {
+    val in = Files.newInputStream(path)
+    val book = WorkbookFactory.create(in)
+    val sheet = book.getSheet(sheetName)
+    val row = sheet.getRow(rownum)
+    val className = if (sheetName.matches(ALPHA_NUMERIC)) sheetName else DEFAULT_CLASS_NAME
+    val buffer = ListBuffer[String]()
+    val indexAndParamName = for {
+      i <- row.getFirstCellNum until row.getLastCellNum
+      s = paramName(stringFormat.bind(i, row), i)
+    } yield (i, s)
+    buffer += s"case class $className(" + indexAndParamName.map(s => s"${s._2}: String").mkString(", ") + ")"
+    buffer += ""
+    buffer += s"val ${lowercase(className)}Line = Line(mapping("
+    buffer += indexAndParamName.map { case (index, _) =>
+        s"\tkey($index) -> text"
+      }.mkString("," + Properties.lineSeparator)
+    buffer += s")($className.apply)($className.unapply))"
+
+    val outPath = path.getParent.resolve(className + ".scala")
+    try {
+      Files.write(outPath, buffer.asJava)
+      println(s"Output completed to $outPath as follows.")
+      println
+      buffer.foreach(println)
+      println
+      println(s"To use above, type these script at scala console.")
+      println
+      println("import jp.co.nri.nefs.tool.util.data.Line")
+      println("import jp.co.nri.nefs.tool.util.data.Lines._")
+      println(s":load $outPath")
+    } finally {
+      in.close()
+    }
+
+  }
+
+  private def lowercase(str: String): String = {
+    val chars = str.toCharArray
+    chars(0) = chars(0).toLower
+    new String(chars)
+  }
+
+  private def paramName(either: Either[Seq[LineError], String], index: Int): String = {
+    either.right.map { str =>
+      if (str == null || !str.matches(ALPHA_NUMERIC))
+        s"para$index"
+      else
+        str
+    }.getOrElse(s"para$index")
+  }
 
   def write[T: TypeTag](line: Line[T], values: Seq[T], path: Path, sheetName: String = "sheet1",
                start: Int = 0, header: Boolean = true, headers: Option[Seq[String]] = None): Unit ={

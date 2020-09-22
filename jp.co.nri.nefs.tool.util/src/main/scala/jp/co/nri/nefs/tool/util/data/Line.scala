@@ -34,6 +34,15 @@ trait Mapping[T] {
   val key: Key
   val paramName: String
 
+  /**
+    * Transform this Mapping[T] to a Mapping[B].
+    *
+    * @tparam B The type of the new mapping.
+    * @param f1 Transform value of T to a value of B
+    * @param f2 Transform value of B to a value of T
+    */
+  def transform[B](f1: T => B, f2: B => T): Mapping[B] = WrappedMapping(this, f1, f2)
+
   protected def addKey(newKey: Key): Option[Key] = {
     Option(key).map { key1 =>
       Key(key1.index + Option(newKey).map(_.index).getOrElse(0), Option(newKey).map(_.count).getOrElse(key1.count))
@@ -46,6 +55,52 @@ trait Mapping[T] {
     Get the list of parameter names which this class have including child parameter names.
    */
   def paramNames: Seq[String]
+
+}
+
+/**
+  * A mapping wrapping another existing mapping with transformation functions.
+  *
+  * @param wrapped Existing wrapped mapping
+  * @param f1 Transformation function from A to B
+  * @param f2 Transformation function from B to A
+  */
+case class WrappedMapping[A, B](wrapped: Mapping[A], f1: A => B, f2: B => A) extends Mapping[B] {
+
+  /**
+    * The field key.
+    */
+  override val key: Key = wrapped.key
+
+  /**
+    * Binds this field, i.e. construct a concrete value from submitted data.
+    *
+    * @param row the submitted data
+    * @return either a concrete value of type `B` or a set of errors, if the binding failed
+    */
+  override def bind(row: Row): Either[Seq[LineError], B] = {
+    wrapped.bind(row).right.map(t => f1(t))
+  }
+
+  /**
+    * Unbinds this field, i.e. transforms a concrete value to plain data.
+    *
+    * @param value the value to unbind
+    * @return the plain data
+    */
+  override def unbind(value: B, row: Row): Unit = wrapped.unbind(f2(value), row)
+
+  def withKey(key: Key): Mapping[B] = {
+    this.copy(wrapped = wrapped.withKey(key))
+  }
+
+  override def withParamName(paramName: String): Mapping[B] = {
+    this.copy(wrapped = wrapped.withParamName(paramName))
+  }
+
+  override val paramName: String = wrapped.paramName
+
+  override def paramNames: Seq[String] = wrapped.paramNames
 
 }
 

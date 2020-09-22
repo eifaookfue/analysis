@@ -36,7 +36,7 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
   val e9nCounts = TableQuery[E9nCounts]
 
   def recreate(): Unit = {
-    for {tableQuery <- Seq(logs, windowDetails, preChecks, e9ns, e9nStackTraces, e9nDetails)}{
+    for {tableQuery <- Seq(logs, windowDetails, preChecks, e9ns, e9nStackTraces, e9nDetails, e9nCounts)}{
       val schema = tableQuery.schema
       logger.debug("create statements")
       schema.create.statements.foreach(s => logger.debug(s))
@@ -108,7 +108,7 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
                 e9nCounts.filter(_.e9nId === e9nId).map(_.count).update(count + 1)
               // If no records found from E9N_COUNT table, insert with count = 1
               case None =>
-                e9nCounts += E9nCount(e9nId, 1)
+                e9nCounts.map(e => (e.e9nId, e.count)) += (e9nId, 1)
             }
             db.run(DBIO.seq(insertE9nDetail, insertOrUpdateE9nCount))
           // If not found from E9N table, insert to E9N_TABLE first
@@ -122,7 +122,7 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
                 val insertE9nDetail = e9nDetails.map(e => (e.logId, e.lineNo, e.e9nId)) += (logId, lineNo, e9nId)
                 val insertE9nStackTrace = e9nStackTraces.map(e => (e.e9nId, e.number, e.message)) ++=
                   e9nStackTraceSeq.map(e => (e9nId, e.number, e.message))
-                val insertE9nCount = e9nCounts += E9nCount(e9nId, 1)
+                val insertE9nCount = e9nCounts.map(e => (e.e9nId, e.count)) += (e9nId, 1)
                 db.run(DBIO.seq(insertE9nDetail, insertE9nStackTrace, insertE9nCount))
               case Failure(e) =>
                 Future.failed(e)

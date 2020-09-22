@@ -7,51 +7,14 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 
 import com.typesafe.config.ConfigFactory
-import javax.inject.Inject
 import jp.co.nri.nefs.tool.analytics.common.property.EDestinationType
 import jp.co.nri.nefs.tool.analytics.model.client._
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
 import jp.co.nri.nefs.tool.analytics.store.common.ServiceInjector
-import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import slick.jdbc.JdbcProfile
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConverters._
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Random, Success, Try}
-
-class Generator @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
-  extends E9nComponent with E9nStackTraceComponent with E9nDetailComponent with HasDatabaseConfigProvider[JdbcProfile] {
-
-  import profile.api._
-
-  val e9ns = TableQuery[E9ns]
-  val e9nStackTraces = TableQuery[E9nStackTraces]
-  val e9nDetails = TableQuery[E9nDetails]
-
-  def insertE9n(e9nSeq: Seq[E9n]): Unit = {
-    val futures = for {
-      (e9n, index) <- e9nSeq.zipWithIndex
-      insert1 = e9ns.map(e => (e.e9nHeadMessage, e.e9nLength, e.count)) returning e9ns.map(_.e9nId) += (e9n.e9nHeadMessage, e9n.e9nLength, e9n.count)
-      f1 = db.run(insert1)
-      e9nId = Await.result(f1, Duration.Inf)
-      i <- 0 to 9
-      insert2 = e9nStackTraces.map(e => (e.e9nId, e.number, e.message)) += (e9nId, i, s"at $i")
-      f2 = db.run(insert2)
-      _ = Await.ready(f2, Duration.Inf)
-      insert3 = e9nDetails += E9nDetail(e9nId, i, index * 10 + i)
-      f3 = db.run(insert3)
-    } yield f3
-    val aggFuture = Future.sequence(futures)
-    Await.ready(aggFuture, Duration.Inf)
-    aggFuture.value.get match {
-      case Success(_) => println("insert succeeded.")
-      case Failure(e) => println(s"insert failed. $e")
-    }
-  }
-
-}
 
 object Generator {
   val r: Random = Random
@@ -62,19 +25,37 @@ object Generator {
   val destinationTypes: Seq[String] = EDestinationType.values.map(_.toString).toSeq
   val actions: Seq[String] = Seq("OK", "OK", "OK", "OK", "CANCEL")
   val e9ns: Seq[String] = Seq("IllegalArgumentException", "RuntimeException", "TimeoutException")
+  val messages: Seq[String] = Seq("対象レコードがありません。", "株数が入力されていません。")
 
   def main(args: Array[String]): Unit = {
     ServiceInjector.initialize()
     val recorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
     recorder.recreate()
-    val generator = ServiceInjector.getComponent(classOf[Generator])
-    generator.insertE9n(e9nLists(100))
+    val sequence = 1 to 10
     for {
       log <- Generator.logs("2019-01-01", "2019-01-31", 10)
       logId = recorder.record(log)
       windowDetail <- Generator.windowDetails(log, 20)
       f = recorder.record(logId.get, windowDetail)
-      _ = Await.result(f, Duration.Inf)
+      _ = Await.ready(f, Duration.Inf)
+      // record e9n once every 10 times
+      f2 = if (randomValue(sequence) == 1) {
+        recorder.recordE9n(logId.get, windowDetail.lineNo, e9nStaceTraceSeq(10))
+      } else {
+        Future.successful(0)
+      }
+      _ = Await.ready(f2, Duration.Inf)
+      _  = f2.value.get match {
+        case Success(_) => println("Succeeded!")
+        case Failure(e) => println(e)
+      }
+      check <- preCheck(logId.get, windowDetail, 0.25)
+      f3 = recorder.record(check)
+      _ = Await.ready(f3, Duration.Inf)
+      _ = f3.value.get match {
+        case Success(_) => println("Succeeded inserting PreCheck!")
+        case Failure(e) => println(e)
+      }
     } {}
 
   }
@@ -83,9 +64,18 @@ object Generator {
     for {
       i <- 0 until count
       message = randomValue(e9ns)
-      e9n = E9n(0, message, i, r.nextInt(100))
+      e9n = E9n(0, message, i)
     } yield e9n
   }
+
+  def e9nStaceTraceSeq(count: Int): Seq[E9nStackTrace] = {
+    for {
+      i <- 0 until count
+      e9nStackTrace = E9nStackTrace(0, i, message(i))
+    } yield e9nStackTrace
+  }
+
+  private def message(number: Int): String = if (number == 0) randomValue(e9ns) else s"at $number"
 
   def fileName(appName: String, env: String, computer: String, userId: String, startTime: Date): String = {
     val format = new SimpleDateFormat("yyyyMMddHHmmssSSS")
@@ -162,6 +152,16 @@ object Generator {
       action = randomValue(actions)
       windowDetail = WindowDetail(0, lineNo, act, Some(windowName), dest, Some(action), None, ts(lineNo), Some(r.nextInt(500)))
     } yield windowDetail
+  }
+
+  def preCheck(logId: Int, detail: WindowDetail, probOccurrence: Double): Option[PreCheck] = {
+    val limit = math.floor(1 / probOccurrence).toInt
+    val sequence = 1 to limit
+    if (randomValue(sequence) == 1) {
+      val message = randomValue(messages)
+      val code = s"Code${messages.indexOf(message)}"
+      Some(PreCheck(logId, detail.lineNo, detail.windowName, code, message))
+    } else None
   }
 
   private def randomValue[T](seq: Seq[T]): T = {
