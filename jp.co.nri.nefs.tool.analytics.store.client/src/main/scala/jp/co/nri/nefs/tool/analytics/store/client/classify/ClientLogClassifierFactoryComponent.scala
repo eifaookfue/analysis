@@ -433,6 +433,8 @@ trait ClientLogClassifierFactoryComponent {
     val requestBuffer: ListBuffer[Request] = ListBuffer[Request]()
     val futureBuffer: ListBuffer[Future[Any]] = ListBuffer()
     val e9nMessageBuffer: ListBuffer[(Int, String)] = ListBuffer()
+    // 初期値はアプリケーション開始時刻。最終更新時刻。Exceptionログは時刻が表示されないため、直近の時刻を用いる
+    var lastTime: Timestamp = aplInfo.time
     private lazy val logId: Option[Int] = clientLogRecorder.record(
       Log(0, aplInfo.appName, aplInfo.computer,
         aplInfo.userId, aplInfo.tradeDate, aplInfo.time, aplInfo.fileName)
@@ -456,6 +458,8 @@ trait ClientLogClassifierFactoryComponent {
     }
 
     private def classifyLineInfo(lineInfo: LineInfo, lineNo: Int): Unit = {
+
+      lastTime = lineInfo.datetime
 
       if (lineInfo.message contains KEY_MESSAGE.HANDLER_START) {
         handlerBuffer += Handler(lineInfo.underlyingClass, LineTime(lineNo, lineInfo.datetime))
@@ -658,8 +662,12 @@ trait ClientLogClassifierFactoryComponent {
             case None =>
               if (logId.nonEmpty) {
                 val (headLineNo, _) = e9nMessageBuffer.head
-                val e9nStackTraceSeq =  for (((_, message), number) <- e9nMessageBuffer.zipWithIndex)
-                  yield E9nStackTrace(0, number, message)
+                // Stacktraceに空行が含まれることがあり、空のメッセージはDBインサート時にエラーとなるため、空白に置き換える
+                val e9nStackTraceSeq = for {
+                  ((_, msg), number) <- e9nMessageBuffer.zipWithIndex
+                  message = if (msg.isEmpty) " " else msg
+                } yield E9nStackTrace(0, number, message)
+                e9nStackTraceSeq.foreach(e => logger.info(e.toString))
                 clientLogRecorder.recordE9n(logId.get, headLineNo, e9nStackTraceSeq)
                 e9nMessageBuffer.clear()
                 e9nMode = MAYBE_E9N
@@ -676,9 +684,10 @@ trait ClientLogClassifierFactoryComponent {
   }
 
   object DefaultClientLogClassifier {
+    final val CONFIG_BASE = "client-log-classifier"
     final val HANDLER_MAPPING = "handler-mapping"
     final val WINDOW_MAPPING = "window-mapping"
-    final val E9N_REASON_ACCEPTABLE_NUMBER = "e9n-reason-acceptable-number"
+    final val E9N_REASON_ACCEPTABLE_NUMBER = CONFIG_BASE +  ".e9n-reason-acceptable-number"
     val e9nReasonAcceptableNumber: Int = ConfigFactory.load().getInt(E9N_REASON_ACCEPTABLE_NUMBER)
   }
 

@@ -3,7 +3,7 @@ package dao
 import javax.inject.{Inject, Singleton}
 import jp.co.nri.nefs.tool.analytics.model.client._
 import jp.co.nri.nefs.tool.analytics.model.common.UserComponent
-import models.{E9nDetailTbl, E9nDetailTblRequestParams, E9nTblRequestParams}
+import models.{E9nDetailTbl, E9nDetailTblRequestParams, E9nTbl, E9nTblRequestParams}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -11,13 +11,15 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext)
-  extends E9nComponent with E9nStackTraceComponent with E9nDetailComponent with LogComponent with UserComponent with HasDatabaseConfigProvider[JdbcProfile]{
+  extends E9nComponent with E9nStackTraceComponent with E9nDetailComponent with E9nCountComponent
+    with LogComponent with UserComponent with HasDatabaseConfigProvider[JdbcProfile]{
 
   import profile.api._
 
   val e9ns = TableQuery[E9ns]
   val e9nStackTraces = TableQuery[E9nStackTraces]
   val e9nDetails = TableQuery[E9nDetails]
+  val e9nCounts = TableQuery[E9nCounts]
   val logs = TableQuery[Logs]
   val users = TableQuery[Users]
 
@@ -31,23 +33,26 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
 
   private def filterQuery(params: E9nTblRequestParams) = {
     for {
-      e <- e9ns
+      (e, c) <- e9ns joinLeft e9nCounts on (_.e9nId === _.e9nId)
       if Option(params.searchValue).filter(_.trim.nonEmpty).map(e.e9nHeadMessage like "%" + _  + "%").getOrElse(true: Rep[Boolean])
-    } yield e
+    } yield (e.e9nId, e.e9nHeadMessage, c.map(_.count).getOrElse(0))
   }
 
-  def e9nList(params: E9nTblRequestParams): Future[Seq[E9n]] = {
+  def e9nList(params: E9nTblRequestParams): Future[Seq[E9nTbl]] = {
     val q1 = filterQuery(params)
-    val q2 = q1.sortBy(e =>
+    val q2 = q1.sortBy { case (e9nId, e9nHeadMessage, count) =>
       params.order0Column match {
-        case 0 => if (params.order0Dir == "desc") e.e9nId.desc else e.e9nId.asc
-        case 1 => if (params.order0Dir == "desc") e.e9nHeadMessage.desc else e.e9nHeadMessage.asc
-        case 2 => if (params.order0Dir == "desc") e.count.desc else e.count.asc
-        case _ => if (params.order0Dir == "desc") e.e9nId.desc else e.e9nId.asc
+        case 0 => if (params.order0Dir == "desc") e9nId.desc else e9nId.asc
+        case 1 => if (params.order0Dir == "desc") e9nHeadMessage.desc else e9nHeadMessage.asc
+        case 2 => if (params.order0Dir == "desc") count.desc else count.asc
+        case _ => if (params.order0Dir == "desc") e9nId.desc else e9nId.asc
       }
-    )
+    }
     val q3 = q2.drop(params.start).take(params.length)
-    db.run(q3.result)
+    val f = db.run(q3.result)
+    f.map( seq => seq.map{ case (e9nId, message, count) =>
+      E9nTbl(e9nId, message, count)
+    })
   }
 
   def e9nStackTraceList(e9nId: Int): Future[Seq[E9nStackTrace]] = {

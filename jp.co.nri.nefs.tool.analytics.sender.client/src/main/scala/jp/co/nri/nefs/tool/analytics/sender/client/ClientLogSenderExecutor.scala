@@ -19,39 +19,37 @@ object Keywords {
 
 object ClientLogSenderExecutor extends ClientLogSenderComponent with ClientLogClassifierFactoryComponent
   with LazyLogging{
-  implicit val system: ActorSystem = ActorSystem("ClientLogSender")
-  final val WAIT_TIME_UNTIL_RECEIVER_ACK = "wait-time-until-receiver-ack"
-  private val config = ConfigFactory.load()
-  private val waitTimeUntilReceiverAck: FiniteDuration = Duration.fromNanos(config.getDuration(WAIT_TIME_UNTIL_RECEIVER_ACK).toNanos)
-  implicit val timeout: Timeout = Timeout(waitTimeUntilReceiverAck)
 
+  implicit val system: ActorSystem = ActorSystem("ClientLogSender")
+  final val CONFIG_BASE = "client-log-sender"
+  final val IS_RECREATE = CONFIG_BASE +  ".is-recreate"
+  final val WAIT_TIME_UNTIL_ALL_FILES_EXECUTION = CONFIG_BASE +  ".wait-time-until-all-files-execution"
+  private val config = ConfigFactory.load()
+  private val isRecreate = config.getBoolean(IS_RECREATE)
+  private val waitTimeUntilAllFilesExecution: FiniteDuration = Duration.fromNanos(config.getDuration(WAIT_TIME_UNTIL_ALL_FILES_EXECUTION).toNanos)
+  implicit val timeout: Timeout = Timeout(waitTimeUntilAllFilesExecution)
+  logger.info(s"sender before start")
   val sender = new DefaultClientLogSender()
+  logger.info(s"sender after start")
   ServiceInjector.initialize()
+  logger.info("initialize end")
   val clientLogRecorder: ClientLogRecorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
   val clientLogClassifierFactory = new DefaultClientLogClassifierFactory(clientLogRecorder)
 
   def main(args: Array[String]): Unit = {
 
-    val RECREATE_OPTION = "-recreate"
-    val usage = s"Usage: jp.co.nri.nefs.tool.analytics.sender.client.ClientLogSenderExecutor [$RECREATE_OPTION]"
+    logger.info(s"isRecreate=$isRecreate")
 
-    if (args.length > 1){
-      println(usage)
-      sys.exit(1)
-    }
-
-    if (args.length == 1) {
-      if (RECREATE_OPTION.equals(args(0))) {
-        logger.info("recreate starting...")
-        clientLogRecorder.recreate()
-      } else {
-        println(usage)
-        sys.exit(1)
-      }
+    if (isRecreate) {
+      logger.info("recreate starting...")
+      clientLogRecorder.recreate()
     }
 
     try {
       sender.start()
+      logger.info("wait another 3 seconds starts.")
+      Thread.sleep(3000)
+      logger.info("wait another 3 seconds done.")
       //StdIn.readLine()
     } catch {
       case e: Exception => logger.warn("", e)

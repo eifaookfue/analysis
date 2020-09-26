@@ -2,13 +2,14 @@ package jp.co.nri.nefs.tool.analytics.sender.client
 
 import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
+import java.util.concurrent.TimeoutException
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import akka.dispatch.{BoundedMessageQueueSemantics, RequiresMessageQueue}
 import akka.pattern.{ask, gracefulStop}
 import akka.routing.FromConfig
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.analytics.model.client.OMSAplInfo
 import jp.co.nri.nefs.tool.analytics.store.client.classify.ClientLogClassifierFactoryComponent
@@ -28,6 +29,10 @@ trait ClientLogSenderComponent {
   }
 
   class DefaultClientLogSender(implicit val system: ActorSystem, timeout: Timeout) extends ClientLogSender with LazyLogging {
+    val config: Config = ConfigFactory.load()
+    final val WAIT_TIME_UNTIL_SINGLE_FILE_EXECUTION = ClientLogSenderExecutor.CONFIG_BASE + "wait-time-until-single-file-execution"
+    private val waitTimeUntilSingleFileExecution = Duration.fromNanos(config.getDuration(WAIT_TIME_UNTIL_SINGLE_FILE_EXECUTION).toNanos)
+
     def start(): Unit = {
       // トップレベルActor
       val fileSenderActor = system.actorOf(FileSendActor.props(timeout), "fileSender")
@@ -68,6 +73,7 @@ trait ClientLogSenderComponent {
 
   class FileSendActor(implicit val timeout: Timeout) extends Actor with RequiresMessageQueue[BoundedMessageQueueSemantics] with ActorLogging {
     final val INPUT_DIR = "inputDir"
+    final val TARGET_DIR_REGEX = ClientLogSenderExecutor.CONFIG_BASE + ".target-dir-regex"
     final val ZIP_COMMAND = "zipCommand"
     private val config = ConfigFactory.load()
     private val input = Paths.get(config.getString(INPUT_DIR))
@@ -87,17 +93,37 @@ trait ClientLogSenderComponent {
         // ファイル一覧の取得
         val files = FileUtils.autoClose(Files.walk(input)) {
           stream =>
-            stream.iterator().asScala.toList
+            val iterator = stream.iterator().asScala
+            iterator.filter(p => predicate(p)).toList.sortBy(parentName)
         }
 
         files.foreach(p => log.info(p.toString))
         for (file <- files) {
-          log.info("ask call starts.")
+          log.info(s"ask call starts. file = $file")
           val fut = lineSenderActor ? file.toString
-          val message = Await.result(fut, timeout.duration)
-          log.info(s"ask call ends. message = $message")
+          try {
+            val message = Await.result(fut, timeout.duration)
+            log.info(s"ask call ends. message = $message")
+          } catch {
+            case e: TimeoutException =>
+              log.error(e, "")
+          }
+          log.info(s"send All files are processed.")
+          sender() ! "All files are processed."
         }
-        sender() ! "All files are processed."
+    }
+
+    private def parentName(path: Path): String = path.getParent.getFileName.toString
+
+    private def predicate(path: Path): Boolean = {
+      if (Files.isDirectory(path))
+        return false
+      val regexOp = try {
+        Some(config.getString(TARGET_DIR_REGEX))
+      } catch {
+        case _: Exception => None
+      }
+      regexOp.forall(parentName(path).matches(_))
     }
   }
 
@@ -131,6 +157,9 @@ trait ClientLogSenderComponent {
           for (file2 <- files2) {
             send(file2)
           }
+          log.info(s"delete start $file")
+          FileUtils.delete(expandedDir)
+          log.info(s"delete end $file")
         } else {
           send(file)
         }
@@ -147,7 +176,7 @@ trait ClientLogSenderComponent {
           val stream = Files.lines(file, CHARSETNAME)
           for ((line, tmpNo) <- stream.iterator().asScala.zipWithIndex) {
             val lineNo = tmpNo + 1
-            log.info(s"send #$lineNo to $actor")
+            log.debug(s"send #$lineNo to $actor")
             actor ! (line, lineNo)
           }
           try {
@@ -163,7 +192,6 @@ trait ClientLogSenderComponent {
         case None =>
           log.debug(s"$file was not valid format, so skipped log sending.")
       }
-
     }
 
   }

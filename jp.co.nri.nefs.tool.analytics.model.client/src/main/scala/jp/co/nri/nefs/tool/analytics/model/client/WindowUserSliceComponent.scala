@@ -8,7 +8,7 @@ trait WindowUserSliceComponent {
 
   import profile.api._
 
-  class WindowUserSlices(tag: Tag) extends Table[(String, String, String, Int, Int, Long)](tag, "WINDOW_SLICE") {
+  class WindowUserSlices(tag: Tag) extends Table[(String, String, String, Int, Int, Long)](tag, "WINDOW_USER_SLICE") {
     def slice = column[String]("SLICE", O.Length(9))
     def userId = column[String]("USER_ID", O.Length(20))
     def windowName = column[String]("WINDOW_NAME", O.Length(48))

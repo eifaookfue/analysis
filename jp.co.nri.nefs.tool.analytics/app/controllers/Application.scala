@@ -114,13 +114,6 @@ class Application @Inject() (
     windowCount = WindowCountByUser(userName, windowName, count)
   } yield windowCount
 
-  val e9nList: Seq[E9n] = for {
-    e9nId <- 1 to 100
-    message = e9ns(r.nextInt(e9ns.length))
-    count = r.nextInt(1000)
-    e9n = E9n(e9nId, message, 0, count, new Timestamp(new java.util.Date().getTime))
-  } yield e9n
-
   def dashboard_client: Action[AnyContent] = Action.async { implicit request =>
     val windowCountBySlice = windowSliceDao.list
     val windowCountByDate = windowDetailDao.windowCountByDate

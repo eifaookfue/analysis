@@ -2,7 +2,6 @@ package models
 
 import java.sql.Timestamp
 
-import jp.co.nri.nefs.tool.analytics.model.client.E9n
 import play.api.Logging
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -308,14 +307,24 @@ object WindowCountByUserData {
   )
 }
 
-case class E9nTblResponse(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[E9n])
+case class E9nTbl(e9nId: Int, e9nHeadMessage: String, count: Int)
+
+object E9nTbl {
+  implicit val e9nTblWrite: Writes[E9nTbl] = (
+    (JsPath \ "e9n-id").write[Int] and
+      (JsPath \ "message").write[String] and
+      (JsPath \ "count").write[Int]
+    )(unlift(E9nTbl.unapply))
+}
+
+case class E9nTblResponse(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[E9nTbl])
 
 object E9nTblResponse {
   implicit val e9nListDataWrites: Writes[E9nTblResponse] = (
     (JsPath \ "draw").write[Int] and
       (JsPath \ "recordsTotal").write[Int] and
       (JsPath \ "recordsFiltered").write[Int] and
-      (JsPath \ "data").write[Seq[E9n]]
+      (JsPath \ "data").write[Seq[E9nTbl]]
     )(unlift(E9nTblResponse.unapply)
   )
 }
