@@ -178,25 +178,45 @@ object Lines {
       i <- row.getFirstCellNum until row.getLastCellNum
       s = paramName(stringFormat.bind(i, row), i)
     } yield (i, s)
+    buffer += "import jp.co.nri.nefs.tool.util.data.Line"
+    buffer += "import jp.co.nri.nefs.tool.util.data.Lines._"
+    buffer += "import org.apache.poi.ss.usermodel.WorkbookFactory"
+    buffer += "import java.nio.file.{Files, Path, Paths}"
+    buffer += "import java.net.URI"
+    buffer += ""
     buffer += s"case class $className(" + indexAndParamName.map(s => s"${s._2}: String").mkString(", ") + ")"
     buffer += ""
-    buffer += s"val ${lowercase(className)}Line = Line(mapping("
+    val lineClassName = s"${lowercase(className)}Line"
+    buffer += s"val $lineClassName = Line(mapping("
     buffer += indexAndParamName.map { case (index, _) =>
         s"\tkey($index) -> text"
       }.mkString("," + Properties.lineSeparator)
     buffer += s")($className.apply)($className.unapply))"
 
+    buffer += "val uri = new URI(\"" + path.toUri + "\")"
+    buffer += "val book = WorkbookFactory.create(Files.newInputStream(Paths.get(uri)))"
+    buffer += "val sheet = book.getSheet(\"" + sheetName + "\")"
+    buffer += s"val rows = (${rownum + 1} to ${sheet.getLastRowNum}).map(sheet.getRow)"
+    buffer += s"val ${lowercase(className)}s = for {"
+    buffer += s"\t(row, index) <- rows.zipWithIndex"
+    buffer += s"\tbound = $lineClassName.bind(row)"
+    // Add + 1 because Excel starts from 1 row number.
+    // We can not use row.getRowNum because row is null where it is blank line
+    val start = rownum + 1 + 1
+    buffer += "\t_ = if (bound.errors.nonEmpty) println(s\"Row number: ${index + " + start + "} -> ${bound.errors.mkString(\",\")}\")"
+    buffer += "\tif bound.value.isDefined"
+    buffer += "\tvalue = bound.value.get"
+    buffer += "} yield value"
+
     val outPath = path.getParent.resolve(className + ".scala")
     try {
       Files.write(outPath, buffer.asJava)
-      println(s"Output completed to $outPath as follows.")
+      println(s"Output to $outPath as follows.")
       println
       buffer.foreach(println)
       println
       println(s"To use above, type these script at scala console.")
       println
-      println("import jp.co.nri.nefs.tool.util.data.Line")
-      println("import jp.co.nri.nefs.tool.util.data.Lines._")
       println(s":load $outPath")
     } finally {
       in.close()

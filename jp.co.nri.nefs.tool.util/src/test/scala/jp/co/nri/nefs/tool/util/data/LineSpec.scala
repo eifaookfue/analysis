@@ -391,17 +391,21 @@ class LineSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
     }
   }
 
-  feature ("aa") {
-    scenario("bb") {
-      /*implicit object bsTypeFormatter extends Formatter[EBSType] {
-        override def bind(index: Int, row: Row): Either[Seq[LineError], Any] = {
+  feature ("The user can use number method in mapping even if the number includes thousand separator") {
+    scenario("number includes thousand separator") {
+      val int1 = Line(mapping(
+        key(0) -> number
+      )(Int1.apply)(Int1.unapply))
+      Given("integer : [ 12,345,678 ]")
 
-        }
+      rownum += 3
+      row = inSheet.getRow(rownum)
+      assert(
+        int1.bind(row).get
+        ===
+        Int1(12345678)
+      )
 
-        override def unbind(index: Int, value: Any, row: Row): Unit = {
-
-        }
-      }*/
     }
   }
 

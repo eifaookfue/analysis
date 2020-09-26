@@ -13,7 +13,7 @@ object Formats {
   implicit def bigDecimalToJavaBigDecimal(b: BigDecimal): java.math.BigDecimal = b.underlying
   implicit def stringFormat: Formatter[String] = new Formatter[String] {
     override def bind(index: Int, row: Row): Either[Seq[LineError], String] = {
-      val cell = row.getCell(index)
+      val cell = if (row == null) null else row.getCell(index)
       if (cell == null) Right(null) else {
         cell.getCellType match {
           case Cell.CELL_TYPE_BLANK => Right(null)
