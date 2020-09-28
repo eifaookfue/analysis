@@ -147,9 +147,22 @@ object Lines {
 
   import Formats._
 
+  def ignored[A](value: A)(implicit evidence: TypeTag[A]): Mapping[A] = of(ignoredFormat(value))
+
   val text: Mapping[String] = of[String]
 
   val number: Mapping[Int] = of[Int]
+
+  val sqlTimestamp: Mapping[java.sql.Timestamp] = of[java.sql.Timestamp](sqlTimestampFormat)
+
+  def sqlTimestamp(
+                    pattern: String,
+                    timeZone: java.util.TimeZone = java.util.TimeZone.getDefault
+                  ): Mapping[java.sql.Timestamp] = of[java.sql.Timestamp].as(sqlTimestampFormat(pattern, timeZone))
+
+  val localDate: Mapping[java.time.LocalDate] = of[java.time.LocalDate]
+
+  def localDate(pattern: String): Mapping[java.time.LocalDate] = of[java.time.LocalDate].as(localDateFormat(pattern))
 
   def of[T](implicit binder: Formatter[T]): FieldMapping[T] = FieldMapping[T]()(binder)
 

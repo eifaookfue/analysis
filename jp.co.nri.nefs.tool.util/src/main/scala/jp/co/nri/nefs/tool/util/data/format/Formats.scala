@@ -10,6 +10,13 @@ object Formats {
   final val UNEXPECTED_CELL_TYPE = "Unexpected cell type."
   final val NO_VALUES = "There are no values."
 
+  def ignoredFormat[A](value: A): Formatter[A] = new Formatter[A] {
+    override def bind(index: Int, row: Row): Either[Seq[LineError], A] = Right(value)
+
+    override def unbind(index: Int, value: A, row: Row): Unit = {}
+
+  }
+
   implicit def bigDecimalToJavaBigDecimal(b: BigDecimal): java.math.BigDecimal = b.underlying
   implicit def stringFormat: Formatter[String] = new Formatter[String] {
     override def bind(index: Int, row: Row): Either[Seq[LineError], String] = {
@@ -129,9 +136,39 @@ object Formats {
 
   }
 
+  def sqlTimestampFormat(pattern: String, timeZone: java.util.TimeZone = java.util.TimeZone.getDefault): Formatter[java.sql.Timestamp] =
+    new Formatter[java.sql.Timestamp] {
+      import java.time.LocalDateTime
 
+      private val formatter = java.time.format.DateTimeFormatter.ofPattern(pattern).withZone(timeZone.toZoneId)
+      private def timestampParse(data: String) = java.sql.Timestamp.valueOf(LocalDateTime.parse(data, formatter))
 
-    private def getFormulaCellValue(cell: Cell): CellValue = {
+      override def bind(index: Int, row: Row): Either[Seq[LineError], java.sql.Timestamp] =
+        parsing(timestampParse, "error.timestamp", Nil)(index, row)
+
+      override def unbind(index: Int, value: java.sql.Timestamp, row: Row): Unit =
+        row.getCell(index).setCellValue(value.toLocalDateTime.format(formatter))
+    }
+
+  implicit val sqlTimestampFormat: Formatter[java.sql.Timestamp] = sqlTimestampFormat("yyyy-MM-dd HH:mm:ss")
+
+  def localDateFormat(pattern: String): Formatter[java.time.LocalDate] = new Formatter[java.time.LocalDate] {
+
+    import java.time.LocalDate
+
+    private val formatter: java.time.format.DateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern(pattern)
+    private def localDateParse(data: String): LocalDate = LocalDate.parse(data, formatter)
+
+    override def bind(index: Int, row: Row): Either[Seq[LineError], LocalDate] =
+      parsing(localDateParse, "error.date", Nil)(index, row)
+
+    override def unbind(index: Int, value: LocalDate, row: Row): Unit =
+      row.getCell(index).setCellValue(value.format(formatter))
+  }
+
+  implicit val localDateFormat: Formatter[java.time.LocalDate] = localDateFormat("HH:mm:ss")
+
+  private def getFormulaCellValue(cell: Cell): CellValue = {
     val book = cell.getSheet.getWorkbook
     val helper = book.getCreationHelper
     val evaluator = helper.createFormulaEvaluator()
