@@ -5,8 +5,6 @@ import java.nio.file.{Files, Paths}
 import org.scalatest.{BeforeAndAfterAll, FeatureSpec, GivenWhenThen}
 import Lines._
 import com.typesafe.config.ConfigFactory
-import jp.co.nri.nefs.oms.entity.property.definition.EBSType
-import jp.co.nri.nefs.tool.util.data.format.Formatter
 import org.apache.poi.ss.usermodel.{Row, Sheet, WorkbookFactory}
 
 class LineSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
@@ -409,6 +407,39 @@ class LineSpec extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll {
     }
   }
 
+  feature ("The user can define trimText method in mapping") {
+
+    scenario("string includes spaces.") {
+
+      rownum += 3
+      val line = Line(mapping(
+        key(0) -> trimText
+      )(String1.apply)(String1.unapply))
+
+      row = inSheet.getRow(rownum)
+      assert (
+        line.bind(row).get
+        ===
+        String1("abc")
+      )
+    }
+  }
+
+  feature("The user can define transform method in mapping") {
+
+    scenario("number includes spaces.") {
+      rownum += 3
+      val line = Line(mapping(
+        key(0) -> trimText.transform[Int](_.toInt, _.toString)
+      )(Int1.apply)(Int1.unapply))
+      row = inSheet.getRow(rownum)
+      assert(
+        line.bind(row).get
+        ===
+        Int1(123)
+      )
+    }
+  }
 
 }
 

@@ -18,7 +18,12 @@ object Formats {
   }
 
   implicit def bigDecimalToJavaBigDecimal(b: BigDecimal): java.math.BigDecimal = b.underlying
-  implicit def stringFormat: Formatter[String] = new Formatter[String] {
+
+  implicit def stringFormat: Formatter[String] = stringFormat(false)
+
+  def trimStringFormat: Formatter[String] = stringFormat(true)
+
+  private def stringFormat(isTrim: Boolean): Formatter[String] = new Formatter[String] {
     override def bind(index: Int, row: Row): Either[Seq[LineError], String] = {
       val cell = if (row == null) null else row.getCell(index)
       if (cell == null) Right(null) else {
@@ -27,9 +32,11 @@ object Formats {
           case Cell.CELL_TYPE_BOOLEAN => Right(cell.getBooleanCellValue.toString)
           case Cell.CELL_TYPE_ERROR => Left(Seq(LineError(index, CELL_HAS_SOME_ERRORS)))
           case Cell.CELL_TYPE_FORMULA =>
-            getFormulaStringValue(cell).left.map(s => Seq(LineError(index, s)))
+            getFormulaStringValue(cell, isTrim).left.map(s => Seq(LineError(index, s)))
           case Cell.CELL_TYPE_NUMERIC => Right(BigDecimal(cell.getNumericCellValue).underlying.stripTrailingZeros().toPlainString)
-          case Cell.CELL_TYPE_STRING => Right(cell.getStringCellValue)
+          case Cell.CELL_TYPE_STRING =>
+            val str = if (isTrim) cell.getStringCellValue.trim else cell.getStringCellValue
+            Right(str)
         }
       }
     }
@@ -176,7 +183,7 @@ object Formats {
   }
 
   // CellとCellValueで同じメソッド名を提供しているがインターフェースが別のため共通化できない
-  def getFormulaStringValue(cell: Cell): Either[String, String] = {
+  def getFormulaStringValue(cell: Cell, isTrim: Boolean): Either[String, String] = {
     if (cell == null) Right(null) else {
       val cellValue = getFormulaCellValue(cell)
       cellValue.getCellType match {
@@ -185,7 +192,9 @@ object Formats {
         case Cell.CELL_TYPE_ERROR => Left(CELL_HAS_SOME_ERRORS)
         case Cell.CELL_TYPE_FORMULA => Left(UNEXPECTED_CELL_TYPE)
         case Cell.CELL_TYPE_NUMERIC => Right(cellValue.getNumberValue.toString)
-        case Cell.CELL_TYPE_STRING => Right(cellValue.getStringValue)
+        case Cell.CELL_TYPE_STRING =>
+          val str = if (isTrim) cellValue.getStringValue.trim else cellValue.getStringValue
+          Right(str)
       }
     }
   }

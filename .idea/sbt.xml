@@ -31,6 +31,7 @@
             <option value="$PROJECT_DIR$/project" />
           </set>
         </option>
+        <option name="sbtVersion" value="1.2.8" />
       </SbtProjectSettings>
     </option>
     <option name="vmParameters" value="-Dsbt.ivy.home=C:\Apl\.ivy2 -Dfile.encoding=MS932" />

@@ -183,7 +183,7 @@ case class OptionalMapping[T](wrapped: Mapping[T]) extends Mapping[Option[T]] {
         None
       else
         Option(cell)
-    }.map{_ => wrapped.bind(row).right.map(Some(_))}.getOrElse(Right(None))
+    }.map{_ => wrapped.bind(row).right.map(Option(_))}.getOrElse(Right(None))
   }
 
   override def unbind(value: Option[T], row: Row): Unit = {

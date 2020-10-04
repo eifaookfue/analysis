@@ -151,6 +151,8 @@ object Lines {
 
   val text: Mapping[String] = of[String]
 
+  val trimText: Mapping[String] = of[String](trimStringFormat)
+
   val number: Mapping[Int] = of[Int]
 
   val sqlTimestamp: Mapping[java.sql.Timestamp] = of[java.sql.Timestamp](sqlTimestampFormat)
