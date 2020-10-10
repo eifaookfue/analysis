@@ -164,6 +164,12 @@ object E9nListTableParams {
 
 }
 
+case class PreCheckTblRequestParams(draw: Int,
+                                    col0SearchValue: String,
+                                    col1SearchValue: String,
+                                    col2SearchValue: String,
+                                    order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
+                                   )
 
 case class Params(page: Int = 0, orderBy: Option[Int]  = None, logId: Option[Int] = None,
                   appName: Option[String]  = None, computerName: Option[String]  = None, userName:Option[String]  = None, tradeDate: Option[String]  = None, lineNo: Option[Int]  = None,
@@ -363,6 +369,26 @@ case class E9nDetailTblRequestParams(draw: Int,
                                         order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                     )
 
+case class PreCheckSummaryTbl(message: String, windowName: String, count: Int)
+
+object PreCheckSummaryTbl {
+  implicit val preCheckSummaryTblWrite: Writes[PreCheckSummaryTbl] = (
+    (JsPath \ "message").write[String] and
+      (JsPath \ "window-name").write[String] and
+      (JsPath \ "count").write[Int]
+    )(unlift(PreCheckSummaryTbl.unapply))
+}
+
+case class PreCheckTblResponse(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[PreCheckSummaryTbl])
+
+object PreCheckTblResponse {
+  implicit val preCheckTblResponseWrite: Writes[PreCheckTblResponse] = (
+    (JsPath \ "draw").write[Int] and
+      (JsPath \ "recordsTotal").write[Int] and
+      (JsPath \ "recordsFiltered").write[Int] and
+      (JsPath \ "data").write[Seq[PreCheckSummaryTbl]]
+  )(unlift(PreCheckTblResponse.unapply))
+}
 
 sealed abstract class Menu(val parent: Menu)
 

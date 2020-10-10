@@ -5,7 +5,8 @@
     routes.javascript.Application.windowCountTable,
     routes.javascript.Application.e9nListTable,
     routes.javascript.Application.e9nStackTrace,
-    routes.javascript.Application.e9nDetail
+    routes.javascript.Application.e9nDetail,
+    routes.javascript.Application.preCheckSummaryTable
 )
 <div id="root" data-jsondata1="@d1", data-jsondata2="@d2"></div>
 <!--<script>
@@ -96,19 +97,18 @@
 
                     <div class="card card-outline">
                         <div class="card-header">
-                            <h3 class="card-title">Exception list</h3>
-                            <div id="e9n-count-header" class="card-tools">
+                            <h3 class="card-title">PreCheck list</h3>
+                            <div id="pre-check-summary-header" class="card-tools">
                                 <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                                 <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
                         <div class="card-body">
-                            <table id="e9n-count-body" class="table table-bordered table-hover table-sm">
+                            <table id="pre-check-summary-body" class="table table-bordered table-hover table-sm">
                                 <thead>
                                 <tr>
-                                    <th>Id</th>
                                     <th>Message</th>
-                                    <th></th>
+                                    <th>WindowName</th>
                                     <th>Count</th>
                                 </tr>
                                 </thead>
@@ -184,6 +184,24 @@
         ]
     });
 
+    var preCheckSummaryTable = $("#pre-check-summary-body").DataTable({
+        "responsive": true,
+        "scrollCollapse": false,
+        "autoWidth": false,
+        "pagingType": "simple",
+        "processing": true,
+        "serverSide": true,
+        "ajax": jsRoutes.controllers.Application.preCheckSummaryTable(),
+        "order": [[ 2, "desc" ]],
+        "columns": [
+            { data: "message" },
+            { data: "window-name" },
+            { data: "count" }
+        ]
+    });
+
+
+    <!--
     var exceptionListTable = $("#e9n-count-body").DataTable({
         "responsive": true,
         "scrollCollapse": false,
@@ -220,7 +238,9 @@
             {targets: 3, width: 80}
         ]
     });
+    -->
 
+    <!--
     $(function() {
         $('#e9n-count-body tbody').on('click', 'td button', function(e) {
             var e9nId = $(this).val();
@@ -233,6 +253,7 @@
             });
         });
     });
+    -->
 
 </script>
 <script src="@routes.Assets.at("javascripts/client.js")"></script>

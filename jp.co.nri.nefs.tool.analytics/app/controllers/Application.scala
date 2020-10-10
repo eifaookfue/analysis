@@ -1,11 +1,9 @@
 package controllers
 
 import java.nio.file.{Files, Paths}
-import java.sql.Timestamp
 
-import dao.{E9nDAO, WindowDetailDAO, WindowSliceDAO, WindowUserDAO}
+import dao._
 import javax.inject.Inject
-import jp.co.nri.nefs.tool.analytics.model.client.E9n
 import models._
 import play.api.Configuration
 import play.api.data.Form
@@ -24,6 +22,7 @@ class Application @Inject() (
     windowSliceDao: WindowSliceDAO,
     windowUserDao: WindowUserDAO,
     e9nDao: E9nDAO,
+    preCheckSummaryDao: PreCheckSummaryDAO,
     controllerComponents: ControllerComponents,
     config: Configuration
 )(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents) with I18nSupport {
@@ -91,6 +90,20 @@ class Application @Inject() (
       "search[regex]" -> boolean)(E9nDetailTblRequestParams.apply)(E9nDetailTblRequestParams.unapply)
   )
 
+  val preCheckTblRequestForm = Form(
+    mapping(
+      "draw" -> number,
+      "columns[0][search][value]" -> text,
+      "columns[1][search][value]" -> text,
+      "columns[2][search][value]" -> text,
+      "order[0][column]" -> number,
+      "order[0][dir]" -> text,
+      "start" -> number,
+      "length" -> number,
+      "search[value]" -> text,
+      "search[regex]" -> boolean)(PreCheckTblRequestParams.apply)(PreCheckTblRequestParams.unapply)
+  )
+
   /** This result directly redirect to the application home.*/
   val Home: Result = Redirect(routes.Application.dashboard_client())
 
@@ -105,14 +118,6 @@ class Application @Inject() (
   val userNames: Seq[String] = Seq("nakamura-s", "miyazaki-m", "saiki-c", "hori-n", "shimizu-r")
   val windowNames: Seq[String] = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
   val e9ns: Seq[String] = Seq("IllegalArgumentException", "RuntimeException", "TimeoutException")
-
-  val windowCountByUsers: Seq[WindowCountByUser] = for {
-    _ <- 1 to 100
-    userName = userNames(r.nextInt(userNames.length))
-    windowName = windowNames(r.nextInt(windowNames.length))
-    count = r.nextInt(1000)
-    windowCount = WindowCountByUser(userName, windowName, count)
-  } yield windowCount
 
   def dashboard_client: Action[AnyContent] = Action.async { implicit request =>
     val windowCountBySlice = windowSliceDao.list
@@ -225,4 +230,20 @@ class Application @Inject() (
     } yield Ok(traces)
   }
 
+  def preCheckSummaryTable(): Action[AnyContent] = Action.async { implicit request =>
+    println("preCheckSummaryTable called.")
+    preCheckTblRequestForm.bindFromRequest.fold(
+      _ =>
+        Future.successful(InternalServerError("Oops")),
+      params =>
+        for {
+          recordsTotal <- preCheckSummaryDao.count
+          recordsFiltered <- preCheckSummaryDao.count(params)
+          seq <- preCheckSummaryDao.list(params)
+          response = PreCheckTblResponse(params.draw, recordsTotal, recordsFiltered, seq)
+          _ = println(response)
+          json = Json.toJson(response)
+        } yield Ok(json)
+    )
+  }
 }
