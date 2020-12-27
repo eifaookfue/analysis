@@ -4,9 +4,10 @@ import java.nio.file.{Files, Paths}
 
 import dao._
 import javax.inject.Inject
+import jp.co.nri.nefs.tool.analytics.model.client.STATUS
 import models._
 import play.api.Configuration
-import play.api.data.Form
+import play.api.data.{Form, FormError}
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Json
@@ -26,6 +27,29 @@ class Application @Inject() (
     controllerComponents: ControllerComponents,
     config: Configuration
 )(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents) with I18nSupport {
+
+  import play.api.data.format.Formatter
+  import play.api.data.format.Formats._
+  implicit object OptionIntFormatter extends Formatter[Option[Int]] {
+    override val format: Option[(String, Seq[Any])] = Some("format.optionInt", Nil)
+
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Option[Int]] =
+      parsing(Option(_).filter(_.trim.nonEmpty).map(_.toInt), "error.optionInt", Nil)(key, data)
+
+    override def unbind(key: String, value: Option[Int]): Map[String, String] =
+      Map(key -> value.map(_.toString).getOrElse(""))
+  }
+
+  implicit object statusFormatter extends Formatter[Option[STATUS]] {
+    override val format: Option[(String, Seq[Any])] = Some("format.status", Nil)
+
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Option[STATUS]] =
+      parsing(Option(_).filter(_.trim.nonEmpty).map(STATUS.valueOf), "error.status", Nil)(key, data)
+
+    override def unbind(key: String, value: Option[STATUS]): Map[String, String] =
+      Map(key -> value.map(_.toString).getOrElse(""))
+
+  }
 
   val windowDetailTblRequestForm = Form(
     mapping(
@@ -62,15 +86,33 @@ class Application @Inject() (
   val e9nTblRequestForm = Form(
     mapping(
       "draw" -> number,
-      "columns[0][search][value]" -> text,
+      "columns[0][search][value]" -> of[Option[Int]],
       "columns[1][search][value]" -> text,
-      "columns[2][search][value]" -> text,
+      "columns[3][search][value]" -> of[Option[Int]],
+      "columns[4][search][value]" -> text.transform[STATUS](STATUS.valueOf, _.toString),
       "order[0][column]" -> number,
       "order[0][dir]" -> text,
       "start" -> number,
       "length" -> number,
       "search[value]" -> text,
       "search[regex]" -> boolean)(E9nTblRequestParams.apply)(E9nTblRequestParams.unapply)
+  )
+
+  val e9nAuditTblRequestForm = Form(
+    mapping(
+      "draw" -> number,
+      "columns[0][search][value]" -> of[Option[Int]],
+      "columns[1][search][value]" -> of[Option[STATUS]],
+      "columns[2][search][value]" -> text,
+      "columns[3][search][value]" -> text,
+      "columns[4][search][value]" -> sqlTimestamp,
+      "order[0][column]" -> number,
+      "order[0][dir]" -> text,
+      "start" -> number,
+      "length" -> number,
+      "search[value]" -> text,
+      "search[regex]" -> boolean
+    )(E9nAuditTblRequestParams.apply)(E9nAuditTblRequestParams.unapply)
   )
 
   val e9nDetailTblRequestForm = Form(
@@ -103,6 +145,8 @@ class Application @Inject() (
       "search[value]" -> text,
       "search[regex]" -> boolean)(PreCheckTblRequestParams.apply)(PreCheckTblRequestParams.unapply)
   )
+
+
 
   /** This result directly redirect to the application home.*/
   val Home: Result = Redirect(routes.Application.dashboard_client())
@@ -208,8 +252,9 @@ class Application @Inject() (
 
   def e9nListTable(): Action[AnyContent] = Action.async { implicit request =>
     e9nTblRequestForm.bindFromRequest.fold(
-      _ =>
-        Future.successful(InternalServerError("Oops")),
+      formWithErrors => {
+        println(formWithErrors)
+        Future.successful(InternalServerError("Oops"))},
       params =>
         for {
           recordsTotal <- e9nDao.count
@@ -228,6 +273,23 @@ class Application @Inject() (
       traces = seq.map(_.message).mkString("<br>" + Properties.lineSeparator)
       _ = println(traces)
     } yield Ok(traces)
+  }
+
+  def e9nAudit(e9nId: Int): Action[AnyContent] = Action.async { implicit request =>
+    e9nAuditTblRequestForm.bindFromRequest.fold(
+      _ => {
+        Future.successful(InternalServerError("Oops"))
+      },
+      params =>
+        for {
+          recordsTotal <- Future(10)
+          recordsFiltered <- Future(5)
+          seq <- e9nDao.e9nAudit(e9nId)
+          data = seq.map(s => E9nAuditTbl(s.audit.e9nId, s.audit.status, s.audit.comment, s.audit.updatedBy, s.updateTime))
+          response = E9nAuditTblResponse(params.draw, recordsTotal, recordsFiltered, data)
+          json = Json.toJson(response)
+        } yield Ok(json)
+    )
   }
 
   def preCheckSummaryTable(): Action[AnyContent] = Action.async { implicit request =>

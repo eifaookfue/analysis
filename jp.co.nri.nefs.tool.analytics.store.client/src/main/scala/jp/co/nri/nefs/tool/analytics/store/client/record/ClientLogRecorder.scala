@@ -17,11 +17,13 @@ trait ClientLogRecorder {
   def record(logId: Int, detail: WindowDetail): Future[Int]
   def record(preCheck: PreCheck): Future[Int]
   def recordE9n(logId: Int, lineNo: Int, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any]
+  def record(audit: E9nAudit): Future[Int]
 }
 
 class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
   extends ClientLogRecorder with LogComponent with WindowDetailComponent with PreCheckComponent
   with E9nComponent with E9nStackTraceComponent with E9nDetailComponent with E9nCountComponent
+  with E9nAuditComponent
     with LazyLogging
     with HasDatabaseConfigProvider[JdbcProfile]{
 
@@ -34,40 +36,41 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
   val e9nStackTraces = TableQuery[E9nStackTraces]
   val e9nDetails = TableQuery[E9nDetails]
   val e9nCounts = TableQuery[E9nCounts]
+  val e9nAudits = TableQuery[E9nAudits]
 
   def recreate(): Unit = {
-    for {tableQuery <- Seq(logs, windowDetails, preChecks, e9ns, e9nStackTraces, e9nDetails, e9nCounts)}{
+    for {tableQuery <- Seq(logs, windowDetails, preChecks, e9ns, e9nStackTraces, e9nDetails, e9nCounts, e9nAudits)}{
       val schema = tableQuery.schema
       logger.debug("create statements")
       schema.create.statements.foreach(s => logger.debug(s))
 
+      val tableName = tableQuery.baseTableRow.tableName
       val drop = schema.dropIfExists
       val f1 = db.run(drop)
       Await.ready(f1, Duration.Inf)
       f1.value.get match {
-        case Success(_) => logger.info("drop succeeded.")
-        case Failure(e) => logger.error("drop failed", e)
+        case Success(_) => logger.info(s"Table $tableName drop succeeded.")
+        case Failure(e) => logger.error(s"Table $tableName drop failed", e)
       }
 
       val create = schema.createIfNotExists
       val f2 = db.run(create)
       Await.ready(f2, Duration.Inf)
       f2.value.get match {
-        case Success(_) => logger.info("create succeeded.")
-        case Failure(e) => logger.error("create failed", e)
+        case Success(_) => logger.info(s"Table $tableName creation succeeded.")
+        case Failure(e) => logger.error(s"Table $tableName creation failed", e)
       }
     }
   }
 
   def record(log: Log): Option[Int] = {
-    val action = (logs.map(l => (l.logId, l.appName, l.computerName, l.userId, l.tradeDate, l.time, l.fileName))
-      returning logs.map(_.logId)) += (log.logId, log.appName, log.computerName, log.userId, log.tradeDate, log.time, log.fileName)
-    try {
-      val f = db.run(action)
-      Some(Await.result(f, Duration.Inf))
-    } catch {
-      case e: Exception =>
-        logger.info("", e)
+    val action = (logs.map(_.logProjection) returning logs.map(_.logId)) += log
+    val f = db.run(action)
+    Await.ready(f, Duration.Inf)
+    f.value.get match {
+      case Success(value) => Some(value)
+      case Failure(e) =>
+        logger.error("failed.", e)
         None
     }
   }
@@ -131,6 +134,11 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
       case Failure(e) =>
         Future.failed(e)
     }
+  }
+
+  override def record(audit: E9nAudit): Future[Int] = {
+    val insert = e9nAudits.map(_.auditProjection) += audit
+    db.run(insert)
   }
 
 }

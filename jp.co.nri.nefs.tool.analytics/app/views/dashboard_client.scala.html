@@ -118,6 +118,41 @@
 
                 </div>
                 <!-- /.col-md-6 -->
+                <div class="col-lg-12">
+                    <div class="card card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">Exception List</h3>
+                            <div id="e9n-count-header" class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                                <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <table id="e9n-count-body" class="table table-bordered table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Id</th>
+                                        <th>Message</th>
+                                        <th></th>
+                                        <th>Count</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Message</th>
+                                    <th></th>
+                                    <th>Count</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- /.row -->
         </div><!-- /.container-fluid -->
@@ -184,6 +219,9 @@
         ]
     });
 
+    /* var r2 = jsRoutes.controllers.Application.preCheckSummaryTable();
+    alert(r2.type);
+    alert(r2.url); */
     var preCheckSummaryTable = $("#pre-check-summary-body").DataTable({
         "responsive": true,
         "scrollCollapse": false,
@@ -200,20 +238,47 @@
         ]
     });
 
+    $('#e9n-count-body tfoot th').each(function(index) {
+        $(this).html('<input type="text" style="width:100%;" />');
+    });
 
-    <!--
+    var r1 = jsRoutes.controllers.Application.e9nListTable();
+    /* alert(r1.type);
+    alert(r1.url); */
     var exceptionListTable = $("#e9n-count-body").DataTable({
+        "dom": '<"top"l>rt<"bottom"ip>',
         "responsive": true,
         "scrollCollapse": false,
         "autoWidth": false,
         "pagingType": "simple",
         "processing": true,
         "serverSide": true,
-        "ajax": jsRoutes.controllers.Application.e9nListTable(),
+        // "ajax": jsRoutes.controllers.Application.e9nListTable(),
+        /* This script sent GET method, I don't know why... 2020/10/11 */
+        "ajax": {
+            "url": r1.url,
+            "type": "POST"
+        },
+        initComplete: function() {
+            var api = this.api();
+
+            // Apply the search
+            api.columns().every(function() {
+                var that = this;
+
+                $('input', this.footer()).on('keyup change', function() {
+                    if (that.search() != this.value) {
+                        that
+                            .search(this.value)
+                            .draw();
+                    }
+                });
+            });
+        },
         "order": [[ 3, "desc" ]],
         "columns": [
             { data: "e9n-id",
-              render: function(data, type, row, meata) {
+              render: function(data, type, row, meta) {
                 var r = jsRoutes.controllers.Application.e9nDetail(data);
                 if (type == 'display') {
                     data = '<a href="' + r.url + '">' + data + '</a>';
@@ -230,7 +295,16 @@
                 return data;
               }
             },
-            { data: "count" }
+            { data: "count" },
+            { data: "status" },
+            { data: "e9n-id",
+              render: function(data, type, row, meta) {
+                if (type == 'display') {
+                    data = '<a class="btn" href="#"><i class="fas fa-edit"></i></a>'
+                }
+                return data;
+              }
+            }
         ],
         "columnDefs": [
             {targets: 0, width: 20},
@@ -238,9 +312,7 @@
             {targets: 3, width: 80}
         ]
     });
-    -->
 
-    <!--
     $(function() {
         $('#e9n-count-body tbody').on('click', 'td button', function(e) {
             var e9nId = $(this).val();
@@ -253,7 +325,6 @@
             });
         });
     });
-    -->
 
 </script>
 <script src="@routes.Assets.at("javascripts/client.js")"></script>

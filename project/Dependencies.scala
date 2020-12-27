@@ -20,7 +20,7 @@ object Dependencies {
     Library.logbackClassic,
     Library.config
   )
-  
+
   val producer: Seq[ModuleID] = Seq(
     Library.config,
     Library.common_util,

@@ -1,6 +1,10 @@
 package jp.co.nri.nefs.tool.util.data.format
+import java.time.ZoneId
+import java.util.Date
+
 import jp.co.nri.nefs.tool.util.data.LineError
-import org.apache.poi.ss.usermodel.{Cell, CellValue, Row}
+import org.apache.poi.ss.usermodel.{Cell, CellValue, DateUtil, Row}
+
 import scala.language.implicitConversions
 import scala.util.control.Exception._
 
@@ -159,6 +163,15 @@ object Formats {
 
   implicit val sqlTimestampFormat: Formatter[java.sql.Timestamp] = sqlTimestampFormat("yyyy-MM-dd HH:mm:ss")
 
+  private def optionalDate(index: Int, row: Row): Option[Date] = {
+    Option(row).map(_.getCell(index)).flatMap { cell =>
+      if (cell.getCellType == Cell.CELL_TYPE_NUMERIC && DateUtil.isCellDateFormatted(cell))
+        Some(cell.getDateCellValue)
+      else
+        None
+    }
+  }
+
   def localDateFormat(pattern: String): Formatter[java.time.LocalDate] = new Formatter[java.time.LocalDate] {
 
     import java.time.LocalDate
@@ -166,8 +179,15 @@ object Formats {
     private val formatter: java.time.format.DateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern(pattern)
     private def localDateParse(data: String): LocalDate = LocalDate.parse(data, formatter)
 
-    override def bind(index: Int, row: Row): Either[Seq[LineError], LocalDate] =
-      parsing(localDateParse, "error.date", Nil)(index, row)
+    override def bind(index: Int, row: Row): Either[Seq[LineError], LocalDate] = {
+      optionalDate(index, row).map { date =>
+        date.toInstant.atZone(ZoneId.systemDefault()).toLocalDate
+      } match {
+        case Some(d) => Right(d)
+        case None =>
+          parsing(localDateParse, "error.date", Nil)(index, row)
+      }
+    }
 
     override def unbind(index: Int, value: LocalDate, row: Row): Unit =
       row.getCell(index).setCellValue(value.format(formatter))

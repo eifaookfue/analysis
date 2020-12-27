@@ -2,6 +2,7 @@ package models
 
 import java.sql.Timestamp
 
+import jp.co.nri.nefs.tool.analytics.model.client.STATUS
 import play.api.Logging
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -31,10 +32,11 @@ case class WindowSliceTblRequestParams(draw: Int,
                                        )
 
 case class E9nTblRequestParams(draw: Int,
-                                       col0SearchValue: String,
-                                       col1SearchValue: String,
-                                       col2SearchValue: String,
-                                       order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
+                               e9nIdSearchValue: Option[Int],
+                               headerSearchValue: String,
+                               countSearchValue: Option[Int],
+                               statusSearchValue: STATUS,
+                               order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                       )
 
 case class WindowCountTableParams(draw: Int,
@@ -313,13 +315,24 @@ object WindowCountByUserData {
   )
 }
 
-case class E9nTbl(e9nId: Int, e9nHeadMessage: String, count: Int)
+case class E9nTbl(e9nId: Int, e9nHeadMessage: String, count: Int, status: STATUS)
+
+object Statuses {
+  implicit val statusWrites: Writes[STATUS] = Writes[STATUS]{s => JsString(s.toString)}
+}
 
 object E9nTbl {
+
+  /*implicit val statusWrites: Writes[STATUS] = new Writes[STATUS] {
+    override def writes(o: STATUS): JsValue = JsString(o.toString)
+  }*/
+  import Statuses.statusWrites
+
   implicit val e9nTblWrite: Writes[E9nTbl] = (
     (JsPath \ "e9n-id").write[Int] and
       (JsPath \ "message").write[String] and
-      (JsPath \ "count").write[Int]
+      (JsPath \ "count").write[Int] and
+      (JsPath \ "status").write[STATUS]
     )(unlift(E9nTbl.unapply))
 }
 
@@ -367,6 +380,40 @@ case class E9nDetailTblRequestParams(draw: Int,
                                         col4SearchValue: String,
                                         col5SearchValue: String,
                                         order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
+                                    )
+
+case class E9nAuditTbl(e9nId: Int, status: STATUS, comment: Option[String], updatedBy: String, updateTime: Timestamp)
+
+object E9nAuditTbl {
+  import Statuses.statusWrites
+  implicit val E9nAuditTblWrites: Writes[E9nAuditTbl] = (
+    (JsPath \ "e9n-id").write[Int] and
+      (JsPath \ "status").write[STATUS] and
+      (JsPath \ "comment").writeNullable[String] and
+      (JsPath \ "updated-by").write[String] and
+      (JsPath \ "update-time").write[Timestamp]
+    )(unlift(E9nAuditTbl.unapply))
+}
+
+case class E9nAuditTblResponse(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[E9nAuditTbl])
+
+object E9nAuditTblResponse {
+  implicit val E9nAuditTblWrites: Writes[E9nAuditTblResponse] = (
+    (JsPath \ "draw").write[Int] and
+      (JsPath \ "recordsTotal").write[Int] and
+      (JsPath \ "recordsFiltered").write[Int] and
+      (JsPath \ "data").write[Seq[E9nAuditTbl]]
+    )(unlift(E9nAuditTblResponse.unapply))
+
+}
+
+case class E9nAuditTblRequestParams(draw: Int,
+                                    e9nIdSearchValue: Option[Int],
+                                    statusSearchValue: Option[STATUS],
+                                    commentSearchValue: String,
+                                    updatedBySearchValue: String,
+                                    updatedTimeSearchValue: Timestamp,
+                                    order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                     )
 
 case class PreCheckSummaryTbl(message: String, windowName: String, count: Int)

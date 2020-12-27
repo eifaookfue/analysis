@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext)
-  extends E9nComponent with E9nStackTraceComponent with E9nDetailComponent with E9nCountComponent
+  extends E9nComponent with E9nStackTraceComponent with E9nDetailComponent with E9nCountComponent with E9nAuditComponent
     with LogComponent with UserComponent with HasDatabaseConfigProvider[JdbcProfile]{
 
   import profile.api._
@@ -20,6 +20,7 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
   val e9nStackTraces = TableQuery[E9nStackTraces]
   val e9nDetails = TableQuery[E9nDetails]
   val e9nCounts = TableQuery[E9nCounts]
+  val e9nAudits = TableQuery[E9nAudits]
   val logs = TableQuery[Logs]
   val users = TableQuery[Users]
 
@@ -32,26 +33,37 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
   }
 
   private def filterQuery(params: E9nTblRequestParams) = {
+
     for {
-      (e, c) <- e9ns joinLeft e9nCounts on (_.e9nId === _.e9nId)
-      if Option(params.searchValue).filter(_.trim.nonEmpty).map(e.e9nHeadMessage like "%" + _  + "%").getOrElse(true: Rep[Boolean])
-    } yield (e.e9nId, e.e9nHeadMessage, c.map(_.count).getOrElse(0))
+      ((e, c), audit) <- e9ns joinLeft e9nCounts on (_.e9nId === _.e9nId) joinLeft e9nAudits on (_._1.e9nId === _.e9nId)
+      if List(
+        params.e9nIdSearchValue.map(e.e9nId === _),
+        Option(params.headerSearchValue).filter(_.trim.nonEmpty).map(e.e9nHeadMessage like "%" + _ + "%"),
+        params.countSearchValue.map(c.map(_.count).getOrElse(0) === _),
+        Option(params.statusSearchValue).map(s => audit.map(_.status).getOrElse(null) === s)
+      ).collect ({case Some(criteria) => criteria}).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
+    } yield (e.e9nId, e.e9nHeadMessage, c.map(_.count),
+      audit.map(_.status))
+//      audit.map{a => LiftedE9nAudit(a.e9nId, a.status, a.comment, a.updatedBy, a.updateTime)}.map(_.status).getOrElse(STATUS.NOT_YET: Rep[STATUS]))
   }
 
   def e9nList(params: E9nTblRequestParams): Future[Seq[E9nTbl]] = {
+    println(s"params=$params")
     val q1 = filterQuery(params)
-    val q2 = q1.sortBy { case (e9nId, e9nHeadMessage, count) =>
+    val q2 = q1.sortBy { case (e9nId, e9nHeadMessage, count, status) =>
       params.order0Column match {
         case 0 => if (params.order0Dir == "desc") e9nId.desc else e9nId.asc
         case 1 => if (params.order0Dir == "desc") e9nHeadMessage.desc else e9nHeadMessage.asc
-        case 2 => if (params.order0Dir == "desc") count.desc else count.asc
+        case 3 => if (params.order0Dir == "desc") count.desc else count.asc
+        case 4 => if (params.order0Dir == "desc") status.desc else status.asc
         case _ => if (params.order0Dir == "desc") e9nId.desc else e9nId.asc
       }
     }
+//    val q2 = q1
     val q3 = q2.drop(params.start).take(params.length)
     val f = db.run(q3.result)
-    f.map( seq => seq.map{ case (e9nId, message, count) =>
-      E9nTbl(e9nId, message, count)
+    f.map( seq => seq.map{ case (e9nId, message, count, status) =>
+      E9nTbl(e9nId, message, count.getOrElse(0), status.getOrElse(STATUS.DONE))
     })
   }
 
@@ -97,6 +109,11 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
       E9nDetailTbl(e9nId, logId, lineNo, appName, userName, e9nHeadMessage)
     })
 
+  }
+
+  def e9nAudit(e9nId: Int): Future[Seq[E9nAuditEx]] = {
+    val q = e9nAudits.filter(_.e9nId === e9nId)
+    db.run(q.result)
   }
 
 

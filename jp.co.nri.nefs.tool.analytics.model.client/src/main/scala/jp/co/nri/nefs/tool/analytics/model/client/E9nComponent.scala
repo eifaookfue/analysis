@@ -84,7 +84,8 @@ trait E9nStackTraceComponent {
   }
 }
 
-case class E9nAudit(e9nId: Int, status: STATUS, comment: Option[String], updatedBy: String, updateTime: Timestamp = null)
+case class E9nAudit(e9nId: Int, status: STATUS, comment: Option[String], updatedBy: String)
+case class E9nAuditEx(audit: E9nAudit, updateTime: Timestamp)
 
 sealed trait STATUS
 object STATUS {
@@ -98,7 +99,8 @@ object STATUS {
       case "NOT_YET" => NOT_YET
       case "DONE" => DONE
       case "PENDING" => PENDING
-      case _ => throw new IllegalArgumentException(s"$name is not a member of STATUS")
+      //case _ => throw new IllegalArgumentException(s"$name is not a member of STATUS")
+      case _ => null
     }
   }
 }
@@ -108,19 +110,24 @@ trait E9nAuditComponent {
 
   import profile.api._
 
-  class E9nAudits(tag: Tag) extends Table[E9nAudit](tag, "E9N_AUDIT") {
+  implicit val statusType: BaseColumnType[STATUS] = MappedColumnType.base[STATUS, String](
+    _.toString,
+    STATUS.valueOf
+  )
 
-    implicit val statusType: BaseColumnType[STATUS] = MappedColumnType.base[STATUS, String](
-      _.toString,
-      STATUS.valueOf
-    )
+  /*case class LiftedE9nAudit(e9nId: Rep[Int], status: Rep[STATUS], comment: Rep[Option[String]],
+                            updatedBy: Rep[String], updatedTime: Rep[Timestamp])
 
+  implicit object E9nAuditShape extends CaseClassShape(LiftedE9nAudit.tupled, E9nAudit.tupled)*/
+
+  class E9nAudits(tag: Tag) extends Table[E9nAuditEx](tag, "E9N_AUDIT") {
     def e9nId = column[Int]("E9N_ID", O.PrimaryKey)
     def status = column[STATUS]("STATUS")
     def comment = column[Option[String]]("COMMENT")
     def updatedBy = column[String]("UPDATED_BY")
     def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
-    def * = (e9nId, status, comment, updatedBy, updateTime) <> (E9nAudit.tupled, E9nAudit.unapply)
+    def auditProjection = (e9nId, status, comment, updatedBy) <> (E9nAudit.tupled, E9nAudit.unapply)
+    def * = (auditProjection, updateTime) <> (E9nAuditEx.tupled, E9nAuditEx.unapply)
   }
 }
 
