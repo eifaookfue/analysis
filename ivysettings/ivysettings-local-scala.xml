@@ -20,8 +20,8 @@
     <property name="ivy.local.default.root"             value="${ivy.default.ivy.user.dir}/local" override="false"/>
     <resolvers>
         <filesystem name="local-scala">
-            <ivy pattern="${ivy.local.default.root}/[organisation]/[module]/scala_${scalaVersion}/sbt_${sbtVersion}/([branch]/)[revision]/[type]s/[artifact].[ext]" />
-            <artifact pattern="${ivy.local.default.root}/[organisation]/[module]/scala_${scalaVersion}/sbt_${sbtVersion}/([branch]/)[revision]/[type]s/[artifact].[ext]" />
+            <ivy pattern="${ivy.local.default.root}/[organisation]/[module]/(scala_[scalaVersion])/(sbt_[sbtVersion])/([branch]/)[revision]/[type]s/[artifact].[ext]" />
+            <artifact pattern="${ivy.local.default.root}/[organisation]/[module]/(scala_[scalaVersion])/(sbt_[sbtVersion])/([branch]/)[revision]/[type]s/[artifact].[ext]" />
         </filesystem>
     </resolvers>
 </ivysettings>

@@ -1,3 +1,4 @@
+/*
 package jp.co.nri.nefs.tool.transport
 
 import java.nio.file.{Files, Path, Paths}
@@ -73,3 +74,4 @@ object CopyCache {
   }
 
 }
+*/

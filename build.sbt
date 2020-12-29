@@ -259,13 +259,11 @@ lazy val log = (project in file ("log"))
   .settings(libraryDependencies ++= Dependencies.log)
 */
 
-/*
 lazy val transport = (project in file ("transport"))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Dependencies.transport)
   .settings(resolvers += "Sonatype OSS Snapshots" at "file:///C:/pleiades/workspace/M2/repository")
-  .dependsOn(log)
-*/
+    .dependsOn(util)
 
 playBuildRepoName in ThisBuild := "analysis"
 

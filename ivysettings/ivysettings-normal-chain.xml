@@ -24,6 +24,11 @@
             <resolver ref="public-maven-scala-3"/>
             <resolver ref="public-scala"/>
             <resolver ref="public-scala-noversion"/>
+            <resolver ref="public-source"/>
         </chain>
+        <ibiblio name="scalatools" root="http://scala-tools.org/repo-releases" m2compatible="true"/>
     </resolvers>
+    <modules>
+        <module organisation="org.scala-lang" resolver="scalatools"/>
+    </modules>
 </ivysettings>

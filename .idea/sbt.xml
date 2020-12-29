@@ -29,6 +29,7 @@
             <option value="$PROJECT_DIR$/json" />
             <option value="$PROJECT_DIR$/play.api.db.slick" />
             <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/transport" />
           </set>
         </option>
         <option name="sbtVersion" value="1.2.8" />

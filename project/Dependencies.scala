@@ -132,7 +132,8 @@ object Dependencies {
   val transport: Seq[ModuleID] = Seq(
     Library.logback,
     Library.scalaLogging,
-    Library.logbackClassic
+    Library.logbackClassic,
+    Library.scala_xml
   )
 }
 
