@@ -11,6 +11,8 @@ class RichConfig(config: Config) {
 
   def getInt(s: String, logger: Logger): Int = getAndLogging(s, logger, config.getInt)
 
+  def getBoolean(s: String, logger: Logger): Boolean = getAndLogging(s, logger, config.getBoolean)
+
   def getStringList(s: String, logger: Logger): List[String] =
     getAndLogging(s, logger, config.getStringList(_).asScala.toList)
 

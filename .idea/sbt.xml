@@ -35,6 +35,6 @@
         <option name="sbtVersion" value="1.2.8" />
       </SbtProjectSettings>
     </option>
-    <option name="vmParameters" value="-Dsbt.ivy.home=C:\Apl\.ivy2 -Dfile.encoding=MS932" />
+    <option name="vmParameters" value="-Dsbt.ivy.home=C:\Apl\.ivy2 -Dfile.encoding=MS932 -Dsbt.override.build.repos=ture" />
   </component>
 </project>

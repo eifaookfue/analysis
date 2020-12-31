@@ -83,9 +83,7 @@ lazy val commonSettings = Seq(
   // Work around https://issues.scala-lang.org/browse/SI-9311
   scalacOptions ~= (_.filterNot(_ == "-Xfatal-warnings")),
   scalaVersion := scala212,
-  //scalaVersion := "2.12.8",
   crossScalaVersions := Seq(scala211, scala212),
-  //crossScalaVersions := Seq("2.10.7", "2.12.8")
   libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 )
 
@@ -253,17 +251,16 @@ lazy val `play-slick` =(project in file("play.api.db.slick"))
   //.settings(mimaSettings)
   .settings(commonSettings: _*)
 
-/*
-lazy val log = (project in file ("log"))
-  .settings(commonSettings: _*)
-  .settings(libraryDependencies ++= Dependencies.log)
-*/
-
 lazy val transport = (project in file ("transport"))
   .settings(commonSettings: _*)
-  .settings(libraryDependencies ++= Dependencies.transport)
-  .settings(resolvers += "Sonatype OSS Snapshots" at "file:///C:/pleiades/workspace/M2/repository")
-    .dependsOn(util)
+  .settings(
+    libraryDependencies ++= Dependencies.transport,
+    resolvers += "Sonatype OSS Snapshots" at "file:///C:/pleiades/workspace/M2/repository",
+    version := "1.0.0",
+    organization := "jp.co.nri.nefs.tool",
+    assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
+  )
+  .dependsOn(util)
 
 playBuildRepoName in ThisBuild := "analysis"
 

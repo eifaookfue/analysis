@@ -2,6 +2,7 @@
   <library name="sbt: org.eclipse.jetty:jetty-io:9.4.12.v20180830:jar">
     <CLASSES>
       <root url="jar://C:/Apl/.ivy2/local/org.eclipse.jetty/jetty-io/9.4.12.v20180830/jars/jetty-io.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/org.eclipse.jetty/jetty-io/jars/jetty-io-9.4.12.v20180830.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

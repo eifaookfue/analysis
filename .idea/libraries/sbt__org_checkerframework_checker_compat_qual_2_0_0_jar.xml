@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.checkerframework:checker-compat-qual:2.0.0:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.checkerframework/checker-compat-qual/jars/checker-compat-qual-2.0.0.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.checkerframework/checker-compat-qual/2.0.0/jars/checker-compat-qual.jar!/" />
     </CLASSES>
     <JAVADOC />

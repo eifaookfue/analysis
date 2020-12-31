@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: commons-logging:commons-logging:1.2:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/commons-logging/commons-logging/jars/commons-logging-1.2.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/commons-logging/commons-logging/1.2/jars/commons-logging.jar!/" />
     </CLASSES>
     <JAVADOC />

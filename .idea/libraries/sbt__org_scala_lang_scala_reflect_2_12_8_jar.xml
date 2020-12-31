@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.scala-lang:scala-reflect:2.12.8:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.12.8.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.scala-lang/scala-reflect/2.12.8/jars/scala-reflect.jar!/" />
     </CLASSES>
     <JAVADOC />

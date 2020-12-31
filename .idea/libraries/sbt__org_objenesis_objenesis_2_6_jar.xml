@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.objenesis:objenesis:2.6:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.objenesis/objenesis/jars/objenesis-2.6.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.objenesis/objenesis/2.6/jars/objenesis.jar!/" />
     </CLASSES>
     <JAVADOC />

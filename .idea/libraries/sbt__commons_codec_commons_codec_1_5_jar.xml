@@ -3,6 +3,7 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/commons-codec/commons-codec/1.5/jars/commons-codec.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/commons-codec/commons-codec/1.5/jars/commons-codec.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/commons-codec/commons-codec/jars/commons-codec-1.5.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.eclipse.jetty:jetty-util:9.4.12.v20180830:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.eclipse.jetty/jetty-util/jars/jetty-util-9.4.12.v20180830.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.eclipse.jetty/jetty-util/9.4.12.v20180830/jars/jetty-util.jar!/" />
     </CLASSES>
     <JAVADOC />

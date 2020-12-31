@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: net.bytebuddy:byte-buddy-agent:1.9.3:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/net.bytebuddy/byte-buddy-agent/jars/byte-buddy-agent-1.9.3.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/net.bytebuddy/byte-buddy-agent/1.9.3/jars/byte-buddy-agent.jar!/" />
     </CLASSES>
     <JAVADOC />

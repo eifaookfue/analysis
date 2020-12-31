@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.apache.httpcomponents:httpclient:4.5.2:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.5.2.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.apache.httpcomponents/httpclient/4.5.2/jars/httpclient.jar!/" />
     </CLASSES>
     <JAVADOC />

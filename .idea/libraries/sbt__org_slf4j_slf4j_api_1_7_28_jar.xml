@@ -2,6 +2,7 @@
   <library name="sbt: org.slf4j:slf4j-api:1.7.28:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/org.slf4j/slf4j-api/1.7.28/jars/slf4j-api.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.28.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.slf4j/slf4j-api/1.7.28/jars/slf4j-api.jar!/" />
     </CLASSES>
     <JAVADOC />

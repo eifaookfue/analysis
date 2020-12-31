@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: net.sourceforge.htmlunit:htmlunit-cssparser:1.2.0:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/net.sourceforge.htmlunit/htmlunit-cssparser/jars/htmlunit-cssparser-1.2.0.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/net.sourceforge.htmlunit/htmlunit-cssparser/1.2.0/jars/htmlunit-cssparser.jar!/" />
     </CLASSES>
     <JAVADOC />

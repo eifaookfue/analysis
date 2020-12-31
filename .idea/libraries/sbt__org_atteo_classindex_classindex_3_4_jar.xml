@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.atteo.classindex:classindex:3.4:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.atteo.classindex/classindex/jars/classindex-3.4.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.atteo.classindex/classindex/3.4/jars/classindex.jar!/" />
     </CLASSES>
     <JAVADOC />

@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.seleniumhq.selenium:htmlunit-driver:2.33.3:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.seleniumhq.selenium/htmlunit-driver/jars/htmlunit-driver-2.33.3.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.seleniumhq.selenium/htmlunit-driver/2.33.3/jars/htmlunit-driver.jar!/" />
     </CLASSES>
     <JAVADOC />

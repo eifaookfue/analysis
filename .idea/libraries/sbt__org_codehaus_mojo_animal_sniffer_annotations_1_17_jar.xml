@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.codehaus.mojo:animal-sniffer-annotations:1.17:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.codehaus.mojo/animal-sniffer-annotations/jars/animal-sniffer-annotations-1.17.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.codehaus.mojo/animal-sniffer-annotations/1.17/jars/animal-sniffer-annotations.jar!/" />
     </CLASSES>
     <JAVADOC />

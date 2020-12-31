@@ -3,6 +3,7 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../.ivy2/local/xml-apis/xml-apis/1.0.b2/jars/xml-apis.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/xml-apis/xml-apis/1.0.b2/jars/xml-apis.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/xml-apis/xml-apis/jars/xml-apis-1.0.b2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

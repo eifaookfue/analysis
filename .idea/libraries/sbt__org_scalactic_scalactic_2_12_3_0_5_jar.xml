@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.scalactic:scalactic_2.12:3.0.5:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.scalactic/scalactic_2.12/bundles/scalactic_2.12-3.0.5.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.scalactic/scalactic_2.12/3.0.5/bundles/scalactic_2.12.jar!/" />
     </CLASSES>
     <JAVADOC />

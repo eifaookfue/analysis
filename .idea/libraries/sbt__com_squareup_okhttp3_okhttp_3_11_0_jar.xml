@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: com.squareup.okhttp3:okhttp:3.11.0:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.squareup.okhttp3/okhttp/jars/okhttp-3.11.0.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/com.squareup.okhttp3/okhttp/3.11.0/jars/okhttp.jar!/" />
     </CLASSES>
     <JAVADOC />

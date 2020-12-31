@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.scala-sbt:test-interface:1.0:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.scala-sbt/test-interface/jars/test-interface-1.0.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.scala-sbt/test-interface/1.0/jars/test-interface.jar!/" />
     </CLASSES>
     <JAVADOC />

@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: xalan:xalan:2.7.2:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/xalan/xalan/jars/xalan-2.7.2.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/xalan/xalan/2.7.2/jars/xalan.jar!/" />
     </CLASSES>
     <JAVADOC />

@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.scala-lang.modules:scala-parser-combinators_2.12:1.1.1:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.scala-lang.modules/scala-parser-combinators_2.12/bundles/scala-parser-combinators_2.12-1.1.1.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.scala-lang.modules/scala-parser-combinators_2.12/1.1.1/bundles/scala-parser-combinators_2.12.jar!/" />
     </CLASSES>
     <JAVADOC />

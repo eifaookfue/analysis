@@ -1,6 +1,7 @@
 <component name="libraryTable">
   <library name="sbt: org.fluentlenium:fluentlenium-core:3.7.1:jar">
     <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/cache/org.fluentlenium/fluentlenium-core/jars/fluentlenium-core-3.7.1.jar!/" />
       <root url="jar://C:/Apl/.ivy2/local/org.fluentlenium/fluentlenium-core/3.7.1/jars/fluentlenium-core.jar!/" />
     </CLASSES>
     <JAVADOC />

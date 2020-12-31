@@ -2,6 +2,7 @@
   <library name="sbt: junit:junit:4.12:jar">
     <CLASSES>
       <root url="jar://C:/Apl/.ivy2/local/junit/junit/4.12/jars/junit.jar!/" />
+      <root url="jar://C:/Apl/.ivy2/cache/junit/junit/jars/junit-4.12.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
