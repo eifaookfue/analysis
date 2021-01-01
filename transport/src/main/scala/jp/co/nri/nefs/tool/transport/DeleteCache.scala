@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.util.FileUtils
 
-object DeleteCashe extends LazyLogging {
+object DeleteCache extends LazyLogging {
 
   final val LOCAL_DIR = "local-dir"
   final val IS_DELETE_CACHE = "is-delete-cache"

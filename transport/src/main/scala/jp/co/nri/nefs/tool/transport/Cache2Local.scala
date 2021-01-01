@@ -13,12 +13,13 @@ import scala.util.Properties
 object Cache2Local extends LazyLogging{
 
   final val BUILD_FILE_DIR = "build-file-dir"
-  final val HTTPS = "https"
+  final val IS_AND_EXECUTION = "is-ant-execution"
 
   import jp.co.nri.nefs.tool.util.config.RichConfig._
 
   private val config = ConfigFactory.load()
   private val buildFileDir = Paths.get(config.getString(BUILD_FILE_DIR, logger))
+  private val isAntExecution = config.getBoolean(IS_AND_EXECUTION, logger)
 
   def main(args: Array[String]): Unit = {
 
@@ -33,16 +34,17 @@ object Cache2Local extends LazyLogging{
     import Ivys._
 
     for {
-      file <- propertyFiles
-      ivyFile <- ivyFileOption(file)
-      artifact = Artifact.createArtifact(ivyFile)
+      pFile <- propertyFiles
+      ivyFile <- ivyFileOption(pFile)
+      artifact = Artifact.createArtifact(pFile, ivyFile)
     } {
       logger.info(s"${buildFileDir.resolve(artifact.buildFileName)}:")
       val s = Properties.lineSeparator + artifact.buildFileBuffer.mkString(Properties.lineSeparator)
       logger.info(s)
       val buildFile = buildFileDir.resolve(artifact.buildFileName)
       Files.write(buildFile, artifact.buildFileBuffer.asJava)
-      AntExecutor(buildFile).execute()
+      if (isAntExecution)
+        AntExecutor(buildFile).execute()
     }
   }
 

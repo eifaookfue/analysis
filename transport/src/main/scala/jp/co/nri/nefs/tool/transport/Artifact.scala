@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ListBuffer
 import scala.xml.XML
 
-case class Artifact(file: Path, site: String, organisation: String, module: String,
+case class Artifact(pFile: Path, ivyFile: Path, site: String, organisation: String, module: String,
                     revision: String, scalaVersion:Option[String], sbtVersion: Option[String]) {
 
   def from: String = "normal"
@@ -24,7 +24,8 @@ case class Artifact(file: Path, site: String, organisation: String, module: Stri
   def buildFileBuffer: ListBuffer[String] = {
     import Artifact._
 
-    val buffer = ListBuffer(s"""<!-- $file -->""")
+    val buffer = ListBuffer(s"""<!-- $pFile -->""")
+    buffer += s"""<!-- $ivyFile -->"""
     buffer += """<project name="localrepository" default="install""""
     buffer +=  s"""\txmlns:ivy="antlib:org.apache.ivy.ant">"""
     buffer += s"""\t<property name="ivy.default.ivy.user.dir" value="$ivyDir" />"""
@@ -52,7 +53,7 @@ object Artifact extends LazyLogging {
 
 
 
-  def createArtifact(ivyFile: Path): Artifact = {
+  def createArtifact(pFile: Path, ivyFile: Path): Artifact = {
     val ivyData = XML.loadFile(ivyFile.toFile)
     val info = ivyData \ "info"
     val organisation = info \@ "organisation"
@@ -62,7 +63,7 @@ object Artifact extends LazyLogging {
       .filter(_.nonEmpty).map(_.text)
     val scalaVersion = Option(info \ "@{http://ant.apache.org/ivy/extra}scalaVersion")
       .filter(_.nonEmpty).map(_.text)
-    Artifact(ivyFile, "", organisation, module, revision, scalaVersion, sbtVersion)
+    Artifact(pFile, ivyFile, "", organisation, module, revision, scalaVersion, sbtVersion)
   }
 
 }
