@@ -5,7 +5,8 @@ import java.nio.file.{Path, Paths}
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 
-import scala.xml.{PrettyPrinter, XML}
+import scala.util.Properties
+import scala.xml.{Comment, NodeSeq, PrettyPrinter, XML}
 
 case class Artifact(ivyFile: Path, site: String, organisation: String, module: String,
                     revision: String, scalaVersion:Option[String], sbtVersion: Option[String],
@@ -28,11 +29,15 @@ case class Artifact(ivyFile: Path, site: String, organisation: String, module: S
   def buildFile: String = {
     import Artifact._
 
-    val xml = <project name="localrepository" default="install"
+    val xml =
+      <project name="localrepository" default="install"
              xmlns:ivy="antlib:org.apache.ivy.ant">
+        {Comment(s"${ivyFile.toString}${Properties.lineSeparator}${pFile.map(_.toString).getOrElse("")}")}
       <property name="ivy.default.ivy.user.dir" value={ivyDir} />
       <property name="my.settings.dir" value={ivySettings} />
       <property name="ivy.settings.file" value="${my.settings.dir}\ivysettings.xml" />
+      {sbtVersion.map(s => <property name="sbtVersion" value={s}/>).getOrElse(NodeSeq.Empty)}
+      {scalaVersion.map(s => <property name="scalaVersion" value={s}/>).getOrElse(NodeSeq.Empty)}
       <target name="install" description="--> install modules to localrepository" >
         <ivy:install organisation={organisation} module={module}
                      revision={revision} transitive="true" overwrite="true" from={from}

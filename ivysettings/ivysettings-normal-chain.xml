@@ -18,17 +18,17 @@
 -->
 <ivysettings>
     <resolvers>
+        <ibiblio name="scalatools" root="http://repo1.maven.org/maven2" m2compatible="true"/>
         <chain name="normal" returnFirst="true" checkmodified="true">
+            <resolver ref="cache-default"/>
+            <resolver ref="cache-scala"/>
             <resolver ref="public"/>
             <resolver ref="public-maven-scala"/>
             <resolver ref="public-maven-scala-3"/>
             <resolver ref="public-scala"/>
             <resolver ref="public-scala-noversion"/>
             <resolver ref="public-source"/>
+            <resolver ref="scalatools"/>
         </chain>
-        <ibiblio name="scalatools" root="http://scala-tools.org/repo-releases" m2compatible="true"/>
     </resolvers>
-    <modules>
-        <module organisation="org.scala-lang" resolver="scalatools"/>
-    </modules>
 </ivysettings>

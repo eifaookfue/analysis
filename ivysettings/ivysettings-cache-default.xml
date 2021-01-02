@@ -17,19 +17,13 @@
    under the License.
 -->
 <ivysettings>
-    <settings defaultResolver="default"/>
-    <include url="./ivysettings-cache-default.xml"/>
-    <include url="./ivysettings-cache-scala.xml"/>
-    <include url="./ivysettings-public.xml"/>
-    <include url="./ivysettings-shared.xml"/>
-    <include url="./ivysettings-local.xml"/>
-    <include url="./ivysettings-main-chain.xml"/>
-    <include url="./ivysettings-default-chain.xml"/>
-    <include url="./ivysettings-public-maven-scala.xml"/>
-    <include url="./ivysettings-public-maven-scala-3.xml"/>
-    <include url="./ivysettings-local-scala.xml"/>
-    <include url="./ivysettings-public-source.xml"/>
-    <include url="./ivysettings-public-scala.xml"/>
-    <include url="./ivysettings-public-scala-noversion.xml"/>
-    <include url="./ivysettings-normal-chain.xml"/>
+    <property name="ivy.cache.default.root"             value="${ivy.default.ivy.user.dir}/cache" override="false"/>
+    <resolvers>
+        <filesystem name="cache-default">
+            <!--C:\Apl\.ivy2\cache\org.apache\apache\ivy-13.xml-->
+            <ivy pattern="${ivy.cache.default.root}/[organisation]/[module]/[artifact]-[revision].[ext]" />
+            <!--C:\Apl\.ivy2\cache\scala_2.12\sbt_1.0\org.xerial.sbt\sbt-sonatype\jars\sbt-sonatype-2.0.jar-->
+            <artifact pattern="${ivy.cache.default.root}/[organisation]/[module]/[type]s/[artifact]-[revision].[ext]" />
+        </filesystem>
+    </resolvers>
 </ivysettings>
