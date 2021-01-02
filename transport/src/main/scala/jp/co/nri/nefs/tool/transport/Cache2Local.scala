@@ -36,13 +36,13 @@ object Cache2Local extends LazyLogging{
     for {
       pFile <- propertyFiles
       ivyFile <- ivyFileOption(pFile)
-      artifact = Artifact.createArtifact(pFile, ivyFile)
+      artifact = Artifact.createArtifact(ivyFile).withPFile(pFile)
     } {
       logger.info(s"${buildFileDir.resolve(artifact.buildFileName)}:")
-      val s = Properties.lineSeparator + artifact.buildFileBuffer.mkString(Properties.lineSeparator)
+      val s = Properties.lineSeparator + artifact.buildFile
       logger.info(s)
       val buildFile = buildFileDir.resolve(artifact.buildFileName)
-      Files.write(buildFile, artifact.buildFileBuffer.asJava)
+      Files.write(buildFile, Seq(artifact.buildFile).asJava)
       if (isAntExecution)
         AntExecutor(buildFile).execute()
     }
