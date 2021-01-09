@@ -68,7 +68,7 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
   }
 
   def e9nStackTraceList(e9nId: Int): Future[Seq[E9nStackTrace]] = {
-    val q = e9nStackTraces.filter(_.e9nId === e9nId).sortBy(_.number)
+    val q = e9nStackTraces.filter(_.e9nId === e9nId).sortBy(_.number).map(_.e9nStackTraceProjection)
     db.run(q.result)
   }
 

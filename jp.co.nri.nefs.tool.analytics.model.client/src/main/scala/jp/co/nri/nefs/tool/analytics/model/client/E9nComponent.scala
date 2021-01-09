@@ -7,14 +7,15 @@ import play.api.libs.json.{JsPath, Writes}
 import slick.jdbc.JdbcProfile
 import slick.sql.SqlProfile.ColumnOption.SqlType
 
-case class E9n(e9nId: Int, e9nHeadMessage: String, e9nLength: Int, updateTime: Timestamp = null)
+case class E9n(e9nId: Int, e9nHeadMessage: String, e9nLength: Int)
+
+case class E9nEx(e9n: E9n, updateTime: Timestamp)
 
 object E9n {
   implicit val e9nWrites: Writes[E9n] = (
     (JsPath \ "e9n-id").write[Int] and
       (JsPath \ "message").write[String] and
-      (JsPath \ "e9n-length").write[Int] and
-      (JsPath \ "update-time").write[Timestamp]
+      (JsPath \ "e9n-length").write[Int]
     )(unlift(E9n.unapply)
   )
 
@@ -40,46 +41,55 @@ trait E9nComponent {
 
   import profile.api._
 
-  class E9ns(tag: Tag) extends Table[E9n](tag, "E9N") {
+  class E9ns(tag: Tag) extends Table[E9nEx](tag, "E9N") {
     def e9nId = column[Int]("E9N_ID", O.PrimaryKey, O.AutoInc)
     def e9nHeadMessage = column[String]("E9N_HEAD_MESSAGE", O.Length(200))
     def e9nLength = column[Int]("E9N_LENGTH")
     def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
     // https://stackoverflow.com/questions/22367092/using-tupled-method-when-companion-object-is-in-class
-    def * = (e9nId, e9nHeadMessage, e9nLength, updateTime) <> ((E9n.apply _).tupled, E9n.unapply)
+    def e9nProjection = (e9nId, e9nHeadMessage, e9nLength) <> ((E9n.apply _).tupled, E9n.unapply)
+    def * = (e9nProjection, updateTime) <> ((E9nEx.apply _).tupled, E9nEx.unapply)
     def uk_1 = index("E9N_UK_1", (e9nHeadMessage, e9nLength), unique = true)
   }
 }
 
 case class E9nDetail(logId: Int, lineNo: Int, e9nId: Int)
 
+case class E9nDetailEx(e9nDetail: E9nDetail, updateTime: Timestamp)
+
 trait E9nDetailComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
 
   import profile.api._
 
-  class E9nDetails(tag: Tag) extends Table[E9nDetail](tag, "E9N_DETAIL") {
+  class E9nDetails(tag: Tag) extends Table[E9nDetailEx](tag, "E9N_DETAIL") {
     def logId = column[Int]("LOG_ID")
     def lineNo = column[Int]("LINE_NO")
     def e9nId = column[Int]("E9N_ID")
-    def * = (logId, lineNo, e9nId) <> (E9nDetail.tupled, E9nDetail.unapply)
+    def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+    def e9nDetailProjection = (logId, lineNo, e9nId) <> (E9nDetail.tupled, E9nDetail.unapply)
+    def * = (e9nDetailProjection,
+      updateTime) <> (E9nDetailEx.tupled, E9nDetailEx.unapply)
     def pk = primaryKey("E9N_PK_1", (logId, lineNo))
   }
 }
 
-case class E9nStackTrace (e9nId: Int, number: Int, message: String, updateTime: Timestamp = null)
+case class E9nStackTrace(e9nId: Int, number: Int, message: String)
+
+case class E9nStackTraceEx(e9nStackTrace: E9nStackTrace, updateTime: Timestamp)
 
 trait E9nStackTraceComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
 
   import profile.api._
 
-  class E9nStackTraces(tag: Tag) extends Table[E9nStackTrace](tag, "E9N_STACKTRACE") {
+  class E9nStackTraces(tag: Tag) extends Table[E9nStackTraceEx](tag, "E9N_STACKTRACE") {
     def e9nId = column[Int]("E9N_ID")
     def number = column[Int]("NUMBER")
     def message = column[String]("MESSAGE")
     def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
-    def * = (e9nId, number, message, updateTime) <> (E9nStackTrace.tupled, E9nStackTrace.unapply)
+    def e9nStackTraceProjection = (e9nId, number, message) <> (E9nStackTrace.tupled, E9nStackTrace.unapply)
+    def * = (e9nStackTraceProjection, updateTime) <> (E9nStackTraceEx.tupled, E9nStackTraceEx.unapply)
     def pk = primaryKey("E9N_STACKTRACE_PK_1", (e9nId, number))
   }
 }

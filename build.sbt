@@ -252,8 +252,7 @@ lazy val `play-slick` =(project in file("play.api.db.slick"))
   .settings(commonSettings: _*)
 
 lazy val transport = (project in file ("transport"))
-  .settings(commonSettings: _*)
-  .settings(
+  .settings(commonSettings: _*).settings(
     libraryDependencies ++= Dependencies.transport,
     resolvers += "Sonatype OSS Snapshots" at "file:///C:/pleiades/workspace/M2/repository",
     version := "1.0.0",

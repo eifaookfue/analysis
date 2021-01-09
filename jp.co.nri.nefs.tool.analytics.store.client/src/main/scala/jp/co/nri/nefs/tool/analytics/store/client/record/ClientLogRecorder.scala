@@ -77,14 +77,12 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
 
   def record(logId: Int, detail: WindowDetail): Future[Int] = {
     logger.info(s"storing $detail")
-    val insert = windowDetails.map(w => (w.logId, w.lineNo, w.activator, w.windowName, w.destinationType, w.action, w.method, w.time, w.startupTime)) +=
-      (logId, detail.lineNo, detail.activator, detail.windowName, detail.destinationType, detail.action, detail.method, detail.time, detail.startupTime)
+    val insert = windowDetails.map(_.windowDetailProjection) += detail
     db.run(insert)
   }
 
   def record(preCheck: PreCheck): Future[Int] = {
-    val insert = preChecks.map(p => (p.logId, p.lineNo, p.windowName, p.code, p.message)) +=
-      (preCheck.logId, preCheck.lineNo, preCheck.windowName, preCheck.code, preCheck.message)
+    val insert = preChecks.map(_.preCheckProjection) += preCheck
     db.run(insert)
   }
 
@@ -104,7 +102,7 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
         e9nIdAndCount match {
           // If found from E9N table, use e9nId from the table
           case Some((e9nId, countOp)) =>
-            val insertE9nDetail = e9nDetails += E9nDetail(logId, lineNo, e9nId)
+            val insertE9nDetail = e9nDetails.map(_.e9nDetailProjection) += E9nDetail(logId, lineNo, e9nId)
             val insertOrUpdateE9nCount = countOp match {
               // If found from E9N_COUNT table, count up
               case Some(count) =>
@@ -122,9 +120,8 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
             Await.ready(f2, Duration.Inf)
             f2.value.get match {
               case Success(e9nId) =>
-                val insertE9nDetail = e9nDetails.map(e => (e.logId, e.lineNo, e.e9nId)) += (logId, lineNo, e9nId)
-                val insertE9nStackTrace = e9nStackTraces.map(e => (e.e9nId, e.number, e.message)) ++=
-                  e9nStackTraceSeq.map(e => (e9nId, e.number, e.message))
+                val insertE9nDetail = e9nDetails.map(_.e9nDetailProjection) += E9nDetail(logId, lineNo, e9nId)
+                val insertE9nStackTrace = e9nStackTraces.map(_.e9nStackTraceProjection) ++= e9nStackTraceSeq
                 val insertE9nCount = e9nCounts.map(e => (e.e9nId, e.count)) += (e9nId, 1)
                 db.run(DBIO.seq(insertE9nDetail, insertE9nStackTrace, insertE9nCount))
               case Failure(e) =>
