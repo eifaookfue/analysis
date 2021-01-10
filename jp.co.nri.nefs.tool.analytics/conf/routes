@@ -26,6 +26,8 @@ POST     /e9nListTable                 controllers.Application.e9nListTable()
 
 GET  /e9nStackTrace               controllers.Application.e9nStackTrace(e9nId: Int)
 
+POST  /e9nAudit               controllers.Application.e9nAudit(e9nId: Int)
+
 POST     /preCheckSummaryTable           controllers.Application.preCheckSummaryTable()
 
 # Map static resources from the /public folder to the /assets URL path

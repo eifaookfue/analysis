@@ -34,6 +34,7 @@ class MockLogRecorder extends ClientLogRecorder {
   val output: ListBuffer[WindowDetail] = ListBuffer[WindowDetail]()
   val preCheckOutput: ListBuffer[PreCheck] = ListBuffer()
   val e9nStackTraceOutput: ListBuffer[E9nStackTrace] = ListBuffer()
+  val e9nAuditOutput: ListBuffer[E9nAudit] = ListBuffer()
 
   def recreate(): Unit = {}
 
@@ -51,6 +52,11 @@ class MockLogRecorder extends ClientLogRecorder {
 
   override def recordE9n(logId: Int, lineNo: Int, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any] = {
     e9nStackTraceOutput ++= e9nStackTraceSeq
+    Future.successful(0)
+  }
+
+  override def record(audit: E9nAudit): Future[Int] = {
+    e9nAuditOutput += audit
     Future.successful(0)
   }
 

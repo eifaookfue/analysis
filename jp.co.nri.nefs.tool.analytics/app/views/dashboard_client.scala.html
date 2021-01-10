@@ -6,6 +6,7 @@
     routes.javascript.Application.e9nListTable,
     routes.javascript.Application.e9nStackTrace,
     routes.javascript.Application.e9nDetail,
+    routes.javascript.Application.e9nAudit,
     routes.javascript.Application.preCheckSummaryTable
 )
 <div id="root" data-jsondata1="@d1", data-jsondata2="@d2"></div>
@@ -178,6 +179,35 @@
     </div>
 </div>
 
+<div class="modal fade" id="modal-audit">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Audit</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-audit-body">
+                <table id="e9n-audit-body" class="table table-bordered table-hover table-sm">
+                    <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Status</th>
+                        <th>Comment</th>
+                        <th>UpdatedBy</th>
+                        <th>UpdatedTime</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- /.content-wrapper -->
 }{
 <!-- mainに渡すjava script -->
@@ -218,6 +248,15 @@
             { data: "count" }
         ]
     });
+
+    function isExist(classes, str) {
+        for (var i=0; i<classes.length; i++) {
+            if (classes[i] === str) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /* var r2 = jsRoutes.controllers.Application.preCheckSummaryTable();
     alert(r2.type);
@@ -290,7 +329,7 @@
             { data: "e9n-id",
               render: function(data, type, row, meta) {
                 if (type == 'display') {
-                    data = '<button type="button" value="' + data + '" class="btn btn-default btn-sm">&hellip;</button>'
+                    data = '<button type="button" value="' + data + '" class="btn btn-default btn-sm stacktrace">&hellip;</button>'
                 }
                 return data;
               }
@@ -300,7 +339,7 @@
             { data: "e9n-id",
               render: function(data, type, row, meta) {
                 if (type == 'display') {
-                    data = '<a class="btn" href="#"><i class="fas fa-edit"></i></a>'
+                    data = '<button type="button" value="' + data + '" class="btn btn-default btn-sm audit"><i class="fas fa-edit"></i></button>'
                 }
                 return data;
               }
@@ -315,14 +354,42 @@
 
     $(function() {
         $('#e9n-count-body tbody').on('click', 'td button', function(e) {
-            var e9nId = $(this).val();
-            $.ajax(jsRoutes.controllers.Application.e9nStackTrace(e9nId))
-            .done(function(data) {
-                $("#modalHtml").html(data);
-                $("#modal-xl").modal("show");
-            }).fail(function(XMLHttpRequest, textStatus, error) {
-                alert("error");
-            });
+            // This doesn't work.
+            // alert($("this[class*='stacktrace']").length);
+
+            if (isExist($(this).attr('class').split(' '), 'stacktrace')) {
+                var e9nId = $(this).val();
+                $.ajax(jsRoutes.controllers.Application.e9nStackTrace(e9nId))
+                    .done(function(data) {
+                        $("#modalHtml").html(data);
+                        $("#modal-xl").modal("show");
+                    })
+                    .fail(function(XMLHttpRequest, textStatus, error) {
+                        alert("error");
+                    });
+            } else if (isExist($(this).attr('class').split(' '), 'audit')) {
+                // alert("audit found");
+                var e9nId = $(this).val();
+                $("#modal-audit").modal("show");
+                var auditTable = $("#e9n-audit-body").DataTable({
+                    "responsive": true,
+                    "scrollCollapse": false,
+                    "autoWidth": false,
+                    "paging": false,
+                    "processing": true,
+                    "serverSide": true,
+                    "destroy": true,
+                    "ajax": jsRoutes.controllers.Application.e9nAudit(e9nId),
+                    "order": [[ 1, "desc" ]],
+                    "columns": [
+                        { data: "e9n-id" },
+                        { data: "status" },
+                        { data: "comment" },
+                        { data: "updated-by" },
+                        { data: "updated-time" }
+                    ]
+                });
+            }
         });
     });
 

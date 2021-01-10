@@ -36,22 +36,22 @@ class DefaultDBSetup @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     val e9nStackTraceSeq =
       for {(msg, number) <- Seq(slickE9nLog.slice(1,4), slickE9nLog.slice(7, slickE9nLog.length - 1)).flatten.zipWithIndex}
       yield E9nStackTrace(1, number, msg)
-    val e9nInsert = e9ns += E9n(1, headMessage, e9nStackTraceSeq.map(_.message.trim).mkString.length)
-    val e9nStackTraceInsert = e9nStackTraces ++= e9nStackTraceSeq
+    val e9nInsert = e9ns.map(_.e9nProjection) += E9n(1, headMessage, e9nStackTraceSeq.map(_.message.trim).mkString.length)
+    val e9nStackTraceInsert = e9nStackTraces.map(_.e9nStackTraceProjection) ++= e9nStackTraceSeq
     val f2 = db.run(DBIO.seq(e9nInsert, e9nStackTraceInsert))
     Await.result(f2, Duration.Inf)
   }
 
   override def e9nSeq: Seq[E9n] = {
-    Await.result(db.run(e9ns.result), Duration.Inf)
+    Await.result(db.run(e9ns.map(_.e9nProjection).result), Duration.Inf)
   }
 
   override def e9nStackTraceSeq: Seq[E9nStackTrace] = {
-    Await.result(db.run(e9nStackTraces.result), Duration.Inf)
+    Await.result(db.run(e9nStackTraces.map(_.e9nStackTraceProjection).result), Duration.Inf)
   }
 
   override def e9nDetailSeq: Seq[E9nDetail] = {
-    Await.result(db.run(e9nDetails.result), Duration.Inf)
+    Await.result(db.run(e9nDetails.map(_.e9nDetailProjection).result), Duration.Inf)
   }
 
 }

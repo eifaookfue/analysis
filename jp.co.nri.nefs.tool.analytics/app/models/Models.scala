@@ -389,9 +389,9 @@ object E9nAuditTbl {
   implicit val E9nAuditTblWrites: Writes[E9nAuditTbl] = (
     (JsPath \ "e9n-id").write[Int] and
       (JsPath \ "status").write[STATUS] and
-      (JsPath \ "comment").writeNullable[String] and
+      (JsPath \ "comment").writeOptionWithNull[String] and
       (JsPath \ "updated-by").write[String] and
-      (JsPath \ "update-time").write[Timestamp]
+      (JsPath \ "updated-time").write[Timestamp]
     )(unlift(E9nAuditTbl.unapply))
 }
 
@@ -412,7 +412,7 @@ case class E9nAuditTblRequestParams(draw: Int,
                                     statusSearchValue: Option[STATUS],
                                     commentSearchValue: String,
                                     updatedBySearchValue: String,
-                                    updatedTimeSearchValue: Timestamp,
+                                    updatedTimeSearchValue: Option[Timestamp],
                                     order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                     )
 

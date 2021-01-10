@@ -1,12 +1,14 @@
 package controllers
 
 import java.nio.file.{Files, Paths}
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 import dao._
 import javax.inject.Inject
 import jp.co.nri.nefs.tool.analytics.model.client.STATUS
 import models._
-import play.api.Configuration
+import play.api.{Configuration, Logging}
 import play.api.data.{Form, FormError}
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
@@ -26,7 +28,8 @@ class Application @Inject() (
     preCheckSummaryDao: PreCheckSummaryDAO,
     controllerComponents: ControllerComponents,
     config: Configuration
-)(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents) with I18nSupport {
+)(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents)
+  with I18nSupport with Logging {
 
   import play.api.data.format.Formatter
   import play.api.data.format.Formats._
@@ -49,6 +52,17 @@ class Application @Inject() (
     override def unbind(key: String, value: Option[STATUS]): Map[String, String] =
       Map(key -> value.map(_.toString).getOrElse(""))
 
+  }
+
+  implicit object OptionTimestampFormatter extends Formatter[Option[Timestamp]] {
+    override val format: Option[(String, Seq[Any])] = Some("format.optionInt", Nil)
+
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Option[Timestamp]] =
+      parsing(Option(_).filter(_.trim.nonEmpty).map(s => Timestamp.valueOf(LocalDateTime.parse(s))),
+        "error.optionTimestamp", Nil)(key, data)
+
+    override def unbind(key: String, value: Option[Timestamp]): Map[String, String] =
+      Map(key -> value.map(_.toString).getOrElse(""))
   }
 
   val windowDetailTblRequestForm = Form(
@@ -105,7 +119,7 @@ class Application @Inject() (
       "columns[1][search][value]" -> of[Option[STATUS]],
       "columns[2][search][value]" -> text,
       "columns[3][search][value]" -> text,
-      "columns[4][search][value]" -> sqlTimestamp,
+      "columns[4][search][value]" -> of[Option[Timestamp]],
       "order[0][column]" -> number,
       "order[0][dir]" -> text,
       "start" -> number,
@@ -276,28 +290,36 @@ class Application @Inject() (
   }
 
   def e9nAudit(e9nId: Int): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"$request called.")
     e9nAuditTblRequestForm.bindFromRequest.fold(
-      _ => {
+      error => {
+        logger.warn(s"error=$error")
         Future.successful(InternalServerError("Oops"))
       },
-      params =>
+      params => {
+        logger.info(s"params = $params")
         for {
-          recordsTotal <- Future(10)
-          recordsFiltered <- Future(5)
+          recordsTotal <- Future(1)
+          recordsFiltered <- Future(1)
           seq <- e9nDao.e9nAudit(e9nId)
           data = seq.map(s => E9nAuditTbl(s.audit.e9nId, s.audit.status, s.audit.comment, s.audit.updatedBy, s.updateTime))
           response = E9nAuditTblResponse(params.draw, recordsTotal, recordsFiltered, data)
           json = Json.toJson(response)
+          _ = logger.info(s"json = $json")
         } yield Ok(json)
+      }
     )
   }
 
   def preCheckSummaryTable(): Action[AnyContent] = Action.async { implicit request =>
-    println("preCheckSummaryTable called.")
+    logger.info(s"request=$request")
     preCheckTblRequestForm.bindFromRequest.fold(
-      _ =>
-        Future.successful(InternalServerError("Oops")),
-      params =>
+      error => {
+        logger.warn(s"error=$error")
+        Future.successful(InternalServerError("Oops"))
+      },
+      params => {
+        logger.info(s"params=$params")
         for {
           recordsTotal <- preCheckSummaryDao.count
           recordsFiltered <- preCheckSummaryDao.count(params)
@@ -306,6 +328,7 @@ class Application @Inject() (
           _ = println(response)
           json = Json.toJson(response)
         } yield Ok(json)
+      }
     )
   }
 }

@@ -12,7 +12,7 @@ import jp.co.nri.nefs.tool.analytics.model.client._
 import jp.co.nri.nefs.tool.analytics.store.client.record.ClientLogRecorder
 import jp.co.nri.nefs.tool.analytics.store.common.ServiceInjector
 import scala.collection.JavaConverters._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Random, Success, Try}
 
@@ -32,6 +32,7 @@ object Generator {
     val recorder = ServiceInjector.getComponent(classOf[ClientLogRecorder])
     recorder.recreate()
     val sequence = 1 to 10
+    var e9nId = 0
     for {
       log <- Generator.logs("2019-01-01", "2019-01-31", 10)
       logId = recorder.record(log)
@@ -39,15 +40,13 @@ object Generator {
       f = recorder.record(logId.get, windowDetail)
       _ = Await.ready(f, Duration.Inf)
       // record e9n once every 10 times
-      f2 = if (randomValue(sequence) == 1) {
-        recorder.recordE9n(logId.get, windowDetail.lineNo, e9nStaceTraceSeq(10))
-      } else {
-        Future.successful(0)
-      }
-      _ = Await.ready(f2, Duration.Inf)
-      _  = f2.value.get match {
-        case Success(_) => println("Succeeded!")
-        case Failure(e) => println(e)
+
+      _ = if (randomValue(sequence) == 1) {
+        val f1 = recorder.recordE9n(logId.get, windowDetail.lineNo, e9nStaceTraceSeq(10))
+        Await.ready(f1, Duration.Inf)
+        val f2 = recorder.record(E9nAudit(e9nId, STATUS.DONE, None, "nakamura-s"))
+        Await.ready(f2, Duration.Inf)
+        e9nId = e9nId + 1
       }
       check <- preCheck(logId.get, windowDetail, 0.25)
       f3 = recorder.record(check)
@@ -57,7 +56,6 @@ object Generator {
         case Failure(e) => println(e)
       }
     } {}
-
   }
 
   def e9nLists(count: Int): Seq[E9n] = {
