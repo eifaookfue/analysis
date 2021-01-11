@@ -77,7 +77,7 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
 
   def record(logId: Int, detail: WindowDetail): Future[Int] = {
     logger.info(s"storing $detail")
-    val insert = windowDetails.map(_.windowDetailProjection) += detail
+    val insert = windowDetails.map(_.windowDetailProjection) += detail.copy(logId = logId)
     db.run(insert)
   }
 

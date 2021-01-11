@@ -80,7 +80,6 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
 
   /** Returns a page of WindowDetail */
   def list(params: WindowDetailTblRequestParams): Future[Seq[WindowDetailTbl]] = {
-    val formatter = new SimpleDateFormat("yy/MM/dd HH:mm")
     val q1 = filterQuery(params)
     val q2 = q1.sortBy { case (logId, appName, userName, lineNo, activator, windowName, time) =>
       params.order0Column match {
@@ -97,7 +96,7 @@ class WindowDetailDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPr
     val q3 = q2.drop(params.start).take(params.length)
     val f = db.run(q3.result)
     f.map(seq => seq.map{case (logId, appName, userName, lineNo, activator, windowName, time) =>
-      WindowDetailTbl(logId, appName, userName, lineNo, activator, windowName, formatter.format(time))
+      WindowDetailTbl(logId, appName, userName, lineNo, activator, windowName, time)
     })
   }
 

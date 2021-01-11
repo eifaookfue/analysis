@@ -120,8 +120,6 @@ class Application @Inject() (
       "columns[2][search][value]" -> text,
       "columns[3][search][value]" -> text,
       "columns[4][search][value]" -> of[Option[Timestamp]],
-      "order[0][column]" -> number,
-      "order[0][dir]" -> text,
       "start" -> number,
       "length" -> number,
       "search[value]" -> text,
