@@ -65,6 +65,7 @@ class Application @Inject() (
       Map(key -> value.map(_.toString).getOrElse(""))
   }
 
+
   val windowDetailTblRequestForm = Form(
     mapping(
       "draw" -> number,
@@ -158,7 +159,13 @@ class Application @Inject() (
       "search[regex]" -> boolean)(PreCheckTblRequestParams.apply)(PreCheckTblRequestParams.unapply)
   )
 
-
+  val auditForm = Form(
+    mapping(
+      "e9nId" -> number,
+      "status" -> of[Option[STATUS]],
+      "comment" -> text
+    )(AuditInput.apply)(AuditInput.unapply)
+  )
 
   /** This result directly redirect to the application home.*/
   val Home: Result = Redirect(routes.Application.dashboard_client())
@@ -185,7 +192,7 @@ class Application @Inject() (
       _ = println(sliceJson)
       date <- windowCountByDate
       dateJson = Json.toJson(date)
-    } yield Ok(html.dashboard_client(sliceJson, dateJson))
+    } yield Ok(html.dashboard_client(sliceJson, dateJson, auditForm))
   }
 
   def dashboard_server: Action[AnyContent] = Action {
@@ -287,7 +294,7 @@ class Application @Inject() (
     } yield Ok(traces)
   }
 
-  def e9nAudit(e9nId: Int): Action[AnyContent] = Action.async { implicit request =>
+  def e9nAuditHistory(e9nId: Int): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"$request called.")
     e9nAuditTblRequestForm.bindFromRequest.fold(
       error => {
@@ -299,9 +306,10 @@ class Application @Inject() (
         for {
           recordsTotal <- Future(1)
           recordsFiltered <- Future(1)
-          seq <- e9nDao.e9nAudit(e9nId)
-          data = seq.map(s => E9nAuditTbl(s.audit.e9nId, s.audit.status, s.audit.comment, s.audit.updatedBy, s.updateTime))
-          response = E9nAuditTblResponse(params.draw, recordsTotal, recordsFiltered, data)
+          seq <- e9nDao.e9nAuditHistory(e9nId)
+          data = seq.map(s => E9nAuditHistoryTbl(s.e9nAuditHistory.e9nHistoryId, s.e9nAuditHistory.status,
+            s.e9nAuditHistory.comment, s.e9nAuditHistory.updatedBy, s.updateTime))
+          response = E9nAuditHistoryTblResponse(params.draw, recordsTotal, recordsFiltered, data)
           json = Json.toJson(response)
           _ = logger.info(s"json = $json")
         } yield Ok(json)
@@ -329,4 +337,40 @@ class Application @Inject() (
       }
     )
   }
+
+  /*
+    def e9nDetail(e9nId: Option[Int]): Action[AnyContent] = Action { implicit request =>
+    Ok(html.e9n_detail(e9nId)(request))
+  }
+   */
+
+  def auditSave(e9nId: Int): Action[AnyContent] = Action { implicit request =>
+    logger.info(s"e9nId = $e9nId")
+    logger.info(s"request = $request")
+    /*
+        e9nDetailTblRequestForm.bindFromRequest.fold(
+      _ =>
+        Future.successful(InternalServerError("Oops")),
+      params =>
+        for {
+          recordsTotal <- e9nDao.count
+          recordsFiltered <- e9nDao.count(params)
+          seq <- e9nDao.e9nDetailList(params)
+          response = E9nDetailTblResponse(params.draw, recordsTotal, recordsFiltered, seq)
+          json = Json.toJson(response)
+        } yield Ok(json)
+    )
+
+     */
+    auditForm.bindFromRequest.fold(
+      error => {
+        logger.error(error.toString)
+        Future.successful(InternalServerError("Oops"))
+      },
+      auditInput =>
+        logger.info(s"auditInput = $auditInput")
+    )
+    Home
+  }
+
 }

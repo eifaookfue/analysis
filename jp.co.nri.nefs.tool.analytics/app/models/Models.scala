@@ -225,33 +225,33 @@ case class E9nDetailTblRequestParams(draw: Int,
                                         order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                     )
 
-case class E9nAuditTbl(e9nId: Int, status: STATUS, comment: Option[String], updatedBy: String, updateTime: Timestamp)
+case class E9nAuditHistoryTbl(e9nHistoryId: Int, status: Option[STATUS], comment: Option[String], updatedBy: String, updateTime: Timestamp)
 
-object E9nAuditTbl {
+object E9nAuditHistoryTbl {
   import Statuses.statusWrites
-  implicit val E9nAuditTblWrites: Writes[E9nAuditTbl] = (
-    (JsPath \ "e9n-id").write[Int] and
-      (JsPath \ "status").write[STATUS] and
+  implicit val E9nAuditTblWrites: Writes[E9nAuditHistoryTbl] = (
+    (JsPath \ "e9n-history-id").write[Int] and
+      (JsPath \ "status").writeOptionWithNull[STATUS] and
       (JsPath \ "comment").writeOptionWithNull[String] and
       (JsPath \ "updated-by").write[String] and
       (JsPath \ "updated-time").write[Timestamp](timestampWrites)
-    )(unlift(E9nAuditTbl.unapply))
+    )(unlift(E9nAuditHistoryTbl.unapply))
 }
 
-case class E9nAuditTblResponse(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[E9nAuditTbl])
+case class E9nAuditHistoryTblResponse(draw: Int, recordsTotal: Int, recordsFiltered: Int, data: Seq[E9nAuditHistoryTbl])
 
-object E9nAuditTblResponse {
-  implicit val E9nAuditTblWrites: Writes[E9nAuditTblResponse] = (
+object E9nAuditHistoryTblResponse {
+  implicit val E9nAuditTblWrites: Writes[E9nAuditHistoryTblResponse] = (
     (JsPath \ "draw").write[Int] and
       (JsPath \ "recordsTotal").write[Int] and
       (JsPath \ "recordsFiltered").write[Int] and
-      (JsPath \ "data").write[Seq[E9nAuditTbl]]
-    )(unlift(E9nAuditTblResponse.unapply))
+      (JsPath \ "data").write[Seq[E9nAuditHistoryTbl]]
+    )(unlift(E9nAuditHistoryTblResponse.unapply))
 
 }
 
 case class E9nAuditTblRequestParams(draw: Int,
-                                    e9nIdSearchValue: Option[Int],
+                                    e9nHistoryIdSearchValue: Option[Int],
                                     statusSearchValue: Option[STATUS],
                                     commentSearchValue: String,
                                     updatedBySearchValue: String,
@@ -290,3 +290,5 @@ case object NEW_ORDER_SINGLE extends Menu(WINDOW)
 case object DETAIL extends Menu(null)
 case object WINDOW_DETAIL extends Menu(DETAIL)
 case object E9N_DETAIL extends Menu(DETAIL)
+
+case class AuditInput(e9nId: Int, status: Option[STATUS], comment: String)

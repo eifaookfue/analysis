@@ -1,9 +1,11 @@
 package dao
 
+import java.sql.Timestamp
+
 import javax.inject.{Inject, Singleton}
 import jp.co.nri.nefs.tool.analytics.model.client._
 import jp.co.nri.nefs.tool.analytics.model.common.UserComponent
-import models.{E9nDetailTbl, E9nDetailTblRequestParams, E9nTbl, E9nTblRequestParams}
+import models._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
@@ -12,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext)
   extends E9nComponent with E9nStackTraceComponent with E9nDetailComponent with E9nCountComponent with E9nAuditComponent
-    with LogComponent with UserComponent with HasDatabaseConfigProvider[JdbcProfile]{
+    with E9nAuditHistoryComponent with LogComponent with UserComponent with HasDatabaseConfigProvider[JdbcProfile]{
 
   import profile.api._
 
@@ -21,6 +23,7 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
   val e9nDetails = TableQuery[E9nDetails]
   val e9nCounts = TableQuery[E9nCounts]
   val e9nAudits = TableQuery[E9nAudits]
+  val e9nAuditHistories = TableQuery[E9nAuditHistories]
   val logs = TableQuery[Logs]
   val users = TableQuery[Users]
 
@@ -63,7 +66,7 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
     val q3 = q2.drop(params.start).take(params.length)
     val f = db.run(q3.result)
     f.map( seq => seq.map{ case (e9nId, message, count, status) =>
-      E9nTbl(e9nId, message, count.getOrElse(0), status.getOrElse(STATUS.DONE))
+      E9nTbl(e9nId, message, count.getOrElse(0), status.getOrElse(STATUS.NOT_YET))
     })
   }
 
@@ -111,8 +114,8 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
 
   }
 
-  def e9nAudit(e9nId: Int): Future[Seq[E9nAuditEx]] = {
-    val q = e9nAudits.filter(_.e9nId === e9nId)
+  def e9nAuditHistory(e9nId: Int): Future[Seq[E9nAuditHistoryEx]] = {
+    val q = e9nAuditHistories.filter(_.e9nId === e9nId)
     db.run(q.result)
   }
 

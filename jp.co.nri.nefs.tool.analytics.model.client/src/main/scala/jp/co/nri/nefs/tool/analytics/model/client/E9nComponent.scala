@@ -115,7 +115,7 @@ object STATUS {
   }
 }
 
-trait E9nAuditComponent {
+trait E9nAuditCommonComponent {
   self: HasDatabaseConfigProvider[JdbcProfile] =>
 
   import profile.api._
@@ -125,10 +125,12 @@ trait E9nAuditComponent {
     STATUS.valueOf
   )
 
-  /*case class LiftedE9nAudit(e9nId: Rep[Int], status: Rep[STATUS], comment: Rep[Option[String]],
-                            updatedBy: Rep[String], updatedTime: Rep[Timestamp])
+}
 
-  implicit object E9nAuditShape extends CaseClassShape(LiftedE9nAudit.tupled, E9nAudit.tupled)*/
+trait E9nAuditComponent extends E9nAuditCommonComponent {
+  self: HasDatabaseConfigProvider[JdbcProfile] =>
+
+  import profile.api._
 
   class E9nAudits(tag: Tag) extends Table[E9nAuditEx](tag, "E9N_AUDIT") {
     def e9nId = column[Int]("E9N_ID", O.PrimaryKey)
@@ -142,28 +144,25 @@ trait E9nAuditComponent {
 }
 
 case class E9nAuditHistory(e9nHistoryId: Int, e9nId: Int, status: Option[STATUS],
-                           comment: Option[String], updatedBy: String, updateTime: Timestamp = null)
+                           comment: Option[String], updatedBy: String)
 
-trait E9nAuditHistoryComponent {
+case class E9nAuditHistoryEx(e9nAuditHistory: E9nAuditHistory, updateTime: Timestamp)
+
+trait E9nAuditHistoryComponent extends E9nAuditCommonComponent {
 
   self: HasDatabaseConfigProvider[JdbcProfile] =>
 
   import profile.api._
 
-  class E9nAuditHistories(tag: Tag) extends Table[E9nAuditHistory](tag, "E9N_AUDIT_HISTORY") {
-
-    implicit val statusType: BaseColumnType[STATUS] = MappedColumnType.base[STATUS, String](
-      _.toString,
-      STATUS.valueOf
-    )
-
+  class E9nAuditHistories(tag: Tag) extends Table[E9nAuditHistoryEx](tag, "E9N_AUDIT_HISTORY") {
     def e9nHistoryId = column[Int]("E9N_HISTORY_ID", O.PrimaryKey, O.AutoInc)
     def e9nId = column[Int]("E9N_ID")
     def status = column[Option[STATUS]]("STATUS")
     def comment = column[Option[String]]("COMMENT")
     def updatedBy = column[String]("UPDATED_BY")
+    def e9nAuditHistoryProjection = (e9nHistoryId, e9nId, status, comment, updatedBy) <> (E9nAuditHistory.tupled, E9nAuditHistory.unapply)
     def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
-    def * = (e9nHistoryId, e9nId, status, comment, updatedBy, updateTime) <> (E9nAuditHistory.tupled, E9nAuditHistory.unapply)
+    def * = (e9nAuditHistoryProjection, updateTime) <> (E9nAuditHistoryEx.tupled, E9nAuditHistoryEx.unapply)
 
   }
 }
