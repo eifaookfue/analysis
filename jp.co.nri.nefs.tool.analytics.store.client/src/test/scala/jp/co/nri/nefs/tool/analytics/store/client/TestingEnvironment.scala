@@ -1,5 +1,7 @@
 package jp.co.nri.nefs.tool.analytics.store.client
 
+import java.sql.Timestamp
+
 import com.google.inject.AbstractModule
 import jp.co.nri.nefs.tool.analytics.model.client._
 import jp.co.nri.nefs.tool.analytics.store.client.classify.ClientLogClassifierFactoryComponent
@@ -50,7 +52,7 @@ class MockLogRecorder extends ClientLogRecorder {
     Future.successful(0)
   }
 
-  override def recordE9n(logId: Int, lineNo: Int, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any] = {
+  override def recordE9n(logId: Int, lineNo: Int, time: Timestamp, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any] = {
     e9nStackTraceOutput ++= e9nStackTraceSeq
     Future.successful(0)
   }

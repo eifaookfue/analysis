@@ -31,6 +31,8 @@ class Application @Inject() (
 )(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents)
   with I18nSupport with Logging {
 
+  final val LOR_DIR: String = "play-analytics" + ".log-dir"
+
   import play.api.data.format.Formatter
   import play.api.data.format.Formats._
   implicit object OptionIntFormatter extends Formatter[Option[Int]] {
@@ -76,6 +78,8 @@ class Application @Inject() (
       "columns[4][search][value]" -> text,
       "columns[5][search][value]" -> text,
       "columns[6][search][value]" -> text,
+      "columns[7][search][value]" -> text,
+      "columns[8][search][value]" -> text,
       "order[0][column]" -> number,
       "order[0][dir]" -> text,
       "start" -> number,
@@ -137,6 +141,7 @@ class Application @Inject() (
       "columns[3][search][value]" -> text,
       "columns[4][search][value]" -> text,
       "columns[5][search][value]" -> text,
+      "columns[6][search][value]" -> text,
       "order[0][column]" -> number,
       "order[0][dir]" -> text,
       "start" -> number,
@@ -196,7 +201,23 @@ class Application @Inject() (
   }
 
   def dashboard_server: Action[AnyContent] = Action {
-    NotFound
+    NotFound("Sorry, now under construction.")
+  }
+
+  def newOrderSingle: Action[AnyContent] = Action {
+    NotFound("Sorry, now under construction.")
+  }
+
+  def newSplit: Action[AnyContent] = Action {
+    NotFound("Sorry, now under construction.")
+  }
+
+  def userDetail: Action[AnyContent] = Action {
+    NotFound("Sorry, now under construction.")
+  }
+
+  def preCheck: Action[AnyContent] = Action {
+    NotFound("Sorry, now under construction.")
   }
 
   def windowDetail: Action[AnyContent] = Action { implicit request =>
@@ -222,7 +243,7 @@ class Application @Inject() (
 
   def fileDownload(logId: Int): Action[AnyContent] = Action {
     val (tradeDate, fileName) = Await.result(windowDetailDao.fileName(logId), 10.seconds)
-    val fileDir = config.underlying.getString("logDir")
+    val fileDir = config.underlying.getString(LOR_DIR)
     val parent = Paths.get(fileDir).resolve(tradeDate)
     val file1 = parent.resolve(fileName)
     val file2 = parent.resolve(fileName.replace("log", "zip"))
@@ -250,10 +271,12 @@ class Application @Inject() (
   }
 
   def e9nDetail(e9nId: Option[Int]): Action[AnyContent] = Action { implicit request =>
+    logger.info(s"request=$request")
     Ok(html.e9n_detail(e9nId)(request))
   }
 
   def e9nDetailTable(): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"request=$request")
     println(s"request=${request.body}")
     e9nDetailTblRequestForm.bindFromRequest.fold(
       _ =>

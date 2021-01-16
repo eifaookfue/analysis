@@ -42,7 +42,7 @@ object Generator {
       // record e9n once every 10 times
 
       _ = if (randomValue(sequence) == 1) {
-        val f1 = recorder.recordE9n(logId.get, windowDetail.lineNo, e9nStaceTraceSeq(10))
+        val f1 = recorder.recordE9n(logId.get, windowDetail.lineNo, new Timestamp(System.currentTimeMillis()), e9nStaceTraceSeq(10))
         Await.ready(f1, Duration.Inf)
         val f2 = recorder.record(E9nAudit(e9nId, STATUS.DONE, None, "nakamura-s"))
         Await.ready(f2, Duration.Inf)

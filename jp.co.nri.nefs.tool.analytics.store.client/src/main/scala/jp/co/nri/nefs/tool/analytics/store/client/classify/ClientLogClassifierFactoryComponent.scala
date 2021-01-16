@@ -117,7 +117,7 @@ trait ClientLogClassifierFactoryComponent {
         logId = 0,
         lineNo = start.lineNo,
         activator = relatedHandler.map(_.name).orElse(relatedWindow.flatMap(w => getWindowName(w.name))),
-        windowName = getWindowName(name),
+        windowName = plainName,
         destinationType = getDestinationType(requestBuffer).map(_.toString),
         action = relatedButtonEvent.map(_.event),
         method = None,
@@ -204,14 +204,21 @@ trait ClientLogClassifierFactoryComponent {
                   }
               }
             case JSD_OTC =>
-              crossCapacityOp match {
-                case Some(crossCapacity) =>
-                  crossCapacity match {
-                    case PRINCIPAL         => Some(EDestinationType.OTC_PRINCIPAL)
-                    case AGENCY            => Some(EDestinationType.OTC_AGENCY)
-                    case BROKER            => Some(EDestinationType.OTC_BROKER)
+              counterPartyOp match {
+                case Some(counterParty) =>
+                  counterParty match {
+                    case ECounterParty.BROKER => Some(EDestinationType.ODD_LOT_PRINCIPAL)
+                    case ECounterParty.RETELA => Some(EDestinationType.ODD_LOT_AGENCY)
                   }
-                case _                     => None
+                case _ => crossCapacityOp match {
+                  case Some(crossCapacity) =>
+                    crossCapacity match {
+                      case PRINCIPAL => Some(EDestinationType.OTC_PRINCIPAL)
+                      case AGENCY => Some(EDestinationType.OTC_AGENCY)
+                      case BROKER => Some(EDestinationType.OTC_BROKER)
+                    }
+                  case _ => None
+                }
               }
             case OSA_DERIV =>
               crossCapacityOp match {
@@ -232,16 +239,9 @@ trait ClientLogClassifierFactoryComponent {
                     case FIXED_PRICE       => Some(EDestinationType.CLOSE_PRICE)
                     case BUY_BACK          => Some(EDestinationType.BUY_BACK)
                     case DISTRIUBUTION     => Some(EDestinationType.BUNBAI)
+                    case _ => None
                   }
-                case _  =>
-                  counterPartyOp match {
-                    case Some(counterParty) =>
-                      counterParty match {
-                        case ECounterParty.BROKER => Some(EDestinationType.ODD_LOT_PRINCIPAL)
-                        case ECounterParty.RETELA => Some(EDestinationType.ODD_LOT_AGENCY)
-                      }
-                    case _                        => Some(EDestinationType.EXCHANGE)
-                  }
+                case _ => Some(EDestinationType.EXCHANGE)
               }
           }
         case _ => None
@@ -282,7 +282,7 @@ trait ClientLogClassifierFactoryComponent {
     /** メッセージに含まれる括弧内の文字列を抜き出します。
       * 例1: ("[Select Symbol Multi]Dialog opened.", "SelectMultiDialog") => "Select Symbol Multi"
       * 例2: ("Opened.", "QuestionDialog") => "QuestionDialog"
-      * 例3: ("[]Dialog Opened.", "QuickInputDialog") => "QuickInputDialog"
+      * 例3: ("[]Dialog opened.", "QuickInputDialog") => "QuickInputDialog"
       *
       * @param  message メッセージ
       * @param  default 括弧内の文字列がなかった場合に算出される文字列
@@ -332,7 +332,7 @@ trait ClientLogClassifierFactoryComponent {
     }
 
     /** メッセージに含まれる鍵括弧内の文字列を抜き出します。
-     */
+      */
     private def getRequestProperty(message: String): Option[String] = {
       message match {
         case LineInfo.requestRegex(r) => Some(r)
@@ -341,13 +341,13 @@ trait ClientLogClassifierFactoryComponent {
     }
 
     /** Returns the request parameter map of key-value format. <br>
-      * There are tow types of log format.
+      * There are two types of log format.
       * {{{
       * Old Format:
       * PARAMETER, BASKET_NAME=SINGLE, BASKET_TYPE=CASH}
       * }}}
       * {{{
-      * NEW Format:
+      * New Format:
       * PARAMETER=DefaultEntity:{INQUIRY_NO=5535,...,}
       * }}}
       */
@@ -453,7 +453,7 @@ trait ClientLogClassifierFactoryComponent {
     }
 
     def classify(line: String, lineNo: Int): Unit = {
-      for (info <- LineInfo.valueOf(line)) classifyLineInfo(info, lineNo)
+      LineInfo.valueOf(line).foreach(classifyLineInfo(_, lineNo))
       classifyOtherInfo(OtherInfo(line), lineNo)
     }
 
@@ -494,7 +494,7 @@ trait ClientLogClassifierFactoryComponent {
               futureBuffer += clientLogRecorder.record(logId.get, window.toWindowDetail)
             }
             windowBuffer.remove(index)
-          case None => logger.warn(s"$aplInfo.fileName:$lineNo Couldn't find window.")
+          case None => logger.warn(s"${aplInfo.fileName}:$lineNo Couldn't find window.")
         }
         // リクエストバッファはクリアしておく
         requestBuffer.clear()
@@ -507,7 +507,7 @@ trait ClientLogClassifierFactoryComponent {
               start = LineTime(lineNo, lineInfo.datetime),
               event = event
             )
-          case None => logger.warn(s"${aplInfo.fileName}:$lineNo Couldn't find action from message.")
+          case None => logger.warn(s"${aplInfo.fileName}:$lineNo Couldn't find action from message. Message = ${lineInfo.message}")
         }
       }
       else if (lineInfo.message contains "Button event ends") {
@@ -516,7 +516,7 @@ trait ClientLogClassifierFactoryComponent {
         }
       } else if (lineInfo.underlyingClass == "DefaultValidationDataManager") {
         for ((code, checkMsg) <- lineInfo.preCheck; id <- logId) {
-          futureBuffer += clientLogRecorder.record(PreCheck(id, lineNo, windowBuffer.lastOption.map(_.name), code, checkMsg))
+          futureBuffer += clientLogRecorder.record(PreCheck(id, lineNo, windowBuffer.lastOption.flatMap(_.plainName), code, checkMsg))
         }
       }
       for (property <- lineInfo.requestProperty) requestBuffer += Request(property)
@@ -552,7 +552,7 @@ trait ClientLogClassifierFactoryComponent {
 
     private def findRelatedObject[T](buffer: ListBuffer[T], underlyingClass: String, f: T => String, configKeyPrefix: String): Option[T] = {
       val config = ConfigFactory.load()
-      val configKey = configKeyPrefix + "." + underlyingClass
+      val configKey = configKeyPrefix + "." + underlyingClass.replace("$", "_")
       try {
         val values = config.getStringList(configKey).asScala
         val lastOption = buffer.lastOption
@@ -561,12 +561,12 @@ trait ClientLogClassifierFactoryComponent {
         }
       } catch {
         case e: ConfigException.Missing =>
-          logger.warn(s"$configKey was not found in config file",e)
+          logger.info(s"${e.getMessage}")
           None
       }
     }
 
-    /** 同じ名前でのオブジェクトをBufferから見つけ出し、Endを更新します。
+    /** 同じ名前のオブジェクトをBufferから見つけ出し、Endを更新します。
       * fileNameが指定されてかつ対象が見つからなかった場合、Warningを出力します。
       *
       * @param  name     オブジェクトの名前
@@ -648,7 +648,7 @@ trait ClientLogClassifierFactoryComponent {
               if (e9nMessageBuffer.size >= DefaultClientLogClassifier.e9nReasonAcceptableNumber && logId.nonEmpty) {
                 // Records only head element regarding others as no longer reason message
                 val (headLineNo, message) = e9nMessageBuffer.head
-                futureBuffer += clientLogRecorder.recordE9n(logId.get, headLineNo, Seq(E9nStackTrace(0, 0, message)))
+                futureBuffer += clientLogRecorder.recordE9n(logId.get, headLineNo, lastTime, Seq(E9nStackTrace(0, 0, message)))
                 e9nMessageBuffer.clear()
                 e9nMode = MAYBE_E9N
               } else {
@@ -662,13 +662,13 @@ trait ClientLogClassifierFactoryComponent {
             case None =>
               if (logId.nonEmpty) {
                 val (headLineNo, _) = e9nMessageBuffer.head
-                // Stacktraceに空行が含まれることがあり、空のメッセージはDBインサート時にエラーとなるため、空白に置き換える
+                // StackTraceに空行が含まれることがあり、空のメッセージはDBインサート時にエラーとなるため、空白に置き換える
                 val e9nStackTraceSeq = for {
                   ((_, msg), number) <- e9nMessageBuffer.zipWithIndex
                   message = if (msg.isEmpty) " " else msg
                 } yield E9nStackTrace(0, number, message)
                 e9nStackTraceSeq.foreach(e => logger.info(e.toString))
-                clientLogRecorder.recordE9n(logId.get, headLineNo, e9nStackTraceSeq)
+                futureBuffer += clientLogRecorder.recordE9n(logId.get, headLineNo, lastTime, e9nStackTraceSeq)
                 e9nMessageBuffer.clear()
                 e9nMode = MAYBE_E9N
               }
@@ -687,7 +687,7 @@ trait ClientLogClassifierFactoryComponent {
     final val CONFIG_BASE = "client-log-classifier"
     final val HANDLER_MAPPING = "handler-mapping"
     final val WINDOW_MAPPING = "window-mapping"
-    final val E9N_REASON_ACCEPTABLE_NUMBER = CONFIG_BASE +  ".e9n-reason-acceptable-number"
+    final val E9N_REASON_ACCEPTABLE_NUMBER = CONFIG_BASE + ".e9n-reason-acceptable-number"
     val e9nReasonAcceptableNumber: Int = ConfigFactory.load().getInt(E9N_REASON_ACCEPTABLE_NUMBER)
   }
 

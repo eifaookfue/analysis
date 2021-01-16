@@ -31,7 +31,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">DataTable with minimal features & hover style</h3>
+                        <h3 class="card-title">Exception Detail</h3>
                     </div>
                     <!-- /.card-header -->
                     <div class="card-body">
@@ -43,6 +43,7 @@
                             <th>LineNo</th>
                             <th>AppName</th>
                             <th>UserName</th>
+                            <th>Time</th>
                             <th>HeadMessage</th>
                         </tr>
                         </thead>
@@ -53,6 +54,7 @@
                             <th>LineNo</th>
                             <th>AppName</th>
                             <th>UserName</th>
+                            <th>Time</th>
                             <th>HeadMessage</th>
                         </tr>
                         </tfoot>
@@ -110,10 +112,19 @@
         */
         "columns": [
             { data: "e9n-id" },
-            { data: "log-id" },
+            { data: "log-id",
+              render: function(data, type, row, meta) {
+                var r = jsRoutes.controllers.Application.fileDownload(data);
+                if (type == 'display') {
+                    data = '<a href="' + r.url + '">' + data + '</a>';
+                }
+                return data;
+              }
+            },
             { data: "line-no" },
             { data: "app-name" },
             { data: "user-name" },
+            { data: "time" },
             { data: "message" }
         ],
         "columnDefs": [
@@ -121,7 +132,8 @@
             {targets: 1, width: 60},
             {targets: 2, width: 60},
             {targets: 3, width: 80},
-            {targets: 4, width: 80}
+            {targets: 4, width: 80},
+            {targets: 5, width: 100}
         ],
         "lengthMenu": [[100, 500, 1000], [100, 500, 1000]],
         "deferLoading": true

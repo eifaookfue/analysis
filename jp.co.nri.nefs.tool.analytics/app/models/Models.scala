@@ -8,13 +8,15 @@ import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 case class WindowDetailTblRequestParams(draw: Int,
-                                        col0SearchValue: String,
-                                        col1SearchValue: String,
-                                        col2SearchValue: String,
-                                        col3SearchValue: String,
-                                        col4SearchValue: String,
-                                        col5SearchValue: String,
-                                        col6SearchValue: String,
+                                        logIdSearchValue: String,
+                                        appNameSearchValue: String,
+                                        userNameSearchValue: String,
+                                        lineNoSearchValue: String,
+                                        activatorSearchValue: String,
+                                        windowNameSearchValue: String,
+                                        destinationTypeSearchValue: String,
+                                        startupTimeSearchValue: String,
+                                        timeSearchValue: String,
                                         order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                   )
 
@@ -61,8 +63,8 @@ case class Params(page: Int = 0, orderBy: Option[Int]  = None, logId: Option[Int
 
 
 case class WindowDetailTbl(logId: Int, appName: String, userName: String,
-                           lineNo: Int, activator: String, windowName: String,
-                           time: Timestamp)
+                           lineNo: Int, activator: String, windowName: String, destinationType: String,
+                           startupTime: String, time: Timestamp)
 
 object timestampWrites extends Writes[Timestamp] {
   val pattern = "yy/MM/dd HH:mm"
@@ -79,6 +81,8 @@ object WindowDetailTbl {
       (JsPath \ "line-no").write[Int] and
       (JsPath \ "activator").write[String] and
       (JsPath \ "window-name").write[String] and
+      (JsPath \ "destination-type").write[String] and
+      (JsPath \ "startup-time").write[String] and
       (JsPath \ "time").write[Timestamp](timestampWrites)
     )(unlift(WindowDetailTbl.unapply))
 }
@@ -107,7 +111,7 @@ object WindowCountBySlice {
   )(unlift(WindowCountBySlice.unapply))
 }
 
-case class WindowCountByDate(tradeDate: String, newOrderSingleCount: Int, newSliceCount: Int, otherCount: Int)
+case class WindowCountByDate(tradeDate: String, newOrderCount: Int, newSplitCount: Int, otherCount: Int)
 
 object WindowCountByDate {
   implicit val windowCountByDateWrites: Writes[WindowCountByDate] = (
@@ -191,7 +195,7 @@ object E9nTblResponse {
   )
 }
 
-case class E9nDetailTbl(e9nId: Int, logId: Int, lineNo: Int, appName: String, userName: String, e9nHeadMessage: String)
+case class E9nDetailTbl(e9nId: Int, logId: Int, lineNo: Int, appName: String, userName: String, time: Timestamp, e9nHeadMessage: String)
 
 object E9nDetailTbl {
   implicit val e9nDetailTableWrites: Writes[E9nDetailTbl] = (
@@ -200,6 +204,7 @@ object E9nDetailTbl {
       (JsPath \ "line-no").write[Int] and
       (JsPath \ "app-name").write[String] and
       (JsPath \ "user-name").write[String] and
+      (JsPath \ "time").write[Timestamp](timestampWrites) and
       (JsPath \ "message").write[String]
   )(unlift(E9nDetailTbl.unapply))
 }
@@ -216,13 +221,14 @@ object E9nDetailTblResponse {
 }
 
 case class E9nDetailTblRequestParams(draw: Int,
-                                        col0SearchValue: String,
-                                        col1SearchValue: String,
-                                        col2SearchValue: String,
-                                        col3SearchValue: String,
-                                        col4SearchValue: String,
-                                        col5SearchValue: String,
-                                        order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
+                                     e9nIdSearchValue: String,
+                                     logIdSearchValue: String,
+                                     lineNoSearchValue: String,
+                                     appNameSearchValue: String,
+                                     userNameSearchValue: String,
+                                     timeSearchValue: String,
+                                     headMessageSearchValue: String,
+                                     order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                     )
 
 case class E9nAuditHistoryTbl(e9nHistoryId: Int, status: Option[STATUS], comment: Option[String], updatedBy: String, updateTime: Timestamp)

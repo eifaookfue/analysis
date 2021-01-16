@@ -31,7 +31,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">DataTable with minimal features & hover style</h3>
+                        <h3 class="card-title">Window Detail</h3>
                     </div>
                     <!-- /.card-header -->
                     <div class="card-body">
@@ -44,6 +44,8 @@
                             <th>LineNo</th>
                             <th>Activator</th>
                             <th>WindowName</th>
+                            <th>DestinationType</th>
+                            <th>StartupTime</th>
                             <th>Time</th>
                         </tr>
                         </thead>
@@ -55,6 +57,8 @@
                             <th>LineNo</th>
                             <th>Activator</th>
                             <th>WindowName</th>
+                            <th>DestinationType</th>
+                            <th>StartupTime</th>
                             <th>Time</th>
                         </tr>
                         </tfoot>
@@ -70,18 +74,8 @@
     var e9nId = $('#e9n-store').attr('data-e9ndata');
     console.log(e9nId);
     $('#window-detail tfoot th').each(function(index) {
-        var title = $(this).text();
-        //$(this).html('<input type="text" style="width:100%;" />');
-        if (index == 0) {
-            var aaa = $(this).attr('id')
-            console.log(aaa);
-            $(this).html('<input type="text" style="width:100%;" value=' + e9nId + ' />');
-        } else {
-            $(this).html('<input type="text" style="width:100%;" />');
-        }
+        $(this).html('<input type="text" style="width:100%;" />');
     });
-    var abc = $('#window-detail tfoot th');
-    console.log(abc);
 
     /*
     hide the search box without disabling search
@@ -133,15 +127,21 @@
             { data: "line-no" },
             { data: "activator" },
             { data: "window-name" },
+            { data: "destination-type" },
+            { data: "startup-time" },
             { data: "time" }
         ],
-        "deferLoading": true
+        "columnDefs": [
+            {targets: 0, width: 20},
+            {targets: 1, width: 60},
+            {targets: 2, width: 60},
+            {targets: 3, width: 20},
+            {targets: 4, width: 20},
+            {targets: 5, width: 20},
+            {targets: 6, width: 20},
+            {targets: 7, width: 20},
+            {targets: 8, width: 20},
+        ],
     });
-    windowDetailTable.columns(0).search(e9nId);
-    //var eee = $('#window-detail-id');
-    //console.log(eee);
-    //windowDetailTable.columns(eee).search(2);
-    //eee.dataTable().api().columns().search(2);
-    windowDetailTable.draw();
 </script>
 }

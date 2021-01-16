@@ -1,11 +1,11 @@
 package jp.co.nri.nefs.tool.analytics.store.client.record
 
+import java.sql.Timestamp
 import com.google.inject.{ImplementedBy, Inject}
 import com.typesafe.scalalogging.LazyLogging
 import jp.co.nri.nefs.tool.analytics.model.client._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
-
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
@@ -16,7 +16,7 @@ trait ClientLogRecorder {
   def record(log: Log): Option[Int]
   def record(logId: Int, detail: WindowDetail): Future[Int]
   def record(preCheck: PreCheck): Future[Int]
-  def recordE9n(logId: Int, lineNo: Int, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any]
+  def recordE9n(logId: Int, lineNo: Int, time: Timestamp, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any]
   def record(audit: E9nAudit): Future[Int]
 }
 
@@ -86,7 +86,7 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
     db.run(insert)
   }
 
-  override def recordE9n(logId: Int, lineNo: Int, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any] = {
+  override def recordE9n(logId: Int, lineNo: Int, time: Timestamp, e9nStackTraceSeq: Seq[E9nStackTrace]): Future[Any] = {
 
     val headMessage = e9nStackTraceSeq.head.message
     val length = e9nStackTraceSeq.map(_.message).mkString.length
@@ -102,7 +102,7 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
         e9nIdAndCount match {
           // If found from E9N table, use e9nId from the table
           case Some((e9nId, countOp)) =>
-            val insertE9nDetail = e9nDetails.map(_.e9nDetailProjection) += E9nDetail(logId, lineNo, e9nId)
+            val insertE9nDetail = e9nDetails.map(_.e9nDetailProjection) += E9nDetail(logId, lineNo, e9nId, time)
             val insertOrUpdateE9nCount = countOp match {
               // If found from E9N_COUNT table, count up
               case Some(count) =>
@@ -120,8 +120,8 @@ class DefaultClientLogRecorder @Inject()(protected val dbConfigProvider: Databas
             Await.ready(f2, Duration.Inf)
             f2.value.get match {
               case Success(e9nId) =>
-                val insertE9nDetail = e9nDetails.map(_.e9nDetailProjection) += E9nDetail(logId, lineNo, e9nId)
-                val insertE9nStackTrace = e9nStackTraces.map(_.e9nStackTraceProjection) ++= e9nStackTraceSeq
+                val insertE9nDetail = e9nDetails.map(_.e9nDetailProjection) += E9nDetail(logId, lineNo, e9nId, time)
+                val insertE9nStackTrace = e9nStackTraces.map(_.e9nStackTraceProjection) ++= e9nStackTraceSeq.map(_.copy(e9nId = e9nId))
                 val insertE9nCount = e9nCounts.map(e => (e.e9nId, e.count)) += (e9nId, 1)
                 db.run(DBIO.seq(insertE9nDetail, insertE9nStackTrace, insertE9nCount))
               case Failure(e) =>

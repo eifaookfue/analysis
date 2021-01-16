@@ -2,17 +2,24 @@ package dao
 
 import java.sql.Timestamp
 
+import com.typesafe.config.Config
+import common.Utilities
 import javax.inject.{Inject, Singleton}
 import jp.co.nri.nefs.tool.analytics.model.client._
 import jp.co.nri.nefs.tool.analytics.model.common.UserComponent
 import models._
+import play.api.Configuration
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit executionContext: ExecutionContext)
+class E9nDAO @Inject()(
+                        protected val dbConfigProvider: DatabaseConfigProvider,
+                        utilities: Utilities,
+                        config: Configuration
+                      )(implicit executionContext: ExecutionContext)
   extends E9nComponent with E9nStackTraceComponent with E9nDetailComponent with E9nCountComponent with E9nAuditComponent
     with E9nAuditHistoryComponent with LogComponent with UserComponent with HasDatabaseConfigProvider[JdbcProfile]{
 
@@ -26,6 +33,11 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
   val e9nAuditHistories = TableQuery[E9nAuditHistories]
   val logs = TableQuery[Logs]
   val users = TableQuery[Users]
+
+  val conf: Config = config.underlying.getConfig(utilities.dbName)
+  val convertFunction: String = conf.getString("dateToChar.function")
+  val toChar: (Rep[Timestamp], Rep[String]) => Rep[String] =
+    SimpleFunction.binary[Timestamp, String, String](convertFunction)
 
   def count: Future[Int] = {
     db.run(e9ns.length.result)
@@ -76,17 +88,21 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
   }
 
   private def e9nDetailListQuery(params: E9nDetailTblRequestParams) = {
+    val timeStr = params.timeSearchValue
+    val formatter = utilities.formatter(timeStr)
     for {
       (((ed, l), e9), u) <- e9nDetails join logs on (_.logId === _.logId) join e9ns on (_._1.e9nId === _.e9nId) joinLeft users on (_._1._2.userId === _.userId)
       if List(
-        Option(params.col0SearchValue).filter(_.trim.nonEmpty).map(ed.e9nId === _.toInt),
-        Option(params.col1SearchValue).filter(_.trim.nonEmpty).map(ed.logId === _.toInt),
-        Option(params.col2SearchValue).filter(_.trim.nonEmpty).map(ed.lineNo === _.toInt),
-        Option(params.col3SearchValue).filter(_.trim.nonEmpty).map(l.appName like "%" + _ + "%"),
-        Option(params.col4SearchValue).filter(_.trim.nonEmpty).map(u.map(_.userName).getOrElse(l.userId) like "%" + _ + "%"),
-        Option(params.col5SearchValue).filter(_.trim.nonEmpty).map(e9.e9nHeadMessage like "%" + _ + "%"),
+        Option(params.e9nIdSearchValue).filter(_.trim.nonEmpty).map(ed.e9nId === _.toInt),
+        Option(params.logIdSearchValue).filter(_.trim.nonEmpty).map(ed.logId === _.toInt),
+        Option(params.lineNoSearchValue).filter(_.trim.nonEmpty).map(ed.lineNo === _.toInt),
+        Option(params.appNameSearchValue).filter(_.trim.nonEmpty).map(l.appName like "%" + _ + "%"),
+        Option(params.userNameSearchValue).filter(_.trim.nonEmpty).map(u.map(_.userName).getOrElse(l.userId) like "%" + _ + "%"),
+        Option(params.timeSearchValue).filter(_.trim.nonEmpty).map(l.tradeDate like "%" + _ + "%"),
+        formatter.map(toChar(ed.time, _) === timeStr),
+        Option(params.headMessageSearchValue).filter(_.trim.nonEmpty).map(e9.e9nHeadMessage like "%" + _ + "%"),
       ).collect({case Some(criteria) => criteria}).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
-    } yield (ed.e9nId, ed.logId, ed.lineNo, l.appName, u.map(_.userName).getOrElse(l.userId), e9.e9nHeadMessage)
+    } yield (ed.e9nId, ed.logId, ed.lineNo, l.appName, u.map(_.userName).getOrElse(l.userId), ed.time, e9.e9nHeadMessage)
   }
 
   def count(params: E9nDetailTblRequestParams): Future[Int] = {
@@ -95,21 +111,22 @@ class E9nDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(i
 
   def e9nDetailList(params: E9nDetailTblRequestParams): Future[Seq[E9nDetailTbl]] = {
     val q1 = e9nDetailListQuery(params)
-    val q2 = q1.sortBy { case (e9nId, logId, lineNo, appName, userName, e9nHeadMessage) =>
+    val q2 = q1.sortBy { case (e9nId, logId, lineNo, appName, userName, time, e9nHeadMessage) =>
       params.order0Column match {
         case 0 => if (params.order0Dir == "desc") e9nId.desc else e9nId.asc
         case 1 => if (params.order0Dir == "desc") logId.desc else logId.asc
         case 2 => if (params.order0Dir == "desc") lineNo.desc else lineNo.asc
         case 3 => if (params.order0Dir == "desc") appName.desc else appName.asc
         case 4 => if (params.order0Dir == "desc") userName.desc else userName.asc
-        case 5 => if (params.order0Dir == "desc") e9nHeadMessage.desc else e9nHeadMessage.asc
+        case 5 => if (params.order0Dir == "desc") time.desc else time.asc
+        case 6 => if (params.order0Dir == "desc") e9nHeadMessage.desc else e9nHeadMessage.asc
         case _ => if (params.order0Dir == "desc") e9nId.desc else e9nId.asc
       }
     }
     val q3 = q2.drop(params.start).take(params.length)
     val f = db.run(q3.result)
-    f.map(seq => seq.map{case (e9nId, logId, lineNo, appName, userName, e9nHeadMessage) =>
-      E9nDetailTbl(e9nId, logId, lineNo, appName, userName, e9nHeadMessage)
+    f.map(seq => seq.map{case (e9nId, logId, lineNo, appName, userName, time, e9nHeadMessage) =>
+      E9nDetailTbl(e9nId, logId, lineNo, appName, userName, time, e9nHeadMessage)
     })
 
   }

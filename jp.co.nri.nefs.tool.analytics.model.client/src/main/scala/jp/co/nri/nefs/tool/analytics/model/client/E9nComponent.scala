@@ -53,7 +53,7 @@ trait E9nComponent {
   }
 }
 
-case class E9nDetail(logId: Int, lineNo: Int, e9nId: Int)
+case class E9nDetail(logId: Int, lineNo: Int, e9nId: Int, time: Timestamp)
 
 case class E9nDetailEx(e9nDetail: E9nDetail, updateTime: Timestamp)
 
@@ -66,8 +66,9 @@ trait E9nDetailComponent {
     def logId = column[Int]("LOG_ID")
     def lineNo = column[Int]("LINE_NO")
     def e9nId = column[Int]("E9N_ID")
+    def time = column[Timestamp]("TIME")
     def updateTime = column[Timestamp]("UPDATE_TIME", SqlType("TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
-    def e9nDetailProjection = (logId, lineNo, e9nId) <> (E9nDetail.tupled, E9nDetail.unapply)
+    def e9nDetailProjection = (logId, lineNo, e9nId, time) <> (E9nDetail.tupled, E9nDetail.unapply)
     def * = (e9nDetailProjection,
       updateTime) <> (E9nDetailEx.tupled, E9nDetailEx.unapply)
     def pk = primaryKey("E9N_PK_1", (logId, lineNo))

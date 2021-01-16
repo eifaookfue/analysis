@@ -14,6 +14,14 @@ GET     /dashboard-client               controllers.Application.dashboard_client
 
 GET     /dashboard-server               controllers.Application.dashboard_server()
 
+GET     /new-order-single               controllers.Application.newOrderSingle()
+
+GET     /new-split               controllers.Application.newSplit()
+
+GET     /user-detail               controllers.Application.userDetail()
+
+GET     /pre-check               controllers.Application.preCheck()
+
 GET  /fileDownload               controllers.Application.fileDownload(logId: Int)
 
 POST     /window-count-table             controllers.Application.windowCountTable()
