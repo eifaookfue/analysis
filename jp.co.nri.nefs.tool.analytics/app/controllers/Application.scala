@@ -45,14 +45,15 @@ class Application @Inject() (
       Map(key -> value.map(_.toString).getOrElse(""))
   }
 
-  implicit object statusFormatter extends Formatter[Option[STATUS]] {
+  implicit object statusFormatter extends Formatter[STATUS] {
     override val format: Option[(String, Seq[Any])] = Some("format.status", Nil)
 
-    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Option[STATUS]] =
-      parsing(Option(_).filter(_.trim.nonEmpty).map(STATUS.valueOf), "error.status", Nil)(key, data)
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], STATUS] = {
+      parsing(STATUS.valueOf, "error.status", Nil)(key, data)
+    }
 
-    override def unbind(key: String, value: Option[STATUS]): Map[String, String] =
-      Map(key -> value.map(_.toString).getOrElse(""))
+    override def unbind(key: String, value: STATUS): Map[String, String] =
+      Map(key -> value.toString)
 
   }
 
@@ -121,7 +122,7 @@ class Application @Inject() (
     mapping(
       "draw" -> number,
       "columns[0][search][value]" -> of[Option[Int]],
-      "columns[1][search][value]" -> of[Option[STATUS]],
+      "columns[1][search][value]" -> optional(of[STATUS]),
       "columns[2][search][value]" -> text,
       "columns[3][search][value]" -> text,
       "columns[4][search][value]" -> of[Option[Timestamp]],
@@ -167,8 +168,9 @@ class Application @Inject() (
   val auditForm = Form(
     mapping(
       "e9nId" -> number,
-      "status" -> of[Option[STATUS]],
-      "comment" -> text
+      "status" -> optional(of[STATUS]),
+      "comment" -> optional(text),
+      "updatedBy" -> nonEmptyText
     )(AuditInput.apply)(AuditInput.unapply)
   )
 
@@ -187,6 +189,8 @@ class Application @Inject() (
   val windowNames: Seq[String] = Seq("NewOrderSingle", "NewSplit", "NewExecution", "OrderDetail")
   val e9ns: Seq[String] = Seq("IllegalArgumentException", "RuntimeException", "TimeoutException")
 
+  val statusOptions: List[(String, String)] = STATUS.values.map(s => (s.toString, s.toString)).toList
+
   def dashboard_client: Action[AnyContent] = Action.async { implicit request =>
     val windowCountBySlice = windowSliceDao.list
     val windowCountByDate = windowDetailDao.windowCountByDate
@@ -197,7 +201,7 @@ class Application @Inject() (
       _ = println(sliceJson)
       date <- windowCountByDate
       dateJson = Json.toJson(date)
-    } yield Ok(html.dashboard_client(sliceJson, dateJson, auditForm))
+    } yield Ok(html.dashboard_client(sliceJson, dateJson, auditForm, statusOptions))
   }
 
   def dashboard_server: Action[AnyContent] = Action {
@@ -361,39 +365,20 @@ class Application @Inject() (
     )
   }
 
-  /*
-    def e9nDetail(e9nId: Option[Int]): Action[AnyContent] = Action { implicit request =>
-    Ok(html.e9n_detail(e9nId)(request))
-  }
-   */
-
-  def auditSave(e9nId: Int): Action[AnyContent] = Action { implicit request =>
-    logger.info(s"e9nId = $e9nId")
-    logger.info(s"request = $request")
-    /*
-        e9nDetailTblRequestForm.bindFromRequest.fold(
-      _ =>
-        Future.successful(InternalServerError("Oops")),
-      params =>
-        for {
-          recordsTotal <- e9nDao.count
-          recordsFiltered <- e9nDao.count(params)
-          seq <- e9nDao.e9nDetailList(params)
-          response = E9nDetailTblResponse(params.draw, recordsTotal, recordsFiltered, seq)
-          json = Json.toJson(response)
-        } yield Ok(json)
-    )
-
-     */
+  def auditSave(): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"request = ${request.body}")
     auditForm.bindFromRequest.fold(
       error => {
         logger.error(error.toString)
         Future.successful(InternalServerError("Oops"))
       },
-      auditInput =>
+      auditInput => {
         logger.info(s"auditInput = $auditInput")
+        for {
+          _ <- e9nDao.e9nAuditSave(auditInput)
+        } yield Home.flashing("success" -> "inserted.")
+      }
     )
-    Home
   }
 
 }

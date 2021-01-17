@@ -12,7 +12,9 @@ import play.api.Configuration
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 @Singleton
 class E9nDAO @Inject()(
@@ -132,8 +134,37 @@ class E9nDAO @Inject()(
   }
 
   def e9nAuditHistory(e9nId: Int): Future[Seq[E9nAuditHistoryEx]] = {
-    val q = e9nAuditHistories.filter(_.e9nId === e9nId)
+    val q = e9nAuditHistories.filter(_.e9nId === e9nId).sortBy(_.e9nHistoryId.desc)
     db.run(q.result)
+  }
+
+  def e9nAuditSave(auditInput: AuditInput): Future[Unit] = {
+    val q = e9nAudits.filter(_.e9nId === auditInput.e9nId).map(_.auditProjection)
+    val f = db.run(q.result)
+    Await.ready(f, Duration.Inf)
+    f.value.get match {
+      case Success(v) =>
+        val insertOrUpdate = v.headOption.map { a =>
+          e9nAudits.filter(_.e9nId === auditInput.e9nId).map(_.auditProjection).update(
+            a.copy(
+              status = auditInput.status.getOrElse(a.status),
+              comment = auditInput.comment.orElse(a.comment),
+              updatedBy = auditInput.updatedBy
+            )
+          )
+        }.getOrElse {
+          e9nAudits.map(_.auditProjection) += E9nAudit(
+            auditInput.e9nId,
+            auditInput.status.getOrElse(STATUS.NOT_YET),
+            auditInput.comment, auditInput.updatedBy
+          )
+        }
+        val insertHistory = e9nAuditHistories.map(_.e9nAuditHistoryProjection) +=
+          E9nAuditHistory(0, auditInput.e9nId, auditInput.status, auditInput.comment, auditInput.updatedBy)
+        db.run(DBIO.seq(insertOrUpdate, insertHistory))
+      case Failure(exception) =>
+        Future.failed(exception)
+    }
   }
 
 

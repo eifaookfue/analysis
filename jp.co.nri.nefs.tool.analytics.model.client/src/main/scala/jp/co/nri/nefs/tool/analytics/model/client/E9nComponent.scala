@@ -114,6 +114,8 @@ object STATUS {
       case _ => null
     }
   }
+
+  def values: Seq[STATUS] = Seq(NOT_YET, DONE, PENDING)
 }
 
 trait E9nAuditCommonComponent {

@@ -1,5 +1,6 @@
 @import _root_.play.api.libs.json.JsValue
-@(d1: JsValue, d2: JsValue, auditForm: Form[AuditInput])(implicit request: play.api.mvc.RequestHeader, messagesProvider: MessagesProvider)
+@import helper._
+@(d1: JsValue, d2: JsValue, auditForm: Form[AuditInput], statusOptions: List[(String, String)])(implicit request: play.api.mvc.RequestHeader, messagesProvider: MessagesProvider)
 @main("dashboard-client", DASHBOARD_CLIENT){
 @helper.javascriptRouter("jsRoutes")(
     routes.javascript.Application.windowCountTable,
@@ -138,7 +139,7 @@
                                         <th></th>
                                         <th>Count</th>
                                         <th>Status</th>
-                                        <th></th>
+                                        <th>Edit</th>
                                     </tr>
                                 </thead>
                                 <tfoot>
@@ -185,7 +186,7 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Audit</h4>
+                <h4 id="auditTitle" class="modal-title">Audit</h4>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -196,16 +197,32 @@
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="card card-outline">
-                                    <!--<div class="card-body">
-                                        <textarea class="form-control" rows="3" placeholder="Enter ..."></textarea>
-                                    </div>
-                                    <div class="card-footer">
-                                        <input type="submit" value="Update" class="btn btn-success float-right">
-                                    </div>-->
-                                    @helper.form(routes.Application.auditSave(0)) {
+                                    @helper.form(routes.Application.auditSave()) {
                                         <div class="card-body">
-                                            <!--<textarea class="form-control" rows="3" placeholder="Enter ..."></textarea>-->
-                                           @helper.textarea(field = auditForm("comment"), args = Symbol("rows") -> 3, Symbol("class") -> "form-control", Symbol("placeholder") -> "Enter ...", Symbol("_label") -> "")
+                                            <div class="row">
+                                                <div class="col-lg-6">
+                                                    <div class="form-group">
+                                                        @select(
+                                                            field = auditForm("status"),
+                                                            options = statusOptions,
+                                                            '_default -> "Select status",
+                                                            '_label -> "Status",
+                                                            '_showConstraints -> false,
+                                                            'class -> "form-control"
+                                                        )
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    @inputText(
+                                                        field = auditForm("updatedBy"),
+                                                        '_label -> "Updated by",
+                                                        '_showConstraints -> false,
+                                                        'class -> "form-control"
+                                                    )
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="e9nId" name="e9nId" value="@auditForm.data.get("e9nId")" />
+                                            @helper.textarea(field = auditForm("comment"), args = Symbol("rows") -> 3, Symbol("class") -> "form-control", Symbol("placeholder") -> "Please input comment ...", Symbol("_label") -> "")
                                         </div>
                                         <div class="card-footer">
                                             <input type="submit" value="Update" class="btn btn-success float-right">
@@ -404,6 +421,8 @@
             } else if (isExist($(this).attr('class').split(' '), 'audit')) {
                 // alert("audit found");
                 var e9nId = $(this).val();
+                $('#auditTitle').text("Audit(E9nID=" + e9nId + ")");
+                $('#e9nId').val(e9nId);
                 $("#modal-audit").modal("show");
                 var auditTable = $("#e9n-audit-body").DataTable({
                     "responsive": true,
@@ -419,7 +438,7 @@
                     "ajax": jsRoutes.controllers.Application.e9nAuditHistory(e9nId),
                     "order": [[ 1, "desc" ]],
                     "columns": [
-                        { data: "e9n-id" },
+                        { data: "e9n-history-id" },
                         { data: "status" },
                         { data: "comment" },
                         { data: "updated-by" },
@@ -427,7 +446,7 @@
                     ],
                     "columnDefs": [
                         {targets: 0, width: 20},
-                        {targets: 1, width: 40},
+                        {targets: 1, width: 60},
                         {targets: 3, width: 90},
                         {targets: 4, width: 110}
                     ]

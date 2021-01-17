@@ -297,4 +297,4 @@ case object DETAIL extends Menu(null)
 case object WINDOW_DETAIL extends Menu(DETAIL)
 case object E9N_DETAIL extends Menu(DETAIL)
 
-case class AuditInput(e9nId: Int, status: Option[STATUS], comment: String)
+case class AuditInput(e9nId: Int, status: Option[STATUS], comment: Option[String], updatedBy: String)
