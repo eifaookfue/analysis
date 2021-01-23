@@ -119,10 +119,10 @@ class WindowDetailDAO @Inject()(
     f1.map {seq =>
       val group = seq.groupBy(_.date)
       group.map { case (tradeDate, seq2) =>
-          val totalCount = seq2.map(_.count).sum
-          val newOrderCount = seq2.filter(_.windowName == "NewOrder").map(_.count).sum
-          val newSplitCount = seq2.filter(_.windowName == "NewSplit").map(_.count).sum
-          WindowCountByDate(tradeDate, newOrderCount, newSplitCount, totalCount - newOrderCount - newSplitCount)
+        val totalCount = seq2.map(_.count).sum
+        val newOrderCount = seq2.filter(_.windowName == "NewOrder").map(_.count).sum
+        val newSplitCount = seq2.filter(_.windowName == "NewSplit").map(_.count).sum
+        WindowCountByDate(tradeDate, newOrderCount, newSplitCount, totalCount - newOrderCount - newSplitCount)
       }.toSeq
     }
   }

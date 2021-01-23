@@ -31,7 +31,7 @@ case class E9nTblRequestParams(draw: Int,
                                e9nIdSearchValue: Option[Int],
                                headerSearchValue: String,
                                countSearchValue: Option[Int],
-                               statusSearchValue: STATUS,
+                               statusSearchValue: Option[STATUS],
                                order0Column: Int, order0Dir: String, start: Int, length: Int, searchValue: String, searchRegex: Boolean
                                       )
 

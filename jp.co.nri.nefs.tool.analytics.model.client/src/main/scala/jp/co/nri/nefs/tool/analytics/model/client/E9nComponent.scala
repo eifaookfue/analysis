@@ -110,8 +110,7 @@ object STATUS {
       case "NOT_YET" => NOT_YET
       case "DONE" => DONE
       case "PENDING" => PENDING
-      //case _ => throw new IllegalArgumentException(s"$name is not a member of STATUS")
-      case _ => null
+      case _ => throw new IllegalArgumentException(s"$name is not a member of STATUS")
     }
   }
 

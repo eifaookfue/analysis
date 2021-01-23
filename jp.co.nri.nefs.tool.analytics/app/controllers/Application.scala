@@ -18,7 +18,7 @@ import views.html
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Properties, Random}
+import scala.util.{Properties, Random, Try}
 
 class Application @Inject() (
     windowDetailDao: WindowDetailDAO,
@@ -31,7 +31,7 @@ class Application @Inject() (
 )(implicit executionContext: ExecutionContext) extends AbstractController(controllerComponents)
   with I18nSupport with Logging {
 
-  final val LOR_DIR: String = "play-analytics" + ".log-dir"
+  final val LOG_DIR: String = "play-analytics" + ".log-dir"
 
   import play.api.data.format.Formatter
   import play.api.data.format.Formats._
@@ -57,6 +57,16 @@ class Application @Inject() (
 
   }
 
+  object nullableStatusFormatter extends Formatter[Option[STATUS]] {
+    override val format: Option[(String, Seq[Any])] = Some("format.option.status", Nil)
+
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Option[STATUS]] =
+      Right(Try(STATUS.valueOf(data(key))).map(Some(_)).getOrElse(None))
+
+    override def unbind(key: String, value: Option[STATUS]): Map[String, String] =
+      Map(key -> value.map(_.toString).getOrElse(""))
+  }
+
   implicit object OptionTimestampFormatter extends Formatter[Option[Timestamp]] {
     override val format: Option[(String, Seq[Any])] = Some("format.optionInt", Nil)
 
@@ -67,7 +77,6 @@ class Application @Inject() (
     override def unbind(key: String, value: Option[Timestamp]): Map[String, String] =
       Map(key -> value.map(_.toString).getOrElse(""))
   }
-
 
   val windowDetailTblRequestForm = Form(
     mapping(
@@ -109,7 +118,7 @@ class Application @Inject() (
       "columns[0][search][value]" -> of[Option[Int]],
       "columns[1][search][value]" -> text,
       "columns[3][search][value]" -> of[Option[Int]],
-      "columns[4][search][value]" -> text.transform[STATUS](STATUS.valueOf, _.toString),
+      "columns[4][search][value]" -> of[Option[STATUS]](nullableStatusFormatter),
       "order[0][column]" -> number,
       "order[0][dir]" -> text,
       "start" -> number,
@@ -247,7 +256,7 @@ class Application @Inject() (
 
   def fileDownload(logId: Int): Action[AnyContent] = Action {
     val (tradeDate, fileName) = Await.result(windowDetailDao.fileName(logId), 10.seconds)
-    val fileDir = config.underlying.getString(LOR_DIR)
+    val fileDir = config.underlying.getString(LOG_DIR)
     val parent = Paths.get(fileDir).resolve(tradeDate)
     val file1 = parent.resolve(fileName)
     val file2 = parent.resolve(fileName.replace("log", "zip"))
@@ -281,7 +290,6 @@ class Application @Inject() (
 
   def e9nDetailTable(): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"request=$request")
-    println(s"request=${request.body}")
     e9nDetailTblRequestForm.bindFromRequest.fold(
       _ =>
         Future.successful(InternalServerError("Oops")),

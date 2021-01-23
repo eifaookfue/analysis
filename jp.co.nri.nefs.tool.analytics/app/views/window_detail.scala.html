@@ -71,9 +71,8 @@
 </div> <!--content-wrapper-->
 }{
 <script>
-    var e9nId = $('#e9n-store').attr('data-e9ndata');
-    console.log(e9nId);
-    $('#window-detail tfoot th').each(function(index) {
+    $('#window-detail tfoot th').each(function() {
+        var title = $(this).text();
         $(this).html('<input type="text" style="width:100%;" />');
     });
 
@@ -119,8 +118,7 @@
                     data = '<a href="' + r.url + '">' + data + '</a>';
                 }
                 return data;
-              },
-              name: "log-id"
+              }
             },
             { data: "app-name" },
             { data: "user-name" },
@@ -136,12 +134,13 @@
             {targets: 1, width: 60},
             {targets: 2, width: 60},
             {targets: 3, width: 20},
-            {targets: 4, width: 20},
-            {targets: 5, width: 20},
-            {targets: 6, width: 20},
-            {targets: 7, width: 20},
-            {targets: 8, width: 20},
+            {targets: 4, width: 60},
+            {targets: 5, width: 60},
+            {targets: 6, width: 60},
+            {targets: 7, width: 60},
+            {targets: 8, width: 60},
         ],
+        "lengthMenu": [[100, 500, 1000], [100, 500, 1000]]
     });
 </script>
 }

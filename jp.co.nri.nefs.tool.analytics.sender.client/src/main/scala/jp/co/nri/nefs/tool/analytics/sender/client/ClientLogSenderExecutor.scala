@@ -22,8 +22,8 @@ object ClientLogSenderExecutor extends ClientLogSenderComponent with ClientLogCl
 
   implicit val system: ActorSystem = ActorSystem("ClientLogSender")
   final val CONFIG_BASE = "client-log-sender"
-  final val IS_RECREATE = CONFIG_BASE +  ".is-recreate"
-  final val WAIT_TIME_UNTIL_ALL_FILES_EXECUTION = CONFIG_BASE +  ".wait-time-until-all-files-execution"
+  final val IS_RECREATE = CONFIG_BASE + ".is-recreate"
+  final val WAIT_TIME_UNTIL_ALL_FILES_EXECUTION = CONFIG_BASE + ".wait-time-until-all-files-execution"
   private val config = ConfigFactory.load()
   private val isRecreate = config.getBoolean(IS_RECREATE)
   private val waitTimeUntilAllFilesExecution: FiniteDuration = Duration.fromNanos(config.getDuration(WAIT_TIME_UNTIL_ALL_FILES_EXECUTION).toNanos)

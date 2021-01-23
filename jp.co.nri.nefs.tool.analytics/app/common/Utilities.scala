@@ -11,7 +11,7 @@ import scala.collection.JavaConverters._
 import scala.util.{Success, Try}
 
 @Singleton()
-class Utilities @Inject() (config: Configuration) (implicit executionContext: ExecutionContext) {
+class Utilities @Inject()(config: Configuration) (implicit executionContext: ExecutionContext) {
 
   // slick.dbs.default
   val dbName: String = config.underlying.getString(SlickModule.DbKeyConfig) +
@@ -22,7 +22,7 @@ class Utilities @Inject() (config: Configuration) (implicit executionContext: Ex
     .map(_.unwrapped()).map(_.asScala.toMap)
 
   /*
-  Returns RDBFormat whose counter party of SimpleFormat is valid for the argument
+     Returns RDBFormat whose counter party of SimpleFormat is valid for the argument
   */
   def formatter(value: String): Option[String] = (for {
     o <- dateFormatters

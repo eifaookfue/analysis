@@ -57,7 +57,7 @@ class E9nDAO @Inject()(
         params.e9nIdSearchValue.map(e.e9nId === _),
         Option(params.headerSearchValue).filter(_.trim.nonEmpty).map(e.e9nHeadMessage like "%" + _ + "%"),
         params.countSearchValue.map(c.map(_.count).getOrElse(0) === _),
-        Option(params.statusSearchValue).map(s => audit.map(_.status).getOrElse(null) === s)
+        params.statusSearchValue.map(s => (s: Rep[STATUS]) === audit.map(_.status).getOrElse(STATUS.NOT_YET: Rep[STATUS]))
       ).collect ({case Some(criteria) => criteria}).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     } yield (e.e9nId, e.e9nHeadMessage, c.map(_.count),
       audit.map(_.status))
@@ -65,7 +65,6 @@ class E9nDAO @Inject()(
   }
 
   def e9nList(params: E9nTblRequestParams): Future[Seq[E9nTbl]] = {
-    println(s"params=$params")
     val q1 = filterQuery(params)
     val q2 = q1.sortBy { case (e9nId, e9nHeadMessage, count, status) =>
       params.order0Column match {

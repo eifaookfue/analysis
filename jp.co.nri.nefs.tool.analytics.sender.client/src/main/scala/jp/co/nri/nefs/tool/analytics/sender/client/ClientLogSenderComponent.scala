@@ -35,7 +35,7 @@ trait ClientLogSenderComponent {
 
     def start(): Unit = {
       // トップレベルActor
-      val fileSenderActor = system.actorOf(FileSendActor.props(timeout), "fileSender")
+      val fileSenderActor = system.actorOf(FileSendActor.props(waitTimeUntilSingleFileExecution), "fileSender")
       val fut = fileSenderActor ? Manager.Start
       logger.info("ask call starts.")
       val message =  Await.result(fut, timeout.duration)
@@ -72,7 +72,7 @@ trait ClientLogSenderComponent {
   }
 
   class FileSendActor(implicit val timeout: Timeout) extends Actor with RequiresMessageQueue[BoundedMessageQueueSemantics] with ActorLogging {
-    final val INPUT_DIR = "inputDir"
+    final val INPUT_DIR = ClientLogSenderExecutor.CONFIG_BASE + ".input-dir"
     final val TARGET_DIR_REGEX = ClientLogSenderExecutor.CONFIG_BASE + ".target-dir-regex"
     final val ZIP_COMMAND = "zipCommand"
     private val config = ConfigFactory.load()
@@ -108,9 +108,9 @@ trait ClientLogSenderComponent {
             case e: TimeoutException =>
               log.error(e, "")
           }
-          log.info(s"send All files are processed.")
-          sender() ! "All files are processed."
         }
+        log.info(s"send All files are processed.")
+        sender() ! "All files are processed."
     }
 
     private def parentName(path: Path): String = path.getParent.getFileName.toString
@@ -121,7 +121,7 @@ trait ClientLogSenderComponent {
       val regexOp = try {
         Some(config.getString(TARGET_DIR_REGEX))
       } catch {
-        case _: Exception => None
+        case _ : Exception => None
       }
       regexOp.forall(parentName(path).matches(_))
     }
@@ -171,7 +171,7 @@ trait ClientLogSenderComponent {
         case Some(aplInfo) =>
           log.info(s"$file is analyzing...")
           val clientLogClassifier = clientLogClassifierFactory.create(aplInfo)
-          val actor = context.actorOf(ClientLogClassifierActor.props(clientLogClassifier),
+          val actor = context.actorOf(ClientLogClassifierActor.props(clientLogClassifier).withDispatcher("blocking-io-dispatcher"),
             aplInfo.fileName)
           val stream = Files.lines(file, CHARSETNAME)
           for ((line, tmpNo) <- stream.iterator().asScala.zipWithIndex) {
