@@ -105,6 +105,8 @@ object STATUS {
   case object DONE extends STATUS
   case object PENDING extends STATUS
 
+  val defaultStatus: STATUS = NOT_YET
+
   def valueOf(name: String): STATUS = {
     name match {
       case "NOT_YET" => NOT_YET
@@ -114,7 +116,7 @@ object STATUS {
     }
   }
 
-  def values: Seq[STATUS] = Seq(NOT_YET, DONE, PENDING)
+  val values: Seq[STATUS] = Seq(NOT_YET, DONE, PENDING)
 }
 
 trait E9nAuditCommonComponent {

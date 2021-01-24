@@ -210,7 +210,7 @@ class Application @Inject() (
       _ = println(sliceJson)
       date <- windowCountByDate
       dateJson = Json.toJson(date)
-    } yield Ok(html.dashboard_client(sliceJson, dateJson, auditForm, statusOptions))
+    } yield Ok(html.dashboard_client(sliceJson, dateJson, auditForm, statusOptions, STATUS.defaultStatus.toString))
   }
 
   def dashboard_server: Action[AnyContent] = Action {

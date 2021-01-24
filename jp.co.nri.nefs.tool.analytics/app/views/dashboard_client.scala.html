@@ -1,6 +1,6 @@
 @import _root_.play.api.libs.json.JsValue
 @import helper._
-@(d1: JsValue, d2: JsValue, auditForm: Form[AuditInput], statusOptions: List[(String, String)])(implicit request: play.api.mvc.RequestHeader, messagesProvider: MessagesProvider)
+@(d1: JsValue, d2: JsValue, auditForm: Form[AuditInput], statusOptions: List[(String, String)], defaultStatus: String)(implicit request: play.api.mvc.RequestHeader, messagesProvider: MessagesProvider)
 @main("dashboard-client", DASHBOARD_CLIENT){
 @helper.javascriptRouter("jsRoutes")(
     routes.javascript.Application.windowCountTable,
@@ -11,9 +11,13 @@
     routes.javascript.Application.preCheckSummaryTable
 )
 
-<div id="root" data-jsondata1="@d1", data-jsondata2="@d2"></div>
+<div id="root" data-jsondata1="@d1", data-jsondata2="@d2", data-value="@defaultStatus"></div>
 @for((k, v) <- statusOptions) {
-    <div class = "myselector" data-value="<option value=@v>@v</option>"></div>
+    @if(k == defaultStatus) {
+        <div class = "status-selector" data-value="<option value=@v selected>@v</option>"></div>
+    } else {
+        <div class = "status-selector" data-value="<option value=@v>@v</option>"></div>
+    }
 }
 
 <!--<script>
@@ -363,7 +367,7 @@
 
                 if (4 == i) {
                     var column = this;
-                    var select = $('<select style="width:100%;height:100%;"><option value=""></option></select>')
+                    var select = $('<select style="width:100%;height:30px;"><option value=""></option></select>')
                         .appendTo( $(column.footer()).empty() )
                         .on('change', function() {
                             var val = $.fn.dataTable.util.escapeRegex(
@@ -373,7 +377,7 @@
                                 .search( val ? val : '', false, false )
                                 .draw();
                         } );
-                        $('.myselector').each(function() {
+                        $('.status-selector').each(function() {
                             select.append($(this).attr('data-value'));
                         });
                 } else {
@@ -424,7 +428,8 @@
             {targets: 3, width: 80}
         ]
     });
-    exceptionListTable.columns(4).search("NOT_YET");
+    var defaultStatus = $('#root').attr('data-value');
+    exceptionListTable.columns(4).search(defaultStatus);
     exceptionListTable.draw();
 
     $(function() {

@@ -57,7 +57,7 @@ class E9nDAO @Inject()(
         params.e9nIdSearchValue.map(e.e9nId === _),
         Option(params.headerSearchValue).filter(_.trim.nonEmpty).map(e.e9nHeadMessage like "%" + _ + "%"),
         params.countSearchValue.map(c.map(_.count).getOrElse(0) === _),
-        params.statusSearchValue.map(s => (s: Rep[STATUS]) === audit.map(_.status).getOrElse(STATUS.NOT_YET: Rep[STATUS]))
+        params.statusSearchValue.map(s => (s: Rep[STATUS]) === audit.map(_.status).getOrElse(STATUS.defaultStatus: Rep[STATUS]))
       ).collect ({case Some(criteria) => criteria}).reduceLeftOption(_ && _).getOrElse(true: Rep[Boolean])
     } yield (e.e9nId, e.e9nHeadMessage, c.map(_.count),
       audit.map(_.status))
@@ -79,7 +79,7 @@ class E9nDAO @Inject()(
     val q3 = q2.drop(params.start).take(params.length)
     val f = db.run(q3.result)
     f.map( seq => seq.map{ case (e9nId, message, count, status) =>
-      E9nTbl(e9nId, message, count.getOrElse(0), status.getOrElse(STATUS.NOT_YET))
+      E9nTbl(e9nId, message, count.getOrElse(0), status.getOrElse(STATUS.defaultStatus))
     })
   }
 
@@ -154,7 +154,7 @@ class E9nDAO @Inject()(
         }.getOrElse {
           e9nAudits.map(_.auditProjection) += E9nAudit(
             auditInput.e9nId,
-            auditInput.status.getOrElse(STATUS.NOT_YET),
+            auditInput.status.getOrElse(STATUS.defaultStatus),
             auditInput.comment, auditInput.updatedBy
           )
         }
