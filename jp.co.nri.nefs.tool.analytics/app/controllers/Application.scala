@@ -307,9 +307,11 @@ class Application @Inject() (
   def e9nListTable(): Action[AnyContent] = Action.async { implicit request =>
     e9nTblRequestForm.bindFromRequest.fold(
       formWithErrors => {
-        println(formWithErrors)
-        Future.successful(InternalServerError("Oops"))},
-      params =>
+        logger.error(s"formWithErrors=$formWithErrors")
+        Future.successful(InternalServerError("Oops"))
+      },
+      params => {
+        logger.info(s"params=$params")
         for {
           recordsTotal <- e9nDao.count
           recordsFiltered <- e9nDao.count(params)
@@ -317,6 +319,7 @@ class Application @Inject() (
           response = E9nTblResponse(params.draw, recordsTotal, recordsFiltered, seq)
           json = Json.toJson(response)
         } yield Ok(json)
+      }
     )
   }
 
