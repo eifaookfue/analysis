@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: com.oracle.ojdbc:simplefan:19.3.0.0:jar">
+    <CLASSES>
+      <root url="jar://C:/Apl/.ivy2/local/com.oracle.ojdbc/simplefan/19.3.0.0/jars/simplefan.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Apl/.ivy2/cache/com.oracle.ojdbc/simplefan/srcs/simplefan-19.3.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -24,8 +24,13 @@
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.store.common" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.training" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.analytics.transfer" />
+            <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.compact" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.producer" />
             <option value="$PROJECT_DIR$/jp.co.nri.nefs.tool.util" />
+            <option value="$PROJECT_DIR$/jp.co.nri.tcatool.common" />
+            <option value="$PROJECT_DIR$/jp.co.nri.tcatool.config" />
+            <option value="$PROJECT_DIR$/jp.co.nri.tcatool.ref" />
+            <option value="$PROJECT_DIR$/jp.co.nri.tcatool.sba" />
             <option value="$PROJECT_DIR$/json" />
             <option value="$PROJECT_DIR$/play.api.db.slick" />
             <option value="$PROJECT_DIR$/project" />
@@ -35,6 +40,6 @@
         <option name="sbtVersion" value="1.2.8" />
       </SbtProjectSettings>
     </option>
-    <option name="vmParameters" value="-Dsbt.ivy.home=C:\Apl\.ivy2 -Dfile.encoding=MS932 -Dsbt.override.build.repos=ture" />
+    <option name="vmParameters" value="-Dsbt.ivy.home=C:\Apl\.ivy2 -Dfile.encoding=MS932" />
   </component>
 </project>

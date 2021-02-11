@@ -14,6 +14,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="getmavenlibrary" target="1.5" />
       <module name="jp.co.nri.nefs.common.util" target="1.5" />
       <module name="nefs-common-di" target="1.5" />
       <module name="nefs-common-model" target="1.5" />
@@ -25,6 +26,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_STRING" value="-encoding UTF-8 -Xlint:-options" />
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="getmavenlibrary" options="" />
       <module name="jp.co.nri.nefs.common.util" options="" />
       <module name="nefs-common-di" options="" />
       <module name="nefs-common-model" options="" />

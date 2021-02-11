@@ -26,6 +26,11 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sender-client.iml" filepath="$PROJECT_DIR$/.idea/modules/sender-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/store-client.iml" filepath="$PROJECT_DIR$/.idea/modules/store-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/store-common.iml" filepath="$PROJECT_DIR$/.idea/modules/store-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tca-common.iml" filepath="$PROJECT_DIR$/.idea/modules/tca-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tca-config.iml" filepath="$PROJECT_DIR$/.idea/modules/tca-config.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tca-ref.iml" filepath="$PROJECT_DIR$/.idea/modules/tca-ref.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tca-sba.iml" filepath="$PROJECT_DIR$/.idea/modules/tca-sba.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tool-compact.iml" filepath="$PROJECT_DIR$/.idea/modules/tool-compact.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/training.iml" filepath="$PROJECT_DIR$/.idea/modules/training.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/transfer.iml" filepath="$PROJECT_DIR$/.idea/modules/transfer.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/transport.iml" filepath="$PROJECT_DIR$/.idea/modules/transport.iml" />

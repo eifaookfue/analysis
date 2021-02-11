@@ -284,3 +284,49 @@ assemblyMergeStrategy in assembly := {
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
 }
+
+lazy val `tool-compact` = (project in file("jp.co.nri.nefs.tool.compact"))
+  .dependsOn(util)
+
+lazy val `tca-common` = (project in file ("jp.co.nri.tcatool.common"))
+  .dependsOn(util, `play-slick`, `store-common`, `tca-config`)
+
+lazy val `tca-config` = project in file ("jp.co.nri.tcatool.config")
+
+lazy val `tca-ref` = (project in file("jp.co.nri.tcatool.ref"))
+  .dependsOn(`tca-common`)
+  .settings(
+    organization := "jp.co.nri.tcatool",
+    version := "1.3.0",
+    libraryDependencies ++= Seq(
+      "com.oracle.ojdbc" % "ojdbc8" % "19.3.0.0",
+      "com.chuusai" %% "shapeless" % "2.3.2"
+    ),
+    assemblyJarName in assembly := s"${name.value}.jar",
+    assemblyMergeStrategy in assembly := {
+      case "application.conf" => MergeStrategy.discard
+      case "logback.xml" => MergeStrategy.discard
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
+  )
+
+lazy val `tca-sba` = (project in file ("jp.co.nri.tcatool.sba"))
+  .dependsOn(`tca-common`, `tca-ref`)
+  .settings(
+    organization := "jp.co.nri.tcatool",
+    version := "1.3.0",
+    libraryDependencies ++= Seq(
+      "com.oracle.ojdbc" % "ojdbc8" % "19.3.0.0",
+      "com.chuusai" %% "shapeless" % "2.3.2"
+    ),
+    assemblyJarName in assembly := s"${name.value}.jar",
+    assemblyMergeStrategy in assembly := {
+      case "application.conf" => MergeStrategy.discard
+      case "logback.xml" => MergeStrategy.discard
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
+  )
